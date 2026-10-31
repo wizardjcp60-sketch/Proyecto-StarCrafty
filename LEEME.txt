@@ -20,6 +20,10 @@ Opción A (recomendada): abre la carpeta y haz doble clic en  index.html.
 Opción B: abre  dist/coliseo-broodwar-un-solo-archivo.html . Es la misma
           versión con todas las imágenes incrustadas en un único archivo, útil
           para enviarla o subirla a un hosting sin carpetas.
+          Esa carpeta dist/ NO está en GitHub (figura en .gitignore): se genera
+          en tu ordenador con  python3 tools/build_dist.py .
+Opción C: en GitHub Pages se juega directamente, sin descargar nada:
+          https://wizardjcp60-sketch.github.io/Proyecto-StarCrafty/
 Nota: la tipografía "Rajdhani" se descarga de Google Fonts; sin internet el
 juego usa otra tipografía parecida y funciona igual.
 
@@ -58,7 +62,7 @@ coliseo-broodwar/
                               (node tools/sim_balance.js 200 normal). Ver sección 6E.
     build_acid_fx.py          Recorta la salpicadura de ácido de la hoja del Hidralisco (python3 tools/build_acid_fx.py).
     build_dist.py             Regenera dist/ con todo incrustado (python3 tools/build_dist.py).
-  dist/
+  dist/                       (no se sube a GitHub: se genera con tools/build_dist.py)
     coliseo-broodwar-un-solo-archivo.html   Versión todo-en-uno.
 
 4. CONTROLES

@@ -1,7 +1,8 @@
 /* ==========================================================================
-   audio.js - SISTEMA DE SONIDO (listo para usar, sin archivos todavia)
-   Coloca los archivos en assets/audio/sfx/ y assets/audio/music/ con los
-   nombres de abajo (mp3, ogg o wav; cambia la extension aqui si hace falta).
+   audio.js - SISTEMA DE SONIDO
+   Los archivos estan en assets/audio/sfx/, music/ y voices/ con los nombres
+   de abajo (mp3, ogg o wav; cambia la extension aqui si hace falta).
+   Para cambiar un sonido, reemplaza el archivo conservando el nombre.
    Si un archivo no existe, el juego simplemente no suena: no da error.
    ========================================================================== */
 
