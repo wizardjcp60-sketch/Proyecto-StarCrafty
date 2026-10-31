@@ -1,0 +1,16 @@
+IMAGENES DE LA PRESENTACION DE ENTRADA
+======================================
+Guarda aqui las imagenes (JPG o PNG, mejor horizontales 16:9, 1600 px de ancho o mas).
+Para usarlas, anadelas a la lista en js/config.js, bloque INTRO > images:
+
+    images:[
+      'assets/images/intro/intro_1.jpg',
+      'assets/images/intro/mi_imagen_2.jpg',
+      'assets/images/intro/mi_imagen_3.jpg'
+    ],
+
+- Se alternan con zoom lento y desvanecido. Cada una dura INTRO.slideTime segundos.
+- Si un archivo de la lista no existe, se salta solo (no rompe nada).
+- Otras opciones del mismo bloque: shuffle (orden al azar), title / subtitle / lines (textos),
+  dim (oscurecido), once (solo la primera vez por sesion) y on:false para quitar la intro.
+- Despues de cambiar imagenes, ejecuta  python3 tools/build_dist.py  para actualizar el archivo unico de dist/.

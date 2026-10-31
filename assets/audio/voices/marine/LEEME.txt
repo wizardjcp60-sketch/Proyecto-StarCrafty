@@ -1,0 +1,5 @@
+﻿VOCES DEL MARINE (originales de StarCraft)
+tmawht02.wav -> al elegir modo en el menú
+tmasti01.wav -> al recoger un stimpack
+tmapss05.wav -> cuando le molesta un golpe fuerte o le queda poca vida
+Cambios de frase o de momento: js/audio.js (marine_*) y js/game.js (AUDIO.voice). Detalle en LEEME.txt, sección 11.

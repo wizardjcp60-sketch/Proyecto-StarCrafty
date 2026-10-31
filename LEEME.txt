@@ -1,0 +1,734 @@
+﻿================================================================================
+ COLISEO BROOD WAR  -  Marine contra Hidralisco
+ Juego de prueba en el navegador, ambientado en StarCraft: Brood War
+================================================================================
+
+1. QUÉ ES
+---------
+Un pequeño juego de lucha de arena para 1 o 2 jugadores. Un Marine Terran y un
+Hidralisco Zerg (o un Dark Templar Protoss, ver sección 6E) pelean dentro de un coliseo de estilo Brood War. Caen objetos
+al azar (escudo, stimpack, zergling explosivo), cada luchador tiene dos vidas,
+cada ronda dura 45 segundos y, si se acaba el tiempo, un misil nuclear cae
+sobre quien tenga menos vida. El juego está hecho con HTML + CSS + JavaScript
+puro (sin librerías) y se dibuja en un <canvas>.
+
+2. CÓMO EJECUTARLO
+------------------
+Opción A (recomendada): abre la carpeta y haz doble clic en  index.html.
+          Se abre en el navegador (Chrome, Edge o Firefox) y funciona sin
+          instalar nada ni usar servidor.
+Opción B: abre  dist/coliseo-broodwar-un-solo-archivo.html . Es la misma
+          versión con todas las imágenes incrustadas en un único archivo, útil
+          para enviarla o subirla a un hosting sin carpetas.
+Nota: la tipografía "Rajdhani" se descarga de Google Fonts; sin internet el
+juego usa otra tipografía parecida y funciona igual.
+
+3. ESTRUCTURA DE CARPETAS
+-------------------------
+coliseo-broodwar/
+  index.html                  Página principal (HUD, menú, pausa y canvas).
+  LEEME.txt                   Este documento.
+  css/
+    style.css                 Estilos: HUD, retratos con efectos, menús, botones.
+  js/
+    config.js                 AJUSTES de balance y rutas de imágenes (edítalo aquí).
+    audio.js                  Sistema de sonido listo (sin archivos todavía).
+    game.js                   Lógica, IA, dibujo, estados y bucle principal.
+    granada_fx.js             Granada y explosión del Marine: vuelo, fuego, humo, chispas, escombros, onda
+                              expansiva, mancha de quemado (solo visual). Se carga ANTES de game.js. Ver 6G.
+  assets/
+    images/
+      sprites/                Personajes: 3 vistas del Marine y 3 del Hidralisco, y la hoja de
+                              fotogramas del Dark Templar (dark_templar_atlas.png y su versión
+                              de capa roja dark_templar_atlas_roja.png).
+      fx/                     Misil nuclear, hoja de la explosión y acido_impacto.png (salpicadura de ácido).
+      ui/                     Retratos del HUD (Marine, Hidralisco y Dark Templar).
+      background/             Fondo del coliseo (arena.jpg y arena_generada.jpg, ver sección 12).
+      source/                 Imágenes ORIGINALES que subiste (para recortar de nuevo).
+    audio/
+      music/                  Música de fondo: arena.mp3 ya incluida (sección 11).
+      sfx/                    Efectos de sonido (ver sección 11).
+      voices/marine/          Voces originales de StarCraft del Marine (3 frases).
+      voices/hydralisk/       Voces originales de StarCraft del Hidralisco (3 frases).
+      voices/dark_templar/    Voces originales de StarCraft del Dark Templar (3 frases).
+  tools/
+    gen_arena.py              Generador del fondo (Python: numpy, scipy, pillow).
+    build_grenade_sfx.py      Sintetiza granada_lanza.wav y granada_explota.wav (python3 tools/build_grenade_sfx.py).
+    sim_balance.js            Simula partidas IA contra IA sin navegador para medir el balance
+                              (node tools/sim_balance.js 200 normal). Ver sección 6E.
+    build_acid_fx.py          Recorta la salpicadura de ácido de la hoja del Hidralisco (python3 tools/build_acid_fx.py).
+    build_dist.py             Regenera dist/ con todo incrustado (python3 tools/build_dist.py).
+  dist/
+    coliseo-broodwar-un-solo-archivo.html   Versión todo-en-uno.
+
+4. CONTROLES
+------------
+  Mover ............ WASD o flechas (en 1 jugador valen las dos)
+  Disparar ......... F o Espacio
+  Pausa / continuar  Enter, o el botón "Pausa" de la barra superior
+  Ataque especial .. G (Marine) y . punto (Hidralisco); en 1 jugador valen ambas.
+                     Cambiables en CONFIG.KEYS (js/config.js).
+  Mando ............ stick o cruceta mueve, A / RB / gatillo derecho dispara,
+                     X / B / Y / LB especial, Start pausa (y en el menú o la
+                     victoria vuelve a jugar con el último modo).
+  Móvil / tablet ... joystick a la izquierda y botones Disparo y Especial a la
+                     derecha; aparecen solos en pantallas táctiles.
+  Sonido sí / no .... tecla M, o el botón de nota musical (♫) junto a Pausa;
+                      el navegador recuerda tu elección.
+  Apuntado ......... automático: cada luchador apunta solo al rival;
+                     lo difícil es esquivar y moverse.
+  Modo 2 jugadores:
+     Marine ........ mover WASD, disparar F
+     Hidralisco .... mover flechas, disparar Shift derecho
+  Menú inicial: se elige libremente el luchador izquierdo y el derecho entre Marine,
+  Hidralisco y Dark Templar (también vale el mismo a ambos lados; en ese caso un
+  aro azul/rojo bajo los pies indica el lado). En 1 jugador el Dark Templar corta solo
+  cuando el rival está a su alcance. "Jugar de <izquierdo>" (la IA controla al
+  derecho), "Jugar de <derecho>" (la IA controla al izquierdo) o "2 jugadores".
+  El lado izquierdo usa WASD + F y G; el derecho flechas + Shift derecho y punto.
+
+5. REGLAS DEL JUEGO
+-------------------
+- Cada ronda empieza con "Ronda N" y una cuenta atrás 3, 2, 1, luego "FIGHT!"
+  (los controles se activan en ese momento).
+- Cada luchador tiene 2 vidas (corazones junto a su nombre). Quien llega a 0 de
+  vida pierde una vida: aparece "K.O." y empieza otra ronda con su cuenta atrás.
+- Gana quien deja al rival sin vidas. La pantalla final muestra al ganador de
+  pie, agrandado, sobre una pila de enemigos muertos (marine sobre hidraliscos
+  o hidralisco sobre marines). Si el ganador no perdió ninguna vida sale
+  "Victoria perfecta". Si caen los dos a la vez en la última ronda: "Empate".
+- Estadísticas actuales (editables en js/config.js, que manda si estos números cambian):
+     Marine .... 95 de vida, velocidad 60, un disparo cada 1,07 s, 3,6 de daño.
+     Hidralisco  140 de vida, velocidad 50, un disparo cada 1,07 s, 8,4 de daño.
+  El Marine dispara rápido con balas finas; el Hidralisco tiene más vida y
+  lanza espinas más lentas y fuertes.
+- Temporizador: 45 s por ronda (contador arriba, en el centro; se pone rojo en
+  los últimos 10 s). Solo corre durante el combate, no en la cuenta atrás ni en
+  la pausa.
+
+6. OBJETOS QUE CAEN AL AZAR
+---------------------------
+Cada 2,2 a 4 s cae un objeto en un punto aleatorio (máximo 3 en el suelo). Se ve
+una sombra y un anillo parpadeante antes de que aterrice (tarda ~1,2 s).
+Probabilidad: escudo 2/11, stimpack 2/11, zergling explosivo 3/11, medical kit 2/11, multidisparo 2/11.
+- ESCUDO (burbuja azul): absorbe hasta 40 de daño. Se ve como un aro azul sobre
+  el personaje y como barra azul en el HUD.
+- STIMPACK (caja roja): 6 s con +50 por ciento de velocidad y +70 por ciento de
+  cadencia. Cuesta 10 de vida (como en el juego original). Se ve como brillo
+  naranja y partículas.
+- MEDICAL KIT (caja blanca con cruz roja): cura unos 35 de vida (al azar entre 30
+  y 40, el mismo daño que hace la explosión de un zergling), sin pasar de la
+  vida máxima. Solo lo recoge quien tenga la vida incompleta; si estás al
+  máximo se queda en el suelo. La IA lo busca cuando baja del 85 por ciento.
+  Sale un "+N" verde sobre el personaje y su retrato destella en verde.
+- EFECTOS DEL DISPARO DEL MARINE (CONFIG.MFX en js/config.js, solo visuales): fogonazo en el cañón, estela
+  luminosa (blanco/ámbar) en la bala con chispas que va soltando, casquillo dorado expulsado en cada disparo,
+  chispas y pequeño aro de luz al impactar (en luchadores, zerglings y al salir por el borde de la arena) y un
+  leve retroceso del Marine. Ajustes: on (false = disparo antiguo), flashT, flashSize, tracerLen, sparks,
+  casing y recoil. No cambian daño, cadencia ni puntería.
+- MECHA DEL ZERGLING EXPLOSIVO: lleva una cuenta atrás sobre la cabeza (CONFIG.LING_FUSE = 4 s). Si en ese tiempo no
+  alcanza a nadie, explota solo con la MITAD del daño habitual (LING_FUSE_DMG = 0,5 -> 15 de 30) y en una zona
+  pequeña (LING_FUSE_RADIUS = 22 px en vez de 38). Si toca a un luchador, o lo detonan (disparo, granada,
+  cuchillada), explota con el daño y radio normales. Se ajusta en js/config.js: LING_FUSE, LING_FUSE_DMG,
+  LING_FUSE_RADIUS y LING_TIMER (false oculta el número). En los últimos 2 s el número muestra décimas y
+  parpadea en rojo, igual que la TNT.
+- ASPECTO DEL ZERGLING EXPLOSIVO: usa el sprite "Zerg Zergling" de ACE_Spark (9 direcciones x 7 fotogramas de
+  caminar, el este se espeja) con un paquete de dinamita TNT atado al lomo, con mecha chispeante. Al quedarle
+  menos de 2 s se pone rojo y parpadea. Ajustes en js/config.js: LING_TNT (true/false) y LING_ART (tamaño,
+  velocidad de animación, altura y tamaño de la TNT). La hoja original está en
+  assets/images/source/zergling/ y el atlas se regenera con  python3 tools/build_ling_atlas.py  (ahí se cambia
+  también el color del equipo, TEAM_RGB; verde tóxico por defecto).
+- ZERGLING EXPLOSIVO (vaina morada): al aterrizar nace un zergling que persigue
+  al luchador más cercano (velocidad 85). Explota al tocarlo o a los 7 s: 35 de
+  daño en un radio de ~38. Tiene 12 de vida: un disparo lo detona donde esté
+  (se puede usar como trampa). Si explota cerca de ti, te daña igualmente.
+- MULTIDISPARO (icono: el emblema dorado y azul de tres proyectiles, con resplandor; assets/images/fx/icono_multidisparo.png,
+  generado con python3 tools/build_multi_icon.py desde assets/images/source/emblema_multidisparo_original.png;
+  tamaño en CONFIG.MULTI.iconSize): durante 5 s el ataque normal sale acompañado
+  de 2 proyectiles extra, uno a cada lado (separados ~14 grados), más pequeños y con solo el 30 por ciento del daño
+  del disparo normal (Marine 1,08 y Hidralisco 2,5 por proyectil extra). Sale "¡Multidisparo!" sobre el personaje,
+  chispitas doradas (verdes en el Hidralisco) lo rodean y el HUD muestra "Multi N s". Solo sirve a luchadores de
+  rango (Marine e Hidralisco): si lo recoge el Dark Templar (cuerpo a cuerpo) se ANULA: el objeto desaparece sin
+  efecto y sale "Anulado" (sirve para quitárselo al rival; la IA del Dark Templar no lo busca, pero si lo pisa se pierde). Se puede combinar con stimpack y
+  escudo. Coger otro renueva el tiempo. Ajustes en js/config.js, bloque CONFIG.MULTI: time, pairs (pares de
+  proyectiles extra), spread, dmgMul y scale. Para quitar el objeto, borra las dos entradas 'multi' de la lista
+  de spawn en game.js (busca "pick(['shield'").
+- Los objetos del suelo desaparecen a los 10 s (parpadean los últimos 3).
+
+6B. ATAQUES ESPECIALES
+-----------------------
+Cada luchador recarga un ataque especial cada 9 s (CONFIG.SPECIAL_COOLDOWN). La
+primera vez queda listo a los 9 s de empezar la ronda; al usarlo, la recarga
+vuelve a empezar de cero y no se acumulan cargas. Cuando está listo suena un
+aviso, sale "¡Especial listo!" sobre el personaje y la barra fina del HUD
+parpadea. Ambos ataques se lanzan hacia donde está el rival en ese instante, así
+que se pueden esquivar moviéndose; el punto de caída se marca en el suelo con un
+anillo discontinuo. Ninguno daña a quien lo lanza.
+- MARINE - GRANADA (tecla G): vuela en arco (~1 s) y explota al aterrizar con el
+  mismo daño y radio que el zergling explosivo (35 de daño, radio 40). Si cae
+  sobre un zergling lo detona en cadena. El escudo absorbe parte del daño.
+- HIDRALISCO - ÁCIDO (tecla . punto): escupe una bola que en el suelo deja un
+  charco de ácido de radio 38 que dura 6 s y hace 9 de daño por segundo a quien
+  esté dentro (cada 0,5 s: 4,5). Total máximo si te quedas todo el tiempo: 54. Quien lo lanza es inmune.
+- La IA usa su especial cuando el rival está a distancia media, y esquiva los
+  charcos y los puntos de caída de las granadas.
+- Ajustes en js/config.js: SPECIAL_COOLDOWN, KEYS, GRENADE_DAMAGE, GRENADE_RADIUS,
+  ACID_DPS, ACID_TIME, ACID_RADIUS.
+
+6F. ESCUPIDA DE ÁCIDO DEL HIDRALISCO (ataque normal)
+-----------------------------------------------------
+El disparo normal del Hidralisco ya no lanza espinas: escupe un globo de ácido. Es un cambio SOLO VISUAL
+(daño 8,4, cadencia, velocidad de la bala y puntería no cambian; el balance medido con sim_balance.js sigue igual).
+- BOCA: al disparar sale una salpicadura verde luminosa con gotas y la cabeza retrocede un poco.
+- VUELO: globo verde alargado que "tiembla" (se estira y se achata), con halo brillante, estela y goteo de ácido
+  que cae al suelo.
+- IMPACTO: animación de salpicadura de 8 fotogramas (la de "Attack Hit" de la hoja de ACE_Spark), gotas que saltan
+  hacia atrás, destello en el suelo y una mancha de ácido que se desvanece (1,4 s). También salpica al
+  detonar un zergling o al salir de la arena. La cifra de daño sale en verde claro y el luchador golpeado destella con un tinte verde
+  (conserva su dibujo) en vez de volverse una silueta blanca.
+- CHARCO DEL ÁCIDO ESPECIAL (tecla .; CONFIG.HFX.poolFx, false = charco sencillo de antes). Solo visual: el daño
+  (ACID_DPS, ACID_TIME, ACID_RADIUS) no cambia.
+    Vuelo: globo grande que tiembla, con estela, halo, gotas en órbita y goteo; en el suelo, la marca de caída
+           es un anillo que se cierra mientras otro crece hasta llenarse.
+    Caída: destello, dos ondas expansivas, temblor leve, 30 gotas en arco y salpicaduras animadas alrededor.
+    Charco: aparece con rebote, borde irregular que ondula, degradado oscuro-a-brillante, brillo que pulsa, onda
+           que sale del centro, burbujas que suben y revientan, vapor tóxico, chispas que suben y salpicaduras
+           que revientan dentro. Quien está dentro chisporrotea y destella en verde con cada golpe.
+           En el último segundo y medio se encoge y se desvanece.
+- Ajustes en js/config.js, bloque CONFIG.HFX: on (false = disparo de espinas de antes), z, flashT, flashSize,
+  recoil, drops, trailLen, hitN, splashT, splashScale, splashDrops, stainT y cols.
+- Sprites: la hoja COMPLETA del Hidralisco se guardó en assets/images/source/hidralisco/hoja_original_hidralisco.png
+  (caminar, ataque, muerte, "Attack Hit", "Attack Overlay", Lurker huevo, enterrado). La tira acido_impacto.png
+  (assets/images/fx/) se genera con  python3 tools/build_acid_fx.py  (cuadrícula X0,Y0,STEP,FW,FH dentro del script).
+  Con esa hoja ya se hizo la animación de caminar y el ciclo de ataque (ver "HIDRALISCO ANIMADO" abajo). Pendiente
+  para el futuro: animación de muerte (4x3 fotogramas, mucha sangre) y la capa "Attack Overlay" (ráfaga de ácido).
+- HIDRALISCO ANIMADO POR FOTOGRAMAS (CONFIG.HYDRA_ART y ATLAS_HYDRA): camina con 7 fotogramas en 9 direcciones
+  (la hoja "Zerg Hydralisk" de ACE_Spark) y, al escupir, hace el ciclo de ataque de 5 fotogramas en el que lanza la
+  cabeza. Mira hacia donde camina; quieto o escupiendo, mira al rival. El fotograma depende de la distancia
+  recorrida (stride), así que no patina. ATLAS: assets/images/sprites/hidralisco_atlas.png (columnas = direcciones: 0 norte/espalda,
+  4 este, 8 sur/frente, el oeste se espeja; 12 filas: 7 de caminar y 5 de ataque; celdas de 42x55 px; el reposo usa el
+  fotograma 0 de caminar). Lo genera tools/build_hydra_atlas.py (python3 tools/build_hydra_atlas.py; necesita Pillow
+  y numpy): corta la hoja guardada en assets/images/source/hidralisco/, quita el fondo gris y cambia el magenta del
+  equipo por rojo (TEAM_RGB dentro del script). Esta hoja no está recortada al contenido, así que los fotogramas se usan
+  con su posición original, sin realinear. AJUSTES (config.js): CONFIG.HYDRA_ART { on, stride, bob, faceMove, aim,
+  attackT, scale } (on:false vuelve a las 3 imágenes fijas de antes; scale se deja en 1 para que se vea nítido) y ATLAS_HYDRA (celda, punto del suelo ax/ay y nº de fotogramas). Código: drawHydraAnim()
+  en game.js. La pantalla de victoria sigue usando la imagen fija grande del Hidralisco.
+  NITIDEZ Y TAMAÑO: el atlas se reduce al 75 % al generarlo (SCALE en tools/build_hydra_atlas.py; 1.0 = tamaño original de la hoja, más
+  grande), se aclaran los tonos oscuros (LIFT, GAMMA) y se añade un contorno oscuro de 1 px (OUTLINE) para que se distinga del suelo.
+  El script reescribe solo ATLAS_HYDRA en js/config.js; después ejecuta  python3 tools/build_dist.py.
+- Código: en game.js, bloque "Escupida de ácido" (acidSpit, acidSplash, drawSplash, drawSpit, drawAcid) y la lista SPL.
+  Tras cambiar algo, regenera el archivo único:  python3 tools/build_dist.py
+- Para probar sin efectos:  node tools/sim_balance.js 100 normal "HFX.on=0"
+
+6G. GRANADA DEL MARINE: VUELO Y EXPLOSIÓN MEJORADOS (solo visual y sonido)
+------------------------------------------------------------------------
+El daño (35), el radio (40 px), el tiempo de vuelo y la IA NO cambian: solo cómo se ve y cómo suena.
+(Balance medido con sim_balance.js antes y después: igual, 28,7 % vs 28,0 % para el Marine.)
+
+EN VUELO
+- Granada con volumen: cuerpo verde oliva con brillo, banda que gira, tapa y anilla de la espoleta.
+- Luz roja de la espoleta que parpadea cada vez más rápido según se acerca al suelo.
+- Arco más alto (según la distancia), sombra en el suelo que se encoge con la altura,
+  estela de fuego, chispitas que caen y humo fino.
+- Marca de caída: anillo exterior que se cierra, arco de cuenta atrás que se completa justo al
+  explotar, mira giratoria y relleno rojizo que crece. Mide EXACTAMENTE el área del daño.
+- Soplo de humo y chispas en la mano del Marine al lanzar.
+
+EXPLOSIÓN (todo en capas)
+- Destello blanco-cálido a pantalla completa y "congelado de impacto" de una fracción de segundo.
+- Bola de fuego con degradado (blanco, amarillo, naranja, rojo, ceniza) que sube formando un hongo.
+- Tres ondas expansivas por el suelo, anillo de polvo y luz naranja sobre el piso.
+- Columna de humo cálido que se enfría y sube; brasas que flotan.
+- Chispas incandescentes que rebotan en el suelo y escombros del coliseo que salen volando
+  dejando un hilo de humo.
+- Tres mini-explosiones encadenadas dentro del radio.
+- Mancha de quemado con grietas incandescentes que se apagan; dura 9 s y se desvanece.
+- Temblor de cámara más fuerte (CONFIG.GFX.shake).
+
+SONIDO
+- Antes los archivos granada_lanza / granada_explota no existían, así que la granada era muda.
+  Ahora hay dos .wav sintetizados (golpe grave, estallido, escombros y eco estéreo).
+  Para usar los tuyos, reemplaza esos .wav conservando el nombre (o cambia la ruta en js/audio.js).
+
+AJUSTES  (js/config.js, bloque GFX)
+  on         false = vuelve a la granada y explosión sencillas de antes
+  quality    cantidad de partículas (1 = todo, .5 = mitad para PCs lentos, 1.5 = más espectáculo)
+  arc        altura del lanzamiento (0 = plano)
+  shake      temblor de cámara          stop / stopScale   congelado de impacto (stop:0 = sin congelado)
+  flash      destello de pantalla       smoke    duración del humo
+  scorchT    segundos de la mancha en el suelo          secondary   mini-explosiones (true/false)
+Probar sin efectos en el simulador:  node tools/sim_balance.js 100 normal "GFX.on=0"
+Rendimiento medido (navegador sin GPU, el caso más lento): una explosión cuesta ~5 ms por
+fotograma (límite a 60 fps: 16 ms). Con GPU es bastante menos.
+NOTA: si quitas js/granada_fx.js del index.html, game.js dejará de funcionar (lo necesita).
+
+6C. OPCIONES Y EXTRAS
+----------------------
+- DIFICULTAD DE LA IA (menú): Fácil, Normal o Difícil. Cambia su puntería, cuánto
+  esquiva granadas, charcos y zerglings, y con qué frecuencia usa el especial.
+  Normal equivale al comportamiento original. Valores en CONFIG.DIFF
+  (aim = error de puntería, jit = error al apuntar el especial, dodge = fuerza
+  de esquiva, spRate = probabilidad de lanzar el especial por fotograma).
+- VIDAS (menú): 1, 2 o 3 por luchador (1 = una sola ronda, 2 = mejor de 3,
+  3 = mejor de 5). Los corazones del HUD se ajustan solos.
+- MARCADOR: cuenta las partidas ganadas por cada personaje (Marine, Hidralisco y Dark
+  Templar) en este navegador y se
+  muestra en el menú y en la pantalla de victoria. "Reiniciar marcador" lo borra.
+- VOLUMEN: en el menú de pausa hay deslizadores de Música y Efectos.
+- PANTALLA COMPLETA: botón ⛶ de la barra superior (se oculta si el navegador o la
+  página incrustada no lo permite).
+- En la pantalla de victoria, "Cambiar opciones" vuelve al menú completo.
+- Se recuerdan entre sesiones: dificultad, vidas, marcador, volúmenes y sonido
+  sí/no (almacenamiento local del navegador).
+
+6D. FEEDBACK Y CONTROLES EXTRA
+------------------------------
+- CIFRAS DE DAÑO FLOTANTES: cada golpe muestra un número sobre el personaje. Los
+  golpes seguidos (menos de 0,35 s) se suman en una sola cifra para no saturar la
+  pantalla. Blanco = vida, azul = absorbido solo por el escudo, verde = ácido,
+  amarillo y más grande = golpe de 20 o más (granada, zergling, bombazo).
+- CÁMARA DEL K.O. (DESACTIVADA por defecto, KO_CAM:false; no gustó): al caer un luchador, el juego se congela 0,08 s, hace zoom
+  (hasta x1,7) sobre él y las partículas van en cámara lenta (30 por ciento) durante
+  casi 1 s; luego el zoom vuelve a la normalidad y entra el cartel "K.O.". La
+  música baja de volumen mientras dura. No afecta a la bomba nuclear, que tiene su
+  propia presentación.
+- MANDO (Gamepad API): se detecta solo al pulsar un botón. En 1 jugador el primer
+  mando controla al luchador humano; en 2 jugadores el mando 1 controla al Marine
+  y el mando 2 al Hidralisco (cada uno puede combinarse con el teclado). El menú
+  se maneja con ratón o toque; Start en el menú o en la victoria inicia otra
+  partida con el último modo.
+- CONTROLES TÁCTILES: joystick virtual + botones Disparo y Especial, en la parte
+  baja de la pantalla. Solo se muestran en dispositivos táctiles y durante el
+  combate. En 2 jugadores el táctil controla al Marine. Recomendado en horizontal.
+- Se pueden desactivar o forzar en js/config.js: DAMAGE_NUMBERS, KO_CAM y
+  TOUCH_CONTROLS ('auto', true o false).
+
+6E. DARK TEMPLAR (tercer luchador)
+----------------------------------
+Se elige en el menú como luchador izquierdo (en lugar del Marine) o derecho (en lugar
+del Hidralisco); también puede haber dos Dark Templar (el de la derecha lleva la capa
+roja y el retrato con marco rosa). Sus sprites son una hoja de 295 fotogramas con 16
+direcciones (caminar 10 fotogramas, reposo, ataque 7, muerte 7), cortada de la hoja
+"Protoss Dark Templar" de ACE_Spark; el juego elige la dirección según hacia dónde
+mira al rival. El retrato del HUD se recortó del fotograma de reposo.
+- ESTADÍSTICAS (config.js, columna d): 100 de vida, velocidad 72 (la más rápida), una
+  cuchillada cada 1 s con 15 de daño. Alcance corto: CONFIG.DT.reach = 10 px.
+- ATAQUE (F, Espacio o el botón de disparo; suena dark_templar_ataque.mp3 al empezar la cuchillada): cuerpo a cuerpo. Si el rival no está al
+  alcance no pasa nada. La cuchillada tarda 0,25 s en caer (fotograma 4 de 7), así
+  que se puede esquivar alejándose; durante el golpe se mueve más despacio. La
+  cuchilla también detona los zerglings cercanos (ojo: la explosión te daña a ti).
+- CAMUFLAJE (CONFIG.DT.cloak): el Dark Templar se ve semitransparente (alpha .5) con
+  un leve espejismo, y los disparos, granadas y ácido del rival contra él se desvían
+  (DT.aim, DT.jit). Se hace visible durante DT.reveal = 0,8 s después de atacar o
+  saltar. Con cloak:false siempre se ve y no desvía nada.
+- ESPECIAL: SALTO SOMBRÍO (tecla G a la izquierda, punto a la derecha; recarga 9 s):
+  desaparece (no se le puede dañar) y 0,45 s después reaparece 12 px DETRÁS del
+  rival, con una cuchillada de área (30 de daño, radio 30). El punto de llegada se
+  marca en el suelo con un anillo morado discontinuo, así que se puede esquivar
+  alejándose. Si el sitio queda fuera de la arena, reaparece dentro, hacia el centro.
+- IA: avanza directo hacia el rival con un ligero zigzag a media distancia, golpea al
+  llegar y usa el salto cuando está a distancia media. Esquiva charcos y granadas.
+- VOCES: el Dark Templar tiene 3 frases originales de StarCraft (ver sección 11): "ready" al empezar la
+  partida, "yes" al lanzar el salto sombrío y otro "yes" al recoger un stimpack. No tiene frase de queja
+  (no hay audio), así que no reacciona a golpes fuertes ni a vida baja. Sus efectos de sonido son
+  dark_templar_ataque.mp3 (cuchillada, aportado), dt_blink.wav (salto) y dt_slash.wav (llegada del salto);
+  los dos .wav están sintetizados por código (originales, sin derechos de terceros). Reemplázalos con el mismo
+  nombre si tienes otros.
+- BALANCE: medido con tools/sim_balance.js (IA contra IA, dificultad normal, 150
+  partidas por combinación). Con daño 15 y cadencia 1 s, Dark Templar y Hidralisco
+  quedan igualados (~50 % - 49 %). El Marine ya perdía contra el Hidralisco (31 % - 69 %)
+  y pierde también contra el Dark Templar (casi siempre): es una debilidad previa del
+  Marine, no del Dark Templar; si quieres equilibrarlo, sube su daño o su vida en
+  config.js. Para probar cambios: node tools/sim_balance.js 200 normal "DAMAGE.d=14" dh
+  (ajustes de CONFIG separados por comas; combinaciones mh, dh, md, dd).
+- EVASIÓN (CONFIG.DT.evasion = 0,35): mientras está camuflado, cada disparo o cuchillada enemiga tiene un 35 % de fallar
+  (sale "¡Falla!"), como el Butterfly de Dota. Al atacar o saltar se deja ver (DT.reveal) y pierde la evasión. La
+  granada, el ácido y el zergling explosivo no se esquivan.
+- CRÍTICO CONTRA EL DT VISIBLE (CONFIG.DT.critChance, critBonus, critMult): cuando el Dark Templar se hace visible
+  (justo después de atacar o saltar, DT.reveal), los disparos del Marine y el Hidralisco y las cuchilladas de otro
+  DT tienen un 25 % de probabilidad (critChance = 0,25) de hacer daño crítico: daño base x critMult + critBonus.
+  Por defecto critMult = 1 y critBonus = 2, es decir +2 de daño sobre el habitual (Marine 3,6 -> 5,6; Hidralisco
+  8,4 -> 10,4; DT 15 -> 17). Sale "¡Crítico!" sobre el DT. Para cambiarlo, edita esas tres líneas en js/config.js
+  (critChance 0 lo desactiva; critMult 2 duplica el daño). La granada, el ácido y el zergling no hacen crítico.
+  Luego ejecuta  python3 tools/build_dist.py  para regenerar el archivo único de dist/.
+- Ajustes: CONFIG.HP/SPEED/COOLDOWN/DAMAGE (clave d), CONFIG.DT (reach, cloak, alpha, evasion, critChance, critBonus, critMult,
+  reveal, aim, jit, blinkDamage, blinkRadius, blinkT, behind) y ATLAS_DT (geometría de
+  la hoja) en js/config.js.
+- Código: en game.js, bloque "Dark Templar" (meleeStart, swingStep, meleeHit, blinkStart,
+  blinkLand, drawBlink, drawDT, setPortraits). En un combate cada luchador tiene
+  f.type ('m', 'h' o 'd') y f.side (0 izquierda, 1 derecha); los controles y el HUD
+  dependen del lado y las estadísticas, del tipo.
+
+CONTROLES MÁS ROBUSTOS (solución a "a veces no me deja atacar")
+- El bucle principal ahora captura los errores de un fotograma: si algo falla una vez, el juego sigue en vez de
+  quedarse congelado hasta recargar (el error se muestra una sola vez en la consola del navegador, F12).
+- Al perder el foco la ventana (cambiar de pestaña, clic fuera, Alt+Tab) se sueltan todas las teclas y el táctil,
+  así no queda ninguna "pulsada" por error.
+- Si el teclado manda la tecla sin código (algunos teclados virtuales o métodos de entrada), se usa la letra:
+  F, A, W, S, D, G y Espacio siguen funcionando.
+- Al iniciar partida se quita el foco de cualquier botón, para que Espacio o Enter no lo vuelvan a pulsar.
+
+6F. MARINE ANIMADO POR FOTOGRAMAS
+---------------------------------
+El Marine ya no es una imagen fija que se desliza: camina con un ciclo de 9 fotogramas en 9 direcciones
+(el oeste se espeja), tiene pose de reposo y pose de disparo. Usa la hoja "Terran Marine" extraída por
+Colton (assets/images/source/marine/hoja_original_marine.png).
+- ATLAS: assets/images/sprites/marine_atlas.png (9 columnas = direcciones: 0 norte/espalda, 4 este, 8 sur/frente;
+  11 filas: reposo, 9 de caminar, disparo; celdas de 40x40 px). Lo genera tools/build_marine_atlas.py
+  (python3 tools/build_marine_atlas.py; necesita Pillow y numpy): corta la hoja, quita el fondo granate y cambia
+  el magenta del equipo por rojo (TEAM_RGB en el script).
+- ALINEACIÓN: la hoja trae cada fotograma recortado al contenido, sin guardar dónde están los pies. El script
+  centra cada fotograma haciendo coincidir sus hombreras (el magenta) con las del reposo de esa dirección, así
+  el torso queda estable y solo se mueven las piernas. Si un fotograma se sale de la celda, avisa al ejecutarlo.
+- COMPORTAMIENTO (game.js, drawMarineAnim): el fotograma depende de la distancia recorrida (CONFIG.MARINE_ART.stride
+  px por fotograma), así que los pies no patinan ni al correr con el stimpack. Al caminar mira hacia donde va; quieto,
+  o durante aim = 0,5 s después de disparar, mira al rival. Al disparar muestra la pose de disparo shootT = 0,14 s;
+  el fogonazo, el retroceso, el casquillo, el escudo y el destello blanco de golpe siguen siendo los de antes.
+- AJUSTES (config.js): CONFIG.MARINE_ART { on, stride, bob, faceMove, aim, shootT, scale } y ATLAS_MARINE
+  (tamaño de celda, pies y filas). on:false vuelve a las 3 imágenes fijas (frente, lateral y espalda), que se
+  siguen usando en la pantalla de victoria y en la pila de derrotados.
+- Pendiente: la hoja también trae "Pulling out gun", el disparo con fogonazo propio y la animación de muerte
+  (marine_hoja_original, última fila). No se usan todavía.
+
+7. PERSONAJES Y SPRITES
+-----------------------
+Los dos personajes usan imágenes (tus modelos) con 3 vistas cada uno. El juego
+elige la vista según la dirección de movimiento:
+   - moviéndose hacia ABAJO en pantalla  -> vista frontal
+   - moviéndose hacia ARRIBA             -> vista trasera
+   - de lado o quieto                    -> vista lateral (se voltea a izquierda
+                                            o derecha según hacia dónde apunta)
+Orientación natural de cada archivo (importante si los reemplazas):
+   marine_lateral.png ........ mira a la DERECHA
+   hidralisco_lateral.png .... mira a la IZQUIERDA
+   frente/espalda ............ simétricos (no se voltean)
+Los pies deben quedar abajo-centro de la imagen (ese punto es la posición del
+personaje en el suelo). Todas con fondo transparente (PNG).
+Tamaño en pantalla: el lienzo interno es de 960x540 px y se dibuja a escala 2,
+así que una imagen de 56 px de alto se ve de 28 unidades lógicas de alto.
+Alturas actuales: Marine 56 px, Hidralisco 64 px.
+Efecto de golpe: el sprite se pone blanco ~0,08 s. Al moverse hay un pequeño
+rebote vertical. En la pantalla de victoria los derrotados se oscurecen y se
+rotan para formar la pila.
+
+8. HUD (BARRA SUPERIOR)
+-----------------------
+- Dos paneles: Marine a la izquierda, Hidralisco a la derecha. Cada uno tiene
+  retrato, nombre (con "(IA)" si lo controla la IA), corazones de vidas, barra
+  de vida segmentada (verde, amarilla bajo 50 por ciento, roja bajo 25 por
+  ciento), barra de escudo azul, una barra fina de ataque especial (naranja el Marine,
+  verde el Hidralisco) y texto de efectos activos (Stim 4 s, Escudo, y
+  "Granada [G]" o "Ácido [.]" cuando el especial está listo).
+- Centro: temporizador de ronda y botón Pausa.
+- RETRATOS con efectos (css/style.css, clase .pt):
+     siempre ......... marco con brillo que respira (azul Marine, rojo
+                       Hidralisco), líneas de monitor, viñeta, barra de luz que
+                       baja y zoom lento
+     al ser golpeado . destello blanco, tinte rojo y sacudida corta
+     vida <= 25 ...... marco rojo parpadeante tipo alarma
+     con stimpack .... brillo naranja
+     con escudo ...... aro azul
+     al curarse ...... destello verde
+     al caer (vida 0)  gris con estática "sin señal"
+  Respeta "reducir movimiento" del sistema: si está activado, se apagan las
+  animaciones.
+
+9. PRESENTACIÓN NUCLEAR (cuando se acaba el tiempo)
+---------------------------------------------------
+La nuclear cae sobre quien tenga MENOS VIDA (hp) en el instante exacto en que el reloj
+llega a 0 (el escudo y las vidas/corazones no cuentan). Por defecto se compara el
+porcentaje de la barra (CONFIG.NUKE_TARGET:'percent'), que es lo que ve el jugador:
+como el Marine tiene 100 de vida máxima y el Hidralisco 140, comparar puntos sueltos
+favorecía que cayera siempre sobre el Marine. Con 'points' se comparan los puntos.
+En la alerta se muestran los dos porcentajes. Quien tenga menos vida es el objetivo;
+si hay empate exacto caen dos bombas. Línea de tiempo (CONFIG.NUKE_FALL y CONFIG.NUKE_HIT en js/config.js) y sonido:
+   0,0 s  la pelea se congela y la pantalla se oscurece; sale "¡Tiempo!" y empieza a
+          sonar la voz nuclear_detected.mp3 (2,27 s: "nuclear detected")
+   0,2 s  aparece la alerta "Lanzamiento nuclear detectado" + "Menos vida: <nombre>"
+          y los porcentajes de vida (el texto entra con la voz)
+   0,6 s  aparece el punto láser rojo con retícula sobre el objetivo
+   2,2 s  la voz termina y el misil entra desde arriba, crece al acercarse y deja
+          estela de humo (queda un silencio tenso de ~1,4 s)
+   3,55 s empieza explosion_nuclear_sonido.mp3, adelantada 0,05 s (CONFIG.NUKE_SFX.lead)
+          porque su estruendo arranca desde el primer instante del archivo
+   3,6 s  impacto: destello blanco, temblor fuerte, el objetivo desaparece
+   3,6 - 5,8 s  animación de la explosión nuclear (27 fotogramas, 2,16 s)
+   luego  "K.O.", el objetivo pierde una vida y sigue la partida
+   El mp3 de la explosión dura 20 s, así que se apaga con un fundido: suena entero
+   hasta 3,2 s después de empezar y baja a cero en 2,8 s más (NUKE_SFX.fadeAt y
+   fadeDur), justo cuando arranca la cuenta atrás de la ronda siguiente.
+   Para recolocar el sonido: si cambias los archivos, ajusta NUKE_FALL (cuándo cae),
+   NUKE_HIT (cuándo impacta) y NUKE_SFX.lead (cuánto se adelanta el estruendo).
+La explosión se dibuja con mezcla aditiva ("lighter"), por eso su fondo negro
+queda transparente. Los tiempos se leen en game.js como T_FALL y T_HIT desde CONFIG.
+
+10. AJUSTES RÁPIDOS
+-------------------
+js/config.js  (lo más común)
+   ROUND_TIME  segundos por ronda (45)      LIVES     vidas por luchador (2)
+   COUNTDOWN   cuenta atrás (3)             HP        vida {m:100, h:140}
+   SPEED       velocidad {m:60, h:50}       COOLDOWN  segundos entre disparos
+   DAMAGE      daño {m:3.6, h:8.4}          BG_IMAGE  fondo del coliseo (arena.jpg; null = por código)
+   ARENA  elipse jugable {cx, cy, rx, ry}   AMBIENT / TORCHES / TORCH_FLAME / TORCH_GLOW  antorchas
+   LING_DAMAGE daño de la explosión del zergling (30)
+   MEDKIT_HEAL vida que cura el medical kit (35, varía ±5)
+   DIFF  parámetros de la IA por dificultad (easy / normal / hard)
+   VOICE voces del Marine (enabled, gap, hitMin, lowHp, chance)
+   NUKE_TARGET quién recibe la nuclear: 'percent' (barra) o 'points'
+   NUKE_FALL / NUKE_HIT / NUKE_SFX  tiempos de la caída, del impacto y del sonido de la nuclear
+   DAMAGE_NUMBERS cifras flotantes (true)   KO_CAM zoom del K.O. (false)
+   TOUCH_CONTROLS controles táctiles ('auto', true o false)
+   SPECIAL_COOLDOWN recarga del especial (9)   KEYS teclas {marine:'KeyG', hydra:'Period'}
+   GRENADE_DAMAGE/GRENADE_RADIUS (35/40)   ACID_DPS/ACID_TIME/ACID_RADIUS (9/6/38)
+   HFX  efectos de la escupida de ácido del Hidralisco (sección 6F)
+Valores que siguen dentro de js/game.js (búscalos por nombre de función):
+   - velocidad de balas: función fire()  (Marine 260, Hidralisco 190)
+   - escudo 40, stim 6 s / x1,5 velocidad / x1,7 cadencia / coste 10: update()
+   - zergling: velocidad 85, vida 12, explosión radio 38 (el daño está en CONFIG.LING_DAMAGE): update() y boom()
+   - frecuencia y probabilidad de objetos: bloque "spawnT" en update()
+   - tamaño de la arena: CONFIG.ARENA (elipse de combate; en game.js se leen como CX, CY, RX, RY)
+   - radios de colisión: función mk()  (Marine 6, Hidralisco 8)
+
+11. SONIDO: MÚSICA DE FONDO Y EFECTOS
+-------------------------------------
+MÚSICA DE FONDO (ya incluida): assets/audio/music/arena.mp3
+   Es "Main Title" de la banda sonora de StarCraft Remastered (Derek Duke,
+   Jason Hayes y Glenn Stafford), aportada por el autor del proyecto. Dura
+   2 min 23 s y se repite en bucle. Se recomprimió a 160 kbps y se le quitó la
+   carátula para que pese menos (unos 2,9 MB), con un fundido de 0,3 s al
+   empezar y de 2 s al terminar para que el bucle no suene cortado.
+   - Empieza al abrir el juego, en el segundo 5 de la pista (AUDIO.musicStart en
+     js/audio.js), y al terminar vuelve a empezar desde ese segundo. Si el
+     navegador bloquea el audio automático, arranca con el primer clic o tecla.
+   - Suena en el menú, el combate y la pantalla de victoria sin reiniciarse.
+   - Al pausar el juego (Enter) o silenciar (M) la música se detiene y al
+     continuar sigue desde el mismo punto.
+   - Baja de volumen durante la presentación nuclear y vuelve a subir después.
+   - Para cambiar de música: reemplaza arena.mp3 con el mismo nombre (o cambia
+     la ruta en js/audio.js). Ajusta el volumen en AUDIO.musicVolume.
+   - También hay una alternativa original sin derechos de terceros:
+     arena_sintetizada.mp3 (bucle de 57,6 s, ambiente oscuro e industrial a
+     100 BPM compuesto por código). Para usarla, renómbrala a arena.mp3 o
+     cambia la ruta de music_arena en js/audio.js.
+   - Un bucle de mp3 puede notar un microcorte al reiniciar; si lo quieres
+     perfecto, usa un archivo .ogg y cambia la extensión en audio.js.
+VOCES DEL MARINE (originales de StarCraft, assets/audio/voices/marine/):
+   tmawht02.wav (marine_what)    al elegir un modo en el menú (la frase de "selección")
+   tmasti01.wav (marine_stim)    cuando el Marine recoge un stimpack
+   tmapss05.wav (marine_pissed)  cuando le molesta algo: un golpe de 20 o más (granada,
+                                  zergling explosivo...) con 70 por ciento de
+                                  probabilidad, y siempre la primera vez que su vida
+                                  baja del 30 por ciento en una ronda
+   Reglas para que suene natural (CONFIG.VOICE en js/config.js): como mínimo pasan
+   3 s entre frases (gap), una frase no se pisa con otra, la música baja de volumen
+   mientras habla y se controla con el volumen de efectos y la tecla M. Para
+   desactivarlas: VOICE.enabled=false. Para ajustar cuándo se queja: hitMin
+   (daño mínimo), lowHp (fracción de vida) y chance (probabilidad).
+   Hablan siempre las del Marine, lo controle una persona o la IA. Para cambiar la
+   frase de un momento, cambia la ruta en js/audio.js (objeto "files", marine_*);
+   para añadir otro momento, llama AUDIO.voice('marine_xxx') desde game.js.
+   Los archivos conservan sus nombres originales (tma = Marine; wht = selección,
+   sti = stimpack, pss = molesto). El mapeo se hizo por el nombre del archivo: si
+   alguna frase no encaja con el momento, solo hay que reasignarla.
+VOCES DEL HIDRALISCO (originales de StarCraft, assets/audio/voices/hydralisk/):
+   zhywht01.wav (hydra_what)    1,8 s después de que el Marine diga la suya, al empezar
+                                 la partida (así se "responden" sin pisarse)
+   zhyyes00.wav (hydra_yes)     al lanzar su ácido y al recoger un stimpack ("¡sí!")
+   zhypss01.wav (hydra_pissed)  cuando le molesta algo: golpe de 20 o más (70 por ciento
+                                 de probabilidad) y siempre la primera vez que su vida
+                                 baja del 30 por ciento en la ronda (dura unos 4,6 s)
+   Mismas reglas y mismo CONFIG.VOICE que el Marine, pero cada personaje tiene su
+   propia pausa mínima entre frases; dos voces nunca suenan a la vez. Mapeo hecho por
+   el nombre del archivo (zhy = Hidralisco; wht, yes, pss), reasignable en js/audio.js.
+VOCES DEL DARK TEMPLAR (originales de StarCraft, assets/audio/voices/dark_templar/):
+   PDtRdy00.wav (dt_ready)   al empezar la partida ("ready", 2,2 s). Si el Dark Templar es el luchador
+                              izquierdo suena al instante; si es el derecho, suena después de la frase del
+                              otro luchador (1,8 s; 2,4 s si el izquierdo también es Dark Templar), así no se
+                              pisan. Con dos Dark Templar la dicen los dos, uno tras otro.
+   pdtyes00.wav (dt_yes0)    al lanzar el salto sombrío (su especial, tecla G / punto, o la IA)
+   pdtyes02.wav (dt_yes2)    al recoger un stimpack
+   Mismas reglas y mismo CONFIG.VOICE que el Marine y el Hidralisco: como mínimo pasan 3 s entre frases del
+   Dark Templar (gap), nunca suenan dos voces a la vez, la música baja mientras habla y se controla con el
+   volumen de efectos y la tecla M. Hablan los dos Dark Templar si hay dos, lo controle una persona o la IA.
+   Los archivos conservan sus nombres originales (pdt = Protoss Dark Templar; Rdy = ready, yes = asentimiento).
+   El mapeo se hizo por el nombre del archivo y se puede cambiar: rutas en js/audio.js (dt_*) y momentos en
+   js/game.js (busca AUDIO.voice('dt_...') en start(), blinkStart() y la recogida del stimpack).
+EFECTOS DE SONIDO (incluidos: disparo_marine, disparo_hidralisco, nuclear_detected y
+explosion_nuclear_sonido; los demás faltan):
+El sistema ya está conectado: solo copia los archivos con estos nombres y
+suenan. Formatos válidos: mp3, ogg o wav (si usas otro formato, cambia la
+extensión en js/audio.js, objeto "files"). Si falta un archivo no pasa nada.
+   Archivo (assets/audio/...)       Cuándo suena
+   music/arena.mp3 ................ música en bucle durante la partida
+   sfx/disparo_marine.wav ......... cada disparo del Marine
+   sfx/disparo_hidralisco.mp3 ..... cada disparo del Hidralisco
+   sfx/impacto.mp3 ................ cuando un luchador recibe daño
+   sfx/recoger_escudo.mp3 ......... al tomar el escudo
+   sfx/recoger_stimpack.mp3 ....... al tomar el stimpack
+   sfx/recoger_medkit.mp3 ......... al tomar el medical kit
+   sfx/recoger_multidisparo.mp3 ... al tomar el multidisparo (opcional, aún no incluido)
+   sfx/especial_listo.mp3 ......... el ataque especial se recarga
+   sfx/granada_lanza.wav .......... el Marine lanza la granada (sintetizado con tools/build_grenade_sfx.py)
+   sfx/granada_explota.wav ........ explota la granada (sintetizado; puedes reemplazarlo por uno tuyo)
+   sfx/acido_escupe.mp3 ........... el Hidralisco escupe ácido
+   sfx/acido_cae.mp3 .............. el ácido toca el suelo
+   sfx/zergling_cae.mp3 ........... aterriza la vaina del zergling
+   sfx/zergling_explota.mp3 ....... explota un zergling
+   sfx/inicio_ronda.mp3 ........... comienza cada ronda
+   sfx/cuenta_atras.mp3 ........... cada número del 3, 2, 1
+   sfx/fight.mp3 .................. aparece FIGHT!
+   sfx/ko.mp3 ..................... aparece K.O.
+   sfx/nuclear_detected.mp3 ....... voz de alerta nuclear (incluido)
+   sfx/nuclear_cae.mp3 ............ el misil empieza a caer
+   sfx/explosion_nuclear_sonido.mp3 estruendo de la bomba (incluido, con fundido)
+   sfx/victoria.mp3 ............... pantalla de victoria
+   sfx/dark_templar_ataque.mp3 .... cuchillada (ataque normal) del Dark Templar (incluido, original aportado)
+   sfx/dt_slash.wav ............... onda de llegada del salto sombrío del Dark Templar (incluido, sintetizado)
+   sfx/dt_blink.wav ............... salto sombrío del Dark Templar (incluido, sintetizado)
+Volumen: AUDIO.sfxVolume y AUDIO.musicVolume en js/audio.js (0 a 1).
+Para silenciar todo: AUDIO.enabled=false.
+Para añadir un sonido nuevo: agrégalo en "files" y llama AUDIO.play('nombre')
+en el punto de game.js donde quieras que suene.
+Los navegadores bloquean el audio hasta que el jugador pulsa algo; por eso la
+música arranca al elegir un modo en el menú.
+
+12. EL ESCENARIO Y CÓMO CAMBIAR EL FONDO
+----------------------------------------
+Fondo actual: assets/images/background/arena.jpg (960x540 px), reducido de la
+imagen "Coliseo Terran contra Zerg sobre lava" que aportó el autor del proyecto
+(original 1672x941 en assets/images/source/coliseo_terran_vs_zerg_original.png).
+Muestra un coliseo visto en 3/4 sobre lava y roca volcánica, con gradas y torres
+de estilo Terran, banderas del águila y del símbolo Zerg, la mitad izquierda del
+suelo como plataforma de acero con franja de peligro y helipuerto amarillo, y la
+mitad derecha cubierta de creep Zerg morado con espinas y el emblema Zerg.
+Alternativa: arena_generada.jpg, el fondo anterior creado por código con
+tools/gen_arena.py (python tools/gen_arena.py; requiere numpy, scipy y pillow).
+Ese script ahora escribe arena_generada.jpg y no pisa a arena.jpg.
+
+ZONA DE COMBATE: es una elipse definida en js/config.js
+   ARENA:{cx:241, cy:129.5, rx:173, ry:77}
+en coordenadas lógicas (la mitad de los píxeles del fondo 960x540, o sea
+centro (482,259) y radios 346x154 en el fondo). Está medida sobre el suelo del
+fondo actual, un poco por dentro del borde para que los pies no pisen la
+grada. Los personajes, objetos, zerglings, granadas y charcos se mantienen
+dentro de esa elipse. Si cambias de fondo, ajusta ARENA hasta que coincida:
+una forma cómoda de medirla es dibujarla encima de la imagen y compararla.
+
+LLAMAS Y BRASAS: el fondo ya trae antorchas encendidas. En el juego se les suma un
+brillo que parpadea y brasas que suben (CONFIG.AMBIENT). Las posiciones de las 8
+antorchas están en CONFIG.TORCHES (centro de cada llama en coordenadas lógicas);
+TORCH_FLAME regula la llama animada que se suma a la dibujada (0 = ninguna) y
+TORCH_GLOW el resplandor.
+
+Para usar otra imagen:
+   1. Guarda un PNG o JPG de 960x540 px en assets/images/background/
+   2. En js/config.js pon  BG_IMAGE:'assets/images/background/tu_imagen.jpg'
+      (o null para volver al coliseo dibujado por la función mkBg()).
+   3. Ajusta ARENA y TORCHES a la nueva imagen.
+
+12B. PRESENTACIÓN DE ENTRADA (INTRO)
+-----------------------------------
+Al abrir el juego sale una presentación antes del menú: imágenes a pantalla completa con zoom lento,
+el título animado y un "Pulsa cualquier tecla" parpadeante. Se cierra con cualquier tecla, clic, toque
+o botón del mando.
+Todo se ajusta en js/config.js, bloque INTRO (imágenes, tiempos, textos, oscurecido, on/off).
+Las imágenes van en assets/images/intro/ (ver el LEEME.txt de esa carpeta).
+Código: bloque final de js/game.js, markup #intro en index.html y estilos al final de css/style.css.
+
+13. CÓMO CAMBIAR SPRITES, RETRATOS Y EFECTOS
+--------------------------------------------
+- Sprites: reemplaza el PNG en assets/images/sprites/ manteniendo el nombre y la
+  orientación (sección 7). Recomendado: ~56-64 px de alto, fondo transparente,
+  pies abajo-centro. Si usas imágenes más grandes se escalan a su tamaño/2.
+- Retratos: assets/images/ui/retrato_*.jpg  (112x112 px, se muestran a 56 px).
+- Misil: assets/images/fx/misil_nuclear.png (40x88, punta hacia abajo, llama arriba).
+- Explosión: assets/images/fx/explosion_nuclear_hoja.jpg es una hoja de 6 columnas
+  x 5 filas con fotogramas de 300x313 px sobre fondo negro. Si la cambias,
+  actualiza EXPLOSION_SHEET en js/config.js (n, cols, fw, fh, ax, ay, dur).
+- Para recortar de nuevo desde los originales: usa assets/images/source/. Los
+  archivos "sin_fondo" ya tienen transparencia real y son los mejores para recortar.
+
+Archivos de imagen actuales del juego:
+  assets/images/sprites/hidralisco_espalda.png         36x64        5 KB
+  assets/images/sprites/hidralisco_frente.png          38x64        5 KB
+  assets/images/sprites/hidralisco_lateral.png         57x64        7 KB
+  assets/images/sprites/hidralisco_atlas.png           378x660      (animación: 9 direcciones x 7 de caminar y 5 de ataque)
+  assets/images/sprites/marine_espalda.png             37x56        5 KB
+  assets/images/sprites/marine_frente.png              39x56        5 KB
+  assets/images/sprites/marine_lateral.png             44x56        5 KB
+  assets/images/fx/explosion_nuclear_hoja.jpg          1800x1565  400 KB
+  assets/images/fx/misil_nuclear.png                   40x88        6 KB
+  assets/images/ui/retrato_hidralisco.jpg              112x112      3 KB
+  assets/images/ui/retrato_marine.jpg                  112x112      4 KB
+
+14. ESTRUCTURA DEL CÓDIGO (js/game.js)
+--------------------------------------
+Datos y estado:  variables globales al inicio (state, mode, F = luchadores,
+   B = balas, I = objetos, L = zerglings, P = partículas, lives, roundT, nk).
+Creación:        mkBg() fondo; mk() luchador; reset() partida nueva;
+                 newRound() ronda nueva.
+Entrada y IA:    human() lee el teclado; ai() mueve y dispara por la IA
+                 (mantiene distancia, rodea al rival, esquiva zerglings, busca
+                 objetos).
+Acciones:        move(), fire(), hurt() (el escudo absorbe primero), boom(),
+                 special() lanza el especial, land() y grenadeBoom() lo resuelven,
+                 inEll() prueba si algo está dentro de un área elíptica.
+Extras:          dmgPop() cifras de daño, startKoCam()/camZ()/pscale() cámara del
+                 K.O., getPads()/padRead()/padPoll() mando, mergeIn() une teclado,
+                 mando y táctil; el joystick táctil está al final de game.js.
+Actualización:   update() combate; intro() cuenta atrás; koStep() tras un K.O.;
+                 startNuke() y nukeStep() presentación nuclear; endGame() fin de
+                 partida y pila de victoria; updP() partículas.
+Dibujo:          draw() (orquesta todo), drawFloorFx() charcos y marcas de caída,
+                 drawProj() granada/ácido en vuelo, drawRing() onda expansiva, drawF() personajes, vw() elige la vista,
+                 drawItem(), drawLing(), drawB(), drawNuke(), drawVictory(),
+                 banner() texto grande estilo Mortal Kombat.
+Interfaz:        hud() actualiza barras, vidas, retratos y temporizador;
+                 togglePause(); start() inicia desde el menú.
+Bucle:           loop() con requestAnimationFrame; limita el salto de tiempo a
+                 0,05 s para que nada se descontrole si se pierde el foco.
+Estados:         menu -> intro -> play -> (ko | nuke) -> intro ... -> victory;
+                 paused se activa desde intro o play.
+
+15. DETALLES TÉCNICOS
+---------------------
+- Lienzo: 960x540 px reales; el código trabaja en coordenadas lógicas de 480x270
+  (se aplica scale(2,2)). El CSS lo ajusta al ancho de la pantalla manteniendo
+  16:9.
+- Colisiones: círculos en el plano del suelo. Las balas viajan por el suelo y se
+  dibujan elevadas (Marine 12 px, Hidralisco 18 px) para dar sensación 3/4.
+- Orden de dibujo: personajes ordenados por la coordenada y (el de abajo tapa).
+- Movimiento limitado a la elipse de la arena; si choca con el borde, desliza.
+- Los sprites golpeados usan una copia blanca generada al cargar (flash) y los
+  derrotados una copia oscurecida (pila de victoria).
+- Solo se usa el almacenamiento local del navegador para recordar opciones,
+  marcador y volumen (todo con try/catch, así que funciona aunque esté bloqueado).
+  No hay peticiones a internet salvo la fuente de Google.
+
+16. IDEAS PARA MÁS ADELANTE
+---------------------------
+- Agregar los efectos de sonido que faltan (sección 11).
+- Barra de "combo" y más feedback visual al pegar.
+- Más objetos: mina Spider, EMP que anula escudos, medikit grande, bomba de humo.
+- Peligros del coliseo: géiseres de lava que avisan antes de salir, zonas de creep
+  que ralentizan, torretas laterales.
+- Más personajes (Zealot, Firebat, Zergling, Ultralisco) reutilizando mk(),
+  fire() y las vistas de sprites.
+- Modo torneo/supervivencia: oleadas de enemigos o una cadena de combates.
+- Repetición (replay) de la última ronda y estadísticas de partida.
+- Selector de mapas con BG_IMAGE y elipses de combate distintas.
+- Animación de muerte por fotogramas (el Marine y el Hidralisco ya caminan y atacan por fotogramas; la hoja del Hidralisco trae también la muerte, ver assets/images/source/hidralisco/).
+
+17. CRÉDITOS Y AVISO
+--------------------
+La hoja "Zerg Hydralisk" (assets/images/source/hidralisco/) también es de ACE_Spark. Los fotogramas del Marine
+(assets/images/source/marine/) son la hoja "Terran Marine" extraída por Colton (pide que se le dé crédito). Los sprites del Dark Templar proceden de la hoja "Protoss Dark Templar" extraída y
+compilada por ACE_Spark (según el paquete DarkTemplar_StarCraft); la hoja original está
+en assets/images/source/dark_templar/.
+StarCraft, Brood War, Terran, Zerg, Protoss y sus personajes e imágenes son propiedad de
+Blizzard Entertainment. Este proyecto es un prototipo de aficionado para uso
+personal y de prueba, sin fines comerciales; los modelos, retratos, misil y
+explosión y voces del Marine fueron aportados por el autor del proyecto. Si lo vas a publicar,
+revisa los derechos de esas imágenes y de la música (la banda sonora de StarCraft
+pertenece a Blizzard y a sus compositores; usa arena_sintetizada.mp3 si necesitas
+una pista libre de derechos).

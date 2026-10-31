@@ -1,0 +1,4 @@
+﻿FONDO
+arena.jpg (960x540) = fondo actual (coliseo Terran contra Zerg sobre lava, aportado por el autor; original en ../source/).
+arena_generada.jpg = alternativa creada por código con tools/gen_arena.py.
+Para cambiarlo: pon tu imagen aquí, ajusta BG_IMAGE, ARENA y TORCHES en js/config.js. Detalle en LEEME.txt, sección 12.

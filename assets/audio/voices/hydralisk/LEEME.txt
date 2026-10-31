@@ -1,0 +1,5 @@
+﻿VOCES DEL HIDRALISCO (originales de StarCraft)
+zhywht01.wav -> responde al Marine al empezar la partida
+zhyyes00.wav -> al lanzar el ácido y al recoger un stimpack
+zhypss01.wav -> cuando le molesta un golpe fuerte o le queda poca vida
+Cambios de frase o de momento: js/audio.js (hydra_*) y js/game.js (AUDIO.voice). Detalle en LEEME.txt, sección 11.

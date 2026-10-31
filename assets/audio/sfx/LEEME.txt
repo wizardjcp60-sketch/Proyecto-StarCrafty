@@ -1,0 +1,21 @@
+EFECTOS DE SONIDO
+Nombres esperados: disparo_marine, disparo_hidralisco, impacto, recoger_escudo,
+recoger_stimpack, recoger_medkit, especial_listo, granada_lanza, granada_explota, acido_escupe, acido_cae, zergling_cae, zergling_explota, inicio_ronda, cuenta_atras,
+fight, ko, nuclear_detected, nuclear_cae, explosion_nuclear_sonido, victoria (.mp3).
+Tabla completa con el momento en que suena cada uno en LEEME.txt, sección 11.
+
+ACTUALIZACION DE AUDIO
+- Los 16 efectos que faltaban (impacto, recoger_*, especial_listo, acido_*, zergling_*, inicio_ronda, cuenta_atras,
+  fight, ko, victoria, nuclear_cae) ahora existen como .wav sintetizados: python3 tools/build_missing_sfx.py
+- Nuevos: dt_evade, critico, dt_cloak, dt_reveal, ling_beep, ling_pop, acido_chisporroteo, reloj_alerta.
+- Si tienes los originales de StarCraft, reemplaza cualquier .wav por el tuyo con el mismo nombre.
+- Equilibrio: audio.js tiene la tabla AUDIO.gain (ganancia por sonido) y AUDIO.vary (variacion de tono/volumen).
+  disparo_hidralisco, granada_lanza y la voz zhywht01 se subieron +9 dB; los originales estan en assets/audio/originales/.
+
+SEGUNDA ACTUALIZACION DE AUDIO (python3 tools/build_extra_sfx.py)
+- Pasos: paso_marine, paso_hidralisco, paso_dt. En game.js, la tabla STEPS dice en que fotogramas del ciclo de caminar suena la pisada.
+- Publico: publico_ko, publico_critico (como mucho 1 cada 2,5 s), publico_nuclear.
+- tension.wav: latido en bucle que se acelera en los ultimos 10 s, junto con la musica (+6 % de velocidad).
+- Voces: control propio de volumen (AUDIO.voiceVolume, guardado en el navegador). Frases de fin de partida en CONFIG.VOICE_END (config.js).
+- disparo_marine era un AAC (M4A) con extension .mp3: algunos navegadores (Chromium/Linux, algunos Firefox) no lo reproducen. Se convirtio a .wav real; el original esta en assets/audio/originales/.
+- AUDIO.preload() carga todos los efectos al abrir el juego para que el primer uso de cada sonido no llegue tarde.

@@ -1,0 +1,5 @@
+﻿VOCES DEL DARK TEMPLAR (originales de StarCraft)
+PDtRdy00.wav -> al empezar la partida ("ready")
+pdtyes00.wav -> al lanzar el salto sombrio (especial)
+pdtyes02.wav -> al recoger un stimpack
+Cambios de frase o de momento: js/audio.js (dt_*) y js/game.js (AUDIO.voice). Detalle en LEEME.txt, seccion 11.
