@@ -819,7 +819,7 @@ function drawVictory(){
  const gl=g.createRadialGradient(CX,170,5,CX,170,160);gl.addColorStop(0,'rgba(255,200,80,.45)');gl.addColorStop(1,'rgba(255,120,20,0)');g.fillStyle=gl;g.fillRect(0,0,W,H);
  pile.forEach(p=>{const s=SPR[p.t];if(!s.dead)return;const w=s.im.width/2,h=s.im.height/2;
   g.save();g.translate(p.x,p.y-h/3);g.rotate(p.rot);if(p.fl)g.scale(-1,1);g.drawImage(s.dead,-w/2,-h/2,w,h);g.restore()});
- if(winner){
+ if(winner&&SPR[winner]&&SPR[winner].im.naturalWidth){
   const s=SPR[winner],k=1.7,w=s.im.width/2*k,h=s.im.height/2*k,bob=Math.sin(time*4)*1.5;
   g.fillStyle='rgba(0,0,0,.45)';g.beginPath();g.ellipse(CX,178,w/2.2,5,0,0,7);g.fill();
   g.save();g.translate(CX,178+bob);if(!s.right)g.scale(-1,1);g.drawImage(s.im,-w/2,-h+3,w,h);g.restore();
