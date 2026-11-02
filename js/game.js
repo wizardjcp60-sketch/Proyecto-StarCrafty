@@ -5,15 +5,14 @@
    Mapa de funciones: ver LEEME.txt, seccion "Estructura del codigo".
    ========================================================================== */
 
-const W=480,H=270,{cx:CX,cy:CY,rx:RX,ry:RY}=CONFIG.ARENA;
+const W=480,H=270;let {cx:CX,cy:CY,rx:RX,ry:RY}=CONFIG.ARENA;   // let: applyArena() los cambia al elegir otra arena
 const $=s=>document.querySelector(s),cv=$('#c'),g=cv.getContext('2d');
 const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.random()*a.length|0];
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const NAMES={m:'Marine',h:'Hidralisco',d:'Dark Templar'},NAMES_SP={m:'Granada',h:'Ácido',d:'Salto sombrío'};
 const HFX=CONFIG.HFX,DT=CONFIG.DT,cloaked=f=>DT.cloak&&f.type=='d'&&!(f.rev>0);   // un DT camuflado que no ha atacado hace poco
 const GRR=k=>k=='g'?CONFIG.GRENADE_RADIUS:k=='b'?DT.blinkRadius:CONFIG.ACID_RADIUS;
-const bg=mkBg();
-if(CONFIG.BG_IMAGE){const im=new Image();im.onload=()=>{const c=bg.getContext('2d');c.setTransform(1,0,0,1,0,0);c.drawImage(im,0,0,bg.width,bg.height)};im.src=CONFIG.BG_IMAGE}
+let bg=mkBg();
 let mode='1m',state='menu',F,B,I,L,P,spawnT,time=0,shake=0,lives=[CONFIG.LIVES,CONFIG.LIVES],roundT=CONFIG.ROUND_TIME,nk=null,introT=0,fightT=0,roundN=1,koT=0,pile=[],winner=null,popups=[],GR=[],AC=[],RG=[],SPL=[],diff='normal',SCORE={m:0,h:0,d:0},CH=['m','h'],winSide=-1,cam={on:false,t:0,x:0,y:0},TOUCH={dx:0,dy:0,fire:false,sp:false},padPrev=false;
 var tcEl=null;
 const keys={};
@@ -895,6 +894,20 @@ function saveScore(){store.set('score',JSON.stringify(SCORE));showScore()}
 try{const s0=JSON.parse(store.get('score','{}'));SCORE.m=+s0.m||0;SCORE.h=+s0.h||0;SCORE.d=+s0.d||0}catch(e){}
 $('#dif').value=store.get('dif','normal');$('#liv').value=store.get('liv','2');$('#cl').value=store.get('cl','m');$('#cr').value=store.get('cr','h');
 diff=$('#dif').value||'normal';CONFIG.LIVES=+$('#liv').value||2;
+/* Arena: fondo, elipse jugable y llamas de la arena elegida (CONFIG.ARENAS en config.js) */
+const ARIMG={},arImg=s=>ARIMG[s]||(ARIMG[s]=Object.assign(new Image(),{src:s}));
+function applyArena(k){
+ const A=CONFIG.ARENAS[k]||CONFIG.ARENAS[CONFIG.ARENA_DEFAULT];
+ CONFIG.BG_IMAGE=A.bg;CONFIG.ARENA=A.arena;CONFIG.TORCHES=A.torches;
+ CX=A.arena.cx;CY=A.arena.cy;RX=A.arena.rx;RY=A.arena.ry;
+ const nb=mkBg();bg=nb;   // version dibujada por codigo hasta que la imagen este lista
+ if(A.bg){const im=arImg(A.bg),paint=()=>{if(bg!==nb)return;const c=nb.getContext('2d');c.setTransform(1,0,0,1,0,0);c.drawImage(im,0,0,nb.width,nb.height)};
+  if(im.complete&&im.naturalWidth)paint();else im.addEventListener('load',paint,{once:true})}
+}
+Object.values(CONFIG.ARENAS).forEach(a=>a.bg&&arImg(a.bg));   // precarga: al cambiar de arena el fondo sale al instante
+$('#ar').value=store.get('ar',CONFIG.ARENA_DEFAULT);if(!$('#ar').value)$('#ar').value=CONFIG.ARENA_DEFAULT;
+applyArena($('#ar').value);
+$('#ar').onchange=()=>{applyArena($('#ar').value);store.set('ar',$('#ar').value);if(state=='menu'){newRound(1);state='menu'}document.activeElement&&document.activeElement.blur()};
 /* Luchadores: izquierda Marine o Dark Templar, derecha Hidralisco o Dark Templar */
 function syncRoster(){CH=[$('#cl').value||'m',$('#cr').value||'h'];$('button[data-m="1m"]').textContent='Jugar de '+NAMES[CH[0]];$('button[data-m="1h"]').textContent='Jugar de '+NAMES[CH[1]];if(state=='menu'){newRound(1);state='menu'}}
 $('#cl').onchange=$('#cr').onchange=()=>{syncRoster();applyOpts();document.activeElement&&document.activeElement.blur()};

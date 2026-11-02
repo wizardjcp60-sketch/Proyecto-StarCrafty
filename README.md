@@ -18,6 +18,7 @@ Haz clic en la pantalla antes de esperar la música: los navegadores bloquean el
 - Si se acaba el tiempo, cae un **misil nuclear** sobre quien tenga menos vida.
 - Caen objetos al azar: escudo, stimpack, botiquín, multidisparo y un zergling explosivo (un disparo lo detona).
 - Dificultad de la IA: fácil, normal o difícil.
+- **Arena:** en el menú puedes elegir entre el coliseo Terran contra Zerg y una arena de piedra algo más estrecha.
 
 ### Controles
 

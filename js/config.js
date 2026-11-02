@@ -147,6 +147,18 @@ const CONFIG={
                               // (960x540). null = usa el coliseo dibujado por codigo.
 };
 
+/* Arenas que se pueden elegir en el menu. BG_IMAGE, ARENA y TORCHES de arriba son la arena
+   activa: game.js los reemplaza al elegir otra. La primera ('coliseo') usa los valores de arriba.
+   Para anadir una arena: pon su imagen (960x540) en assets/images/background/ y anade una entrada
+   con la elipse jugable y las llamas (tools/gen_arena.py imprime las llamas al generar el fondo). */
+CONFIG.ARENA_DEFAULT='coliseo';
+CONFIG.ARENAS={
+  coliseo:  {nombre:'Coliseo Terran contra Zerg', bg:CONFIG.BG_IMAGE, arena:CONFIG.ARENA, torches:CONFIG.TORCHES},
+  generada: {nombre:'Arena de piedra (más estrecha)', bg:'assets/images/background/arena_generada.jpg',
+             arena:{cx:240, cy:146, rx:165, ry:84},
+             torches:[[414,181],[311,234],[166,233],[65,179],[66,103],[169,50],[314,51],[415,105]]}
+};
+
 /* Rutas de las imagenes. Para cambiar un sprite, reemplaza el archivo
    conservando el nombre (o cambia la ruta aqui). */
 const ASSETS={

@@ -605,10 +605,19 @@ Alternativa: arena_generada.jpg, el fondo anterior creado por código con
 tools/gen_arena.py (python tools/gen_arena.py; requiere numpy, scipy y pillow).
 Ese script ahora escribe arena_generada.jpg y no pisa a arena.jpg.
 
+SELECTOR DE ARENA: en el menú, la opción "Arena" elige entre las dos. Cada arena trae su
+fondo, su elipse de combate y la posición de sus antorchas (la de piedra es algo más
+estrecha y su centro queda más abajo). Se recuerda en el navegador. Las arenas están en
+CONFIG.ARENAS (js/config.js) y game.js las aplica con applyArena(), que cambia BG_IMAGE,
+ARENA y TORCHES. Para añadir una: pon su imagen de 960x540 en assets/images/background/,
+añade una entrada en CONFIG.ARENAS y una <option> en el <select id="ar"> de index.html.
+Ojo: el coliseo no tiene obstáculos; lo único que cambia entre arenas es el aspecto y la
+elipse jugable.
+
 ZONA DE COMBATE: es una elipse definida en js/config.js
-   ARENA:{cx:241, cy:129.5, rx:173, ry:77}
+   ARENA:{cx:241, cy:129.5, rx:182, ry:84}
 en coordenadas lógicas (la mitad de los píxeles del fondo 960x540, o sea
-centro (482,259) y radios 346x154 en el fondo). Está medida sobre el suelo del
+centro (482,259) y radios 364x168 en el fondo). Está medida sobre el suelo del
 fondo actual, un poco por dentro del borde para que los pies no pisen la
 grada. Los personajes, objetos, zerglings, granadas y charcos se mantienen
 dentro de esa elipse. Si cambias de fondo, ajusta ARENA hasta que coincida:
@@ -624,7 +633,7 @@ Para usar otra imagen:
    1. Guarda un PNG o JPG de 960x540 px en assets/images/background/
    2. En js/config.js pon  BG_IMAGE:'assets/images/background/tu_imagen.jpg'
       (o null para volver al coliseo dibujado por la función mkBg()).
-   3. Ajusta ARENA y TORCHES a la nueva imagen.
+   3. Ajusta ARENA y TORCHES a la nueva imagen (o añádela como arena nueva, ver SELECTOR DE ARENA).
 
 12B. PRESENTACIÓN DE ENTRADA (INTRO)
 -----------------------------------
@@ -716,7 +725,7 @@ Estados:         menu -> intro -> play -> (ko | nuke) -> intro ... -> victory;
   fire() y las vistas de sprites.
 - Modo torneo/supervivencia: oleadas de enemigos o una cadena de combates.
 - Repetición (replay) de la última ronda y estadísticas de partida.
-- Selector de mapas con BG_IMAGE y elipses de combate distintas.
+- Más arenas para el selector, o con obstáculos reales (hoy solo cambian el fondo y la elipse).
 - Animación de muerte por fotogramas (el Marine y el Hidralisco ya caminan y atacan por fotogramas; la hoja del Hidralisco trae también la muerte, ver assets/images/source/hidralisco/).
 
 17. CRÉDITOS Y AVISO
