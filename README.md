@@ -59,6 +59,6 @@ Proyecto de aficionado, sin fines comerciales y sin relación con Blizzard Enter
 
 - Hoja de sprites del Marine ("Terran Marine"): extraída por Colton.
 - Hojas del Hidralisco y del Dark Templar: ACE_Spark.
-- La música de fondo (`arena.mp3`) es el "Main Title" de StarCraft Remastered. Si quieres publicar tu propia versión, usa `assets/audio/music/arena_sintetizada.mp3`, una pista generada por código y libre de derechos de terceros.
+- La música de fondo (`arena.mp3`) es el "Main Title" de StarCraft Remastered. Si quieres publicar tu propia versión, reemplázala por una pista tuya con el mismo nombre.
 
 Si vas a redistribuir el proyecto, revisa antes los derechos de las imágenes, voces y música.

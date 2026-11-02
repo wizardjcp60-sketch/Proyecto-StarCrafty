@@ -510,10 +510,6 @@ MÚSICA DE FONDO (ya incluida): assets/audio/music/arena.mp3
    - Baja de volumen durante la presentación nuclear y vuelve a subir después.
    - Para cambiar de música: reemplaza arena.mp3 con el mismo nombre (o cambia
      la ruta en js/audio.js). Ajusta el volumen en AUDIO.musicVolume.
-   - También hay una alternativa original sin derechos de terceros:
-     arena_sintetizada.mp3 (bucle de 57,6 s, ambiente oscuro e industrial a
-     100 BPM compuesto por código). Para usarla, renómbrala a arena.mp3 o
-     cambia la ruta de music_arena en js/audio.js.
    - Un bucle de mp3 puede notar un microcorte al reiniciar; si lo quieres
      perfecto, usa un archivo .ogg y cambia la extensión en audio.js.
 VOCES DEL MARINE (originales de StarCraft, assets/audio/voices/marine/):
@@ -734,5 +730,5 @@ Blizzard Entertainment. Este proyecto es un prototipo de aficionado para uso
 personal y de prueba, sin fines comerciales; los modelos, retratos, misil y
 explosión y voces del Marine fueron aportados por el autor del proyecto. Si lo vas a publicar,
 revisa los derechos de esas imágenes y de la música (la banda sonora de StarCraft
-pertenece a Blizzard y a sus compositores; usa arena_sintetizada.mp3 si necesitas
-una pista libre de derechos).
+pertenece a Blizzard y a sus compositores; reemplaza arena.mp3 por una pista
+libre de derechos si vas a publicarlo).

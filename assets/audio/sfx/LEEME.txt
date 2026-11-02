@@ -10,12 +10,12 @@ ACTUALIZACION DE AUDIO
 - Nuevos: dt_evade, critico, dt_cloak, dt_reveal, ling_beep, ling_pop, acido_chisporroteo, reloj_alerta.
 - Si tienes los originales de StarCraft, reemplaza cualquier .wav por el tuyo con el mismo nombre.
 - Equilibrio: audio.js tiene la tabla AUDIO.gain (ganancia por sonido) y AUDIO.vary (variacion de tono/volumen).
-  disparo_hidralisco, granada_lanza y la voz zhywht01 se subieron +9 dB; los originales estan en assets/audio/originales/.
+  disparo_hidralisco, granada_lanza y la voz zhywht01 se subieron +9 dB.
 
 SEGUNDA ACTUALIZACION DE AUDIO (python3 tools/build_extra_sfx.py)
 - Pasos: paso_marine, paso_hidralisco, paso_dt. En game.js, la tabla STEPS dice en que fotogramas del ciclo de caminar suena la pisada.
 - Publico: publico_ko, publico_critico (como mucho 1 cada 2,5 s), publico_nuclear.
 - tension.wav: latido en bucle que se acelera en los ultimos 10 s, junto con la musica (+6 % de velocidad).
 - Voces: control propio de volumen (AUDIO.voiceVolume, guardado en el navegador). Frases de fin de partida en CONFIG.VOICE_END (config.js).
-- disparo_marine era un AAC (M4A) con extension .mp3: algunos navegadores (Chromium/Linux, algunos Firefox) no lo reproducen. Se convirtio a .wav real; el original esta en assets/audio/originales/.
+- disparo_marine era un AAC (M4A) con extension .mp3: algunos navegadores (Chromium/Linux, algunos Firefox) no lo reproducen. Se convirtio a .wav real.
 - AUDIO.preload() carga todos los efectos al abrir el juego para que el primer uso de cada sonido no llegue tarde.

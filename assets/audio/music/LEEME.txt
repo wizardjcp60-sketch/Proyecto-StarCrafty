@@ -1,7 +1,6 @@
 MÚSICA
 arena.mp3 = bucle de fondo actual: "Main Title" de StarCraft Remastered (aportada por el autor del proyecto).
-arena_sintetizada.mp3 = alternativa original generada por código (57,6 s, sin derechos de terceros).
 Para cambiar de pista reemplaza arena.mp3 con el mismo nombre. Detalle en LEEME.txt, sección 11.
 
-menu.mp3 = musica del menu (copia de arena_sintetizada.mp3). Reemplazala por tu pista con el mismo nombre.
+menu.mp3 = musica del menu (pista generada por código, sin derechos de terceros). Reemplazala por tu pista con el mismo nombre.
 El bucle usa fundido cruzado (AUDIO.musicXf en audio.js, 2,5 s) y cada pista tiene su segundo de inicio en AUDIO.musicStarts.
