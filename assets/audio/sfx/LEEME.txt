@@ -19,3 +19,14 @@ SEGUNDA ACTUALIZACION DE AUDIO (python3 tools/build_extra_sfx.py)
 - Voces: control propio de volumen (AUDIO.voiceVolume, guardado en el navegador). Frases de fin de partida en CONFIG.VOICE_END (config.js).
 - disparo_marine era un AAC (M4A) con extension .mp3: algunos navegadores (Chromium/Linux, algunos Firefox) no lo reproducen. Se convirtio a .wav real.
 - AUDIO.preload() carga todos los efectos al abrir el juego para que el primer uso de cada sonido no llegue tarde.
+
+ANTI-SATURACIÓN (js/audio.js): los efectos usan Web Audio (se decodifican una vez al abrir el juego) y pasan por
+un compresor/limitador, así que muchos sonidos a la vez ya no distorsionan.
+- Máximo de copias simultáneas por sonido: AUDIO.sfxLimit (3 por defecto) y en total: AUDIO.maxVoices (18).
+  El sonido nuevo reemplaza al más viejo con un fundido corto. AUDIO.prio lista los que nunca se cortan (KO, victoria...).
+- Pausa mínima entre dos sonidos iguales: AUDIO.sfxGap (0,04 s por defecto; más larga en pasos y público).
+- Si el audio aún está bloqueado por el navegador, o la pestaña está oculta, los sonidos se descartan en vez de
+  encolarse, para que no salgan todos de golpe al reanudar.
+- Abriendo index.html con doble clic (sin servidor) el navegador no deja a Web Audio leer los archivos: entonces se
+  usa un respaldo con <audio> reutilizables (máx. 3 por sonido). Va bien, pero en GitHub Pages o con un servidor
+  local (python3 -m http.server) suena mejor.

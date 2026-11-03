@@ -85,7 +85,7 @@ const AUDIO={
   musicXf:2.5,         // segundos de fundido cruzado al volver al inicio del bucle (0,5 s o menos = casi corte)
   voiceVolume:.9,      // volumen propio de las voces (0-1), independiente de los efectos
   _hold:{},            // motivos por los que la musica esta en pausa (pausa del juego)
-  _cache:{},_trk:null,_out:[],_int:0,_tn:null,_tt:0,_iv:null,_ul:false,
+  _cache:{},_ctx:undefined,_mg:null,_buf:{},_act:[],_last:{},_pl:{},_trk:null,_out:[],_int:0,_tn:null,_tt:0,_iv:null,_ul:false,
   _vol(){return Math.min(1,this.musicVolume*(Object.keys(this._duck).length?.3:1)*(1+.3*this._int))},
   _mv(e){e.volume=Math.max(0,Math.min(1,this._vol()*(e._g==null?1:e._g)))},
   musicVol(){if(this._trk)this._trk.els.forEach(e=>this._mv(e))},
@@ -94,7 +94,7 @@ const AUDIO={
   toggle(){
     this.enabled=!this.enabled;
     try{localStorage.setItem('coliseo.sonido',this.enabled?'1':'0')}catch(e){}
-    if(!this.enabled){this._pauseAll();if(this._tn)this._tn.pause()}   // al reactivar sigue desde el mismo punto
+    if(!this.enabled){this._pauseAll();if(this._tn)this._tn.pause();this._act.slice().forEach(v=>this._kill(v))}   // al reactivar sigue desde el mismo punto
     return this.enabled;
   },
   _pauseAll(){if(this._trk)this._trk.els.forEach(e=>e.pause());this._out.forEach(q=>q.el.pause())},
@@ -107,15 +107,79 @@ const AUDIO={
     }
     return a;
   },
+  // ---- EFECTOS (Web Audio): cada sonido se decodifica UNA vez y se reproduce sin crear elementos <audio>.
+  // Antes cada disparo/golpe/paso clonaba un <audio> sin limite: el navegador se saturaba, algunos sonidos
+  // se retrasaban y salian todos de golpe, y la suma de muchos a la vez distorsionaba. Ahora:
+  //  - todo pasa por un compresor (limitador) que evita la distorsion al sumarse muchos sonidos;
+  //  - hay un maximo de copias simultaneas por sonido (sfxLimit) y en total (maxVoices), y una pausa minima
+  //    entre dos iguales (sfxGap): el sonido nuevo reemplaza al mas viejo en vez de apilarse;
+  //  - si el audio aun esta bloqueado o la pestana esta oculta, el sonido se DESCARTA (no se encola);
+  //  - si Web Audio no puede cargar un archivo (p. ej. abriendo index.html con doble clic, sin servidor)
+  //    se usa un grupo reducido de <audio> reutilizables.
+  sfxLimit:{def:3,shoot_marine:4,shoot_hydralisk:4,hit:4,step_marine:2,step_hydra:2,step_dt:2,crowd_ko:1,crowd_crit:1,crowd_nuke:1,clock_warn:1,acid_sizzle:2,ling_beep:2,pickup_shield:2,pickup_stim:2,pickup_medkit:2,pickup_multi:2},
+  sfxGap:{def:.04,hit:.03,step_marine:.09,step_hydra:.09,step_dt:.09,crowd_ko:.5,crowd_crit:.5,crowd_nuke:.5,acid_sizzle:.12,ling_beep:.08},   // segundos entre dos sonidos iguales
+  maxVoices:18,        // efectos simultaneos en total
+  prio:{ko:1,victory:1,countdown:1,fight:1,round_start:1,nuke_warning:1,nuke_fall:1,special_ready:1,grenade_boom:1,ling_boom:1,crit:1},   // nunca se descartan ni se reemplazan
+  _isVoice:n=>/^(marine|hydra)_|^dt_(ready|yes)/.test(n),
+  _wa(){
+    if(this._ctx!==undefined)return this._ctx;
+    try{
+      const C=window.AudioContext||window.webkitAudioContext;if(!C)throw 0;
+      const c=this._ctx=new C({latencyHint:'interactive'}),k=c.createDynamicsCompressor();
+      k.threshold.value=-16;k.knee.value=14;k.ratio.value=10;k.attack.value=.003;k.release.value=.22;
+      const m=this._mg=c.createGain();m.gain.value=.9;m.connect(k);k.connect(c.destination);
+      const wake=()=>{if(c.state!=='running'&&c.resume)c.resume().catch(()=>{})};
+      ['pointerdown','keydown','touchstart','touchend','click'].forEach(e=>addEventListener(e,wake,true));
+      document.addEventListener('visibilitychange',()=>{if(!document.hidden)wake()});
+      return c;
+    }catch(e){return this._ctx=null}
+  },
+  _load(name){
+    const c=this._wa(),url=this.files[name];if(!c||!url||this._buf[name]!==undefined)return;
+    this._buf[name]=0;   // 0 = cargando o fallo: mientras tanto se usa el respaldo <audio>
+    fetch(url).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
+      .then(ab=>new Promise((ok,no)=>{const p=c.decodeAudioData(ab,ok,no);if(p&&p.catch)p.catch(no)}))
+      .then(b=>{this._buf[name]=b}).catch(()=>{this._buf[name]=0});
+  },
   // Carga de antemano todos los efectos y voces (la musica no): sin esto el primer uso de cada sonido llegaba 30-60 ms tarde
-  preload(){Object.keys(this.files).forEach(n=>{if(n.indexOf('music')!==0&&n!=='tension')this._get(n)})},
+  preload(){Object.keys(this.files).forEach(n=>{if(n.indexOf('music')!==0&&n!=='tension'){this._get(n);if(!this._isVoice(n)&&n!=='nuke_explosion')this._load(n)}})},
+  _kill(v){   // apaga un efecto con un fundido de 30 ms (sin chasquido)
+    const i=this._act.indexOf(v);if(i>=0)this._act.splice(i,1);
+    try{const t=this._ctx.currentTime;v.gn.gain.cancelScheduledValues(t);v.gn.gain.setValueAtTime(v.gn.gain.value,t);v.gn.gain.linearRampToValueAtTime(0,t+.03);v.s.stop(t+.04)}catch(e){}
+  },
   play(name,vol){
-    if(!this.enabled)return;
+    if(!this.enabled||document.hidden)return;   // pestana oculta: no se acumulan sonidos para soltarlos al volver
+    const now=performance.now()/1000,pr=this.prio[name];
+    if(!pr&&now-(this._last[name]||0)<(this.sfxGap[name]||this.sfxGap.def))return;
+    const g=this.gain[name]||1,k=this.vary[name]||0;
+    const v=Math.min(1,this.sfxVolume*g*(vol==null?1:vol)*(1+(Math.random()*2-1)*this.varVol*k)),rate=k?1+(Math.random()*2-1)*this.varPitch*k:1;
+    const c=this._ctx,b=this._buf[name];
+    if(c&&b){
+      if(c.state!=='running'){if(c.resume)c.resume().catch(()=>{});return}   // aun bloqueado: se descarta, NO se encola (saldrian todos de golpe)
+      const same=this._act.filter(a=>a.n===name),lim=this.sfxLimit[name]||this.sfxLimit.def;
+      if(same.length>=lim)this._kill(same[0]);
+      if(this._act.length>=this.maxVoices){const old=this._act.find(a=>!this.prio[a.n]);if(old)this._kill(old);else if(!pr)return}
+      const s=c.createBufferSource(),gn=c.createGain(),a={n:name,s,gn};
+      s.buffer=b;s.playbackRate.value=rate;gn.gain.value=v;s.connect(gn);gn.connect(this._mg);
+      s.onended=()=>{const i=this._act.indexOf(a);if(i>=0)this._act.splice(i,1);try{gn.disconnect()}catch(e){}};
+      this._act.push(a);this._last[name]=now;
+      try{s.start()}catch(e){this._kill(a)}
+      return;
+    }
+    this._playEl(name,v,rate,now);   // respaldo
+  },
+  // Respaldo con <audio>: grupo reducido y reutilizable por sonido (no se crean elementos nuevos en cada disparo)
+  _playEl(name,v,rate,now){
     const a=this._get(name);if(!a)return;
-    const c=a.cloneNode(),g=this.gain[name]||1,k=this.vary[name]||0;
-    c.volume=Math.min(1,this.sfxVolume*g*(vol==null?1:vol)*(1+(Math.random()*2-1)*this.varVol*k));
-    if(k){c.preservesPitch=false;c.mozPreservesPitch=false;c.webkitPreservesPitch=false;c.playbackRate=1+(Math.random()*2-1)*this.varPitch*k}
-    const p=c.play();if(p&&p.catch)p.catch(()=>{});
+    const P=this._pl[name]||(this._pl[name]=[]),lim=Math.min(this.sfxLimit[name]||this.sfxLimit.def,3);
+    let e=P.find(x=>x.paused||x.ended);
+    if(!e){if(P.length<lim){e=a.cloneNode();P.push(e)}else{e=P.shift();P.push(e)}}   // si estan todos ocupados, reutiliza el mas antiguo
+    this._last[name]=now;
+    try{e.currentTime=0}catch(x){}
+    e.volume=v;
+    if(rate!==1){e.preservesPitch=false;e.mozPreservesPitch=false;e.webkitPreservesPitch=false}
+    e.playbackRate=rate;
+    const p=e.play();if(p&&p.catch)p.catch(()=>{});
   },
   // Musica: cada pista usa DOS elementos Audio; al acercarse al final el segundo entra con fundido (potencia constante) mientras el primero se apaga
   playMusic(name){
