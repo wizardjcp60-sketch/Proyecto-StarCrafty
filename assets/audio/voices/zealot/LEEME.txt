@@ -1,0 +1,6 @@
+VOCES DEL ZEALOT
+what-battle-calls.mp3 -> al empezar la partida (zealot_what)
+my-life-for-aiur.mp3 -> al lanzar la carga (zealot_charge)
+thus-i-serve.mp3 -> al recoger un stimpack (zealot_stim)
+zealot.mp3 -> al ganar la partida (zealot_win)
+Cambios de frase o de momento: js/audio.js (zealot_*), js/game.js y CONFIG.VOICE_END.

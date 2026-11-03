@@ -9,11 +9,12 @@ const W=480,H=270;let {cx:CX,cy:CY,rx:RX,ry:RY}=CONFIG.ARENA;   // let: applyAre
 const $=s=>document.querySelector(s),cv=$('#c'),g=cv.getContext('2d');
 const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.random()*a.length|0];
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-const NAMES={m:'Marine',h:'Hidralisco',d:'Dark Templar'},NAMES_SP={m:'Granada',h:'Ácido',d:'Salto sombrío'};
+const NAMES={m:'Marine',h:'Hidralisco',d:'Dark Templar',z:'Zealot'},NAMES_SP={m:'Granada',h:'Ácido',d:'Salto sombrío',z:'Carga'};
+const ZL=CONFIG.ZL,melee=f=>f.type=='d'||f.type=='z',reachOf=f=>f.type=='z'?ZL.reach:DT.reach;   // luchadores cuerpo a cuerpo: Dark Templar y Zealot
 const HFX=CONFIG.HFX,DT=CONFIG.DT,cloaked=f=>DT.cloak&&f.type=='d'&&!(f.rev>0);   // un DT camuflado que no ha atacado hace poco
 const GRR=k=>k=='g'?CONFIG.GRENADE_RADIUS:k=='b'?DT.blinkRadius:CONFIG.ACID_RADIUS;
 let bg=mkBg();
-let mode='1m',state='menu',F,B,I,L,P,spawnT,time=0,shake=0,lives=[CONFIG.LIVES,CONFIG.LIVES],roundT=CONFIG.ROUND_TIME,nk=null,introT=0,fightT=0,roundN=1,koT=0,pile=[],winner=null,popups=[],GR=[],AC=[],RG=[],SPL=[],diff='normal',SCORE={m:0,h:0,d:0},CH=['m','h'],winSide=-1,cam={on:false,t:0,x:0,y:0},TOUCH={dx:0,dy:0,fire:false,sp:false},padPrev=false;
+let mode='1m',state='menu',F,B,I,L,P,spawnT,time=0,shake=0,lives=[CONFIG.LIVES,CONFIG.LIVES],roundT=CONFIG.ROUND_TIME,nk=null,introT=0,fightT=0,roundN=1,koT=0,pile=[],winner=null,popups=[],GR=[],AC=[],RG=[],SPL=[],diff='normal',SCORE={m:0,h:0,d:0,z:0},CH=['m','h'],winSide=-1,cam={on:false,t:0,x:0,y:0},TOUCH={dx:0,dy:0,fire:false,sp:false},padPrev=false;
 var tcEl=null;
 const keys={};
 const kc=e=>e.code||(e.key&&e.key.length==1?(e.key==' '?'Space':/[a-z]/i.test(e.key)?'Key'+e.key.toUpperCase():''):'');   // respaldo: algunos teclados/IME mandan e.code vacio
@@ -49,7 +50,7 @@ function mkBg(){
  return b;
 }
 
-function mk(type,x,y,hp){return{type,x,y,hp,max:hp,sh:0,stim:0,cd:0,cdm:.16,spT:0,flash:0,face:0,step:0,trail:[],seed:rnd(0,6),r:type=='m'?6:type=='d'?7:8,mv:0,side:0,rev:0,ghost:0,atkT:null,hitDone:false,dT:null,mf:0,mfa:0,hf:0,hfa:0,multi:0,aimT:0,shT:0}}
+function mk(type,x,y,hp){return{type,x,y,hp,max:hp,sh:type=='z'?CONFIG.ZL.baseShield:0,stim:0,cd:0,cdm:.16,spT:type=='z'?CONFIG.SPECIAL_COOLDOWN:0,flash:0,face:0,step:0,trail:[],seed:rnd(0,6),r:type=='m'?6:type=='d'||type=='z'?7:8,chT:0,cha:0,stun:0,hitN:0,mv:0,side:0,rev:0,ghost:0,atkT:null,hitDone:false,dT:null,mf:0,mfa:0,hf:0,hfa:0,multi:0,aimT:0,shT:0}}
 function reset(){lives=[CONFIG.LIVES,CONFIG.LIVES];roundN=1;newRound()}
 function newRound(q){
  F=[mk(CH[0],CX-95,CY+4,CONFIG.HP[CH[0]]),mk(CH[1],CX+95,CY+4,CONFIG.HP[CH[1]])];F[0].side=0;F[1].side=1;F.forEach(f=>f.dtc=(CH[0]=='d'&&CH[1]=='d'&&f.side==1)?'red':'orig');
@@ -81,7 +82,7 @@ function move(f,dx,dy,dt){
 }
 function fire(f,o){
  if(f.cd>0)return;
- if(f.type=='d'){meleeStart(f,o);return}
+ if(melee(f)){meleeStart(f,o);return}
  const mar=f.type=='m',a=Math.atan2(o.y-f.y,o.x-f.x)+(f.ai?rnd(-D().aim,D().aim):0)+(cloaked(o)?rnd(-DT.aim,DT.aim):0),v=mar?260:190;
  f.cdm=CONFIG.COOLDOWN[f.type]/(f.stim>0?1.7:1);f.cd=f.cdm;AUDIO.play(mar?'shoot_marine':'shoot_hydralisk');
  B.push({x:f.x+Math.cos(a)*8,y:f.y+Math.sin(a)*8,vx:Math.cos(a)*v,vy:Math.sin(a)*v,own:f,dmg:CONFIG.DAMAGE[f.type],mar,life:1.4});
@@ -116,11 +117,11 @@ function human(f){
  return r;
 }
 function ai(f,o){
- const dm=f.type=='d',d=dist(f,o),a=Math.atan2(o.y-f.y,o.x-f.x),pref=f.type=='h'?105:85,rch=f.r+o.r+DT.reach;
+ const dm=melee(f),d=dist(f,o),a=Math.atan2(o.y-f.y,o.x-f.x),pref=f.type=='h'?105:85,rch=f.r+o.r+reachOf(f);
  const dir=dm?(d>rch-3?1:0):(d>pref+15?1:d<pref-25?-1:0),s=Math.sin(time*.9+f.seed)>0?1:-1,sw=dm?(d<110&&d>rch+10?.35:0):.8;
  let dx=Math.cos(a)*dir-Math.sin(a)*s*sw,dy=Math.sin(a)*dir+Math.cos(a)*s*sw;
  L.forEach(l=>{const q=dist(l,f);if(q<60){dx+=(f.x-l.x)/(q||1)*2.5;dy+=(f.y-l.y)/(q||1)*2.5}});
- let best=null,bd=130;I.forEach(it=>{if(it.z==0&&(it.t!='medkit'||f.hp<f.max*.85)&&(it.t!='multi'||f.type!='d')){const q=dist(it,f);if(q<bd){bd=q;best=it}}});
+ let best=null,bd=130;I.forEach(it=>{if(it.z==0&&(it.t!='medkit'||f.hp<f.max*.85)&&(it.t!='multi'||!melee(f))){const q=dist(it,f);if(q<bd){bd=q;best=it}}});
  if(best&&d>50){dx+=(best.x-f.x)/bd*1.5;dy+=(best.y-f.y)/bd*1.5}
  if(!inArena(f.x,f.y,24)){dx+=(CX-f.x)/RX*2;dy+=(CY-f.y)/RY*2}
  AC.forEach(p=>{if(p.own!==f){const q=Math.hypot(f.x-p.x,(f.y-p.y)/.6);if(q<p.R+12){dx+=(f.x-p.x)/(q||1)*D().dodge;dy+=(f.y-p.y)/(q||1)*D().dodge}}});
@@ -137,12 +138,14 @@ function boom(l,weak){   // weak = true: se le acabo el tiempo sin alcanzar a na
 function update(dt){
  time+=dt;
  F.forEach((f,i)=>{
-  const o=F[1-i];f.cd-=dt;f.mf-=dt;f.hf-=dt;f.aimT-=dt;f.shT-=dt;f.flash-=dt;f.stim-=dt;f.multi-=dt;f.mv-=dt;f.rev-=dt;
+  const o=F[1-i];f.cd-=dt;f.mf-=dt;f.hf-=dt;f.aimT-=dt;f.shT-=dt;f.flash-=dt;f.stim-=dt;f.multi-=dt;f.mv-=dt;f.rev-=dt;f.stun-=dt;if(f.stunFx>0)f.stunFx-=dt;
   if(f.type=='d'&&DT.cloak){const cl=f.rev<=0&&!f.ghost;if(f._cl===undefined)f._cl=cl;else if(f._cl!==cl&&!f.ghost){f._cl=cl;AUDIO.play(cl?'dt_cloak':'dt_reveal')}}   // destello sonoro al ocultarse y al revelarse
   if(f.ghost)return;
   f.face=Math.atan2(o.y-f.y,o.x-f.x);
+  if(f.chT>0){chargeStep(f,o,dt);return}   // Zealot embistiendo: ignora los controles hasta que termine la carga
   const c=f.ai?ai(f,o):human(f);
-  if(f.type=='d'&&!f.ai&&mode!='2p'&&o.hp>0&&!o.ghost)c.fire=true;   // 1 jugador: el DT corta solo cuando el rival esta a su alcance
+  if(f.stun>0){c.dx=c.dy=0;c.fire=false;c.sp=false}   // recuperacion tras chocar con la carga
+  if((f.type=='d'||(f.type=='z'&&ZL.autoAttack&&f.stun<=0))&&!f.ai&&mode!='2p'&&o.hp>0&&!o.ghost)c.fire=true;   // 1 jugador: el DT y el Zealot (si CONFIG.ZL.autoAttack) cortan solos cuando el rival esta a su alcance
   move(f,c.dx,c.dy,dt);stepSound(f);if(c.fire)fire(f,o);
   if(f.atkT!=null)swingStep(f,o,dt);
   if(f.spT<CONFIG.SPECIAL_COOLDOWN){f.spT+=dt;if(f.spT>=CONFIG.SPECIAL_COOLDOWN){f.spT=CONFIG.SPECIAL_COOLDOWN;AUDIO.play('special_ready');popups.push({x:f.x,y:f.y-30,txt:'¡Especial listo!',c:'#ffd98a',life:1.3})}}
@@ -173,10 +176,10 @@ function update(dt){
    F.forEach(f=>{if(!it.gone&&f.hp>0&&!f.ghost&&dist(f,it)<f.r+7&&(it.t!='medkit'||f.hp<f.max)){
     it.gone=true;
     if(it.t=='shield'){AUDIO.play('pickup_shield');f.sh=40;burst(f.x,f.y-8,16,['#4fc3ff','#c8f0ff'],70)}
-    else if(it.t=='multi'&&f.type=='d'){popups.push({x:f.x,y:f.y-26,txt:'Anulado',c:'#b9aca4',life:1.2});burst(f.x,f.y-8,12,['#8a8a8a','#c9c9c9','#ffd24a'],55)}   // cuerpo a cuerpo: lo recoge y se pierde
+    else if(it.t=='multi'&&melee(f)){popups.push({x:f.x,y:f.y-26,txt:'Anulado',c:'#b9aca4',life:1.2});burst(f.x,f.y-8,12,['#8a8a8a','#c9c9c9','#ffd24a'],55)}   // cuerpo a cuerpo: lo recoge y se pierde
     else if(it.t=='multi'){AUDIO.play('pickup_multi');f.multi=CONFIG.MULTI.time;popups.push({x:f.x,y:f.y-26,txt:'¡Multidisparo!',c:'#ffd24a',life:1.2});burst(f.x,f.y-8,18,['#ffd24a','#ffffff','#ff9a3a'],70)}
     else if(it.t=='medkit'){const h=Math.round(rnd(CONFIG.MEDKIT_HEAL-5,CONFIG.MEDKIT_HEAL+5)),gain=Math.min(h,f.max-f.hp);f.hp+=gain;AUDIO.play('pickup_medkit');popups.push({x:f.x,y:f.y-26,txt:'+'+Math.round(gain),c:'#7fe38a',life:1.2});burst(f.x,f.y-8,18,['#7fe38a','#ffffff','#c6ffd0'],70)}
-    else{AUDIO.play('pickup_stim');{const vz=f.type=='m'?'marine_stim':f.type=='h'?'hydra_yes':f.type=='d'?'dt_yes2':0;if(vz)AUDIO.voice(vz)}f.stim=6;if(f.hp>10)f.hp-=10;burst(f.x,f.y-8,16,['#ff5a4a','#ffe27a'],70)}
+    else{AUDIO.play('pickup_stim');{const vz=f.type=='m'?'marine_stim':f.type=='h'?'hydra_yes':f.type=='d'?'dt_yes2':f.type=='z'?'zealot_stim':0;if(vz)AUDIO.voice(vz)}f.stim=6;if(f.hp>10)f.hp-=10;burst(f.x,f.y-8,16,['#ff5a4a','#ffe27a'],70)}
    }});
   }
  });
@@ -202,7 +205,7 @@ function update(dt){
  L=L.filter(l=>!l.dead);
  const dead=F.filter(f=>f.hp<=0);
  if(dead.length){
-  dead.forEach(f=>{burst(f.x,f.y-6,50,f.type=='m'?['#3b66ad','#6c9be0','#ffb43a']:f.type=='d'?['#b44aff','#7fd0ff','#ffffff']:['#7a5236','#b8452a','#d9a441'],120);lives[F.indexOf(f)]--;if(f.type=='d')f.dT=0});F.forEach(f=>f.ghost=0);
+  dead.forEach(f=>{burst(f.x,f.y-6,50,f.type=='m'?['#3b66ad','#6c9be0','#ffb43a']:f.type=='d'?['#b44aff','#7fd0ff','#ffffff']:f.type=='z'?['#7fd0ff','#ffd24a','#ffffff']:['#7a5236','#b8452a','#d9a441'],120);lives[F.indexOf(f)]--;f.chT=0;f.stun=0;if(melee(f))f.dT=0});F.forEach(f=>f.ghost=0);
   state='ko';koT=KOT();shake=.35;AUDIO.play('ko');AUDIO.play('crowd_ko');startKoCam(dead);
  }else{const r0=Math.ceil(roundT);roundT-=dt;if(roundT>0&&roundT<10&&Math.ceil(roundT)!==r0)AUDIO.play('clock_warn');if(roundT<=0){roundT=0;startNuke()}}
 }
@@ -222,7 +225,7 @@ function endGame(){
  pile=[];
  [7,6,5,4,3,2].forEach((n,r)=>{for(let i=0;i<n;i++){
   const t=winner?F[1-winSide].type:F[i%2].type;
-  pile.push({t,x:CX+(i-(n-1)/2)*(t=='h'?27:t=='d'?24:22)+rnd(-3,3),y:238-r*12+rnd(-2,2),rot:(Math.random()<.5?-1:1)*rnd(1.1,1.9),fl:Math.random()<.5});
+  pile.push({t,x:CX+(i-(n-1)/2)*(t=='h'?27:t=='d'||t=='z'?24:22)+rnd(-3,3),y:238-r*12+rnd(-2,2),rot:(Math.random()<.5?-1:1)*rnd(1.1,1.9),fl:Math.random()<.5});
  }});
  state='victory';time=0;P=[];AUDIO.play('victory');
  {const W=winner,Lc=winSide<0?null:F[1-winSide].type,VE=CONFIG.VOICE_END;   // el perdedor se queja y, tras la fanfarria, el ganador habla (frases en CONFIG.VOICE_END)
@@ -299,6 +302,7 @@ function special(f,o){
  const j=(f.ai?D().jit:0)+(cloaked(o)?DT.jit:0),tx=o.x+rnd(-j,j),ty=o.y+rnd(-j,j),d=Math.hypot(tx-f.x,ty-f.y);
  if(f.type=='m'){const q={kind:'g',own:f,x0:f.x,y0:f.y,x1:tx,y1:ty,t:0,T:Math.max(.5,Math.min(1.6,d/150))};GR.push(q);if(GFX.on)gThrowFx(f,q);AUDIO.play('grenade_throw')}
  else if(f.type=='d')blinkStart(f,tx,ty);
+ else if(f.type=='z'){chargeStart(f,tx,ty);AUDIO.voice('zealot_charge')}
  else{GR.push({kind:'a',own:f,x0:f.x,y0:f.y,x1:tx,y1:ty,t:0,T:Math.max(.5,Math.min(1.4,d/170))});AUDIO.play('acid_spit');AUDIO.voice('hydra_yes')}
 }
 function land(q){
@@ -360,7 +364,7 @@ function drawRing(r){
 }
 /* ---- Voces: cada personaje se queja con golpes fuertes y cuando le queda poca vida ---- */
 function react(f,amt){
- if(f.hp<=0||f.type=='d')return;const V=CONFIG.VOICE,who=f.type=='m'?'marine':'hydra';
+ if(f.hp<=0||melee(f))return;const V=CONFIG.VOICE,who=f.type=='m'?'marine':'hydra';
  if(!f.lowSaid&&f.hp/f.max<=V.lowHp){f.lowSaid=true;AUDIO.voice(who+'_pissed',true)}
  else if(amt>=V.hitMin&&Math.random()<V.chance)AUDIO.voice(who+'_pissed');
 }
@@ -485,21 +489,46 @@ function drawLing(l){
  g.beginPath();g.ellipse(x-d*2,y-9,4,3,0,0,7);g.fill();g.globalAlpha=1;
 }
 /* ---- Dark Templar: cuerpo a cuerpo, camuflaje y salto sombrio (config: CONFIG.DT y ATLAS_DT) ---- */
-const AT=ATLAS_DT,DTI={orig:null,red:null},DTFL={c:null},GLOW={m:'#4fa8ff',h:'#ff5a3c'};
+const AT=ATLAS_DT,DTI={orig:null,red:null},DTFL={c:null},GLOW={m:'#4fa8ff',h:'#ff5a3c',z:'#ffd24a'};
 function dtDir(a){const v=Math.atan2(Math.cos(a),-Math.sin(a));return Math.round(((v+6.283185307)%6.283185307)/(Math.PI/8))%16}
 function meleeStart(f,o){
- if(dist(f,o)>f.r+o.r+DT.reach+2)return;            // fuera de alcance: no golpea
- f.cd=CONFIG.COOLDOWN.d/(f.stim>0?1.7:1);f.cdm=f.cd;f.atkT=0;f.hitDone=false;f.rev=Math.max(f.rev,DT.reveal);AUDIO.play('dt_attack');
+ if(dist(f,o)>f.r+o.r+reachOf(f)+2)return;            // fuera de alcance: no golpea
+ f.cd=CONFIG.COOLDOWN[f.type]/(f.stim>0?1.7:1);f.cdm=f.cd;f.atkT=0;f.hitDone=false;f.hitN=0;
+ if(f.type=='z')AUDIO.play('zl_attack');else{f.rev=Math.max(f.rev,DT.reveal);AUDIO.play('dt_attack')}
 }
 function swingStep(f,o,dt){
  f.atkT+=dt;
+ if(f.type=='z'){   // Zealot: dos cuchillas, dos tajos (ZL.hits); el dano total se reparte entre ellos
+  const hs=ZL.hits;while(f.hitN<hs.length&&f.atkT>=hs[f.hitN]/ZL.atkFps){f.hitN++;meleeHit(f,1/hs.length)}
+  if(f.atkT>=ATLAS_ZEAL.atkN/ZL.atkFps)f.atkT=null;return}
  if(!f.hitDone&&f.atkT>=AT.hitFrame/AT.attackFps){f.hitDone=true;meleeHit(f)}   // el golpe cae en el fotograma 4
  if(f.atkT>=AT.attackN/AT.attackFps)f.atkT=null;
 }
-function meleeHit(f){
- const R=DT.reach+4;
- F.forEach(t=>{if(t!==f&&t.hp>0&&!t.ghost&&dist(f,t)<=f.r+t.r+R){if(cloaked(t)&&Math.random()<DT.evasion){evade(t);return}hurt(t,dtDmg(t,CONFIG.DAMAGE.d));burst(t.x,t.y-10,12,['#e8f4ff','#8fc8ff','#c97bff'],80);shake=Math.max(shake,.12)}});
+function meleeHit(f,part=1){
+ const R=reachOf(f)+4,dmg=CONFIG.DAMAGE[f.type]*part,zl=f.type=='z';
+ F.forEach(t=>{if(t!==f&&t.hp>0&&!t.ghost&&dist(f,t)<=f.r+t.r+R){if(cloaked(t)&&Math.random()<DT.evasion){evade(t);return}hurt(t,dtDmg(t,dmg));burst(t.x,t.y-10,zl?6:12,zl?['#e8f4ff','#7fd0ff','#ffd24a']:['#e8f4ff','#8fc8ff','#c97bff'],80);shake=Math.max(shake,.12)}});
  L.forEach(l=>{if(!l.dead&&dist(f,l)<=f.r+6+R){l.hp=0;boom(l)}});   // la cuchilla detona los zerglings cercanos
+}
+/* ---- Zealot: CARGA (su especial). Embiste en linea recta hacia donde estaba el rival al lanzarla (se puede esquivar moviendose).
+   Al chocar hace ZL.chargeDamage, empuja al rival ZL.chargeKnock px y el Zealot se recupera ZL.chargeStun s. Config: CONFIG.ZL ---- */
+function chargeStart(f,tx,ty){
+ f.cha=Math.atan2(ty-f.y,tx-f.x);f.chT=ZL.chargeTime;f.atkT=null;f.trail=[];f.mv=.12;
+ AUDIO.play('zl_charge');burst(f.x,f.y-6,16,['#ffd24a','#7fd0ff','#ffffff'],80);RG.push({x:f.x,y:f.y,R:16,life:.3,max:.3,c:'255,210,90'});
+}
+function chargeStep(f,o,dt){
+ const a=f.cha,nx=f.x+Math.cos(a)*ZL.chargeSpeed*dt,ny=f.y+Math.sin(a)*ZL.chargeSpeed*dt;
+ f.chT-=dt;f.mv=.12;f.mdx=Math.cos(a);f.mdy=Math.sin(a);f.step+=dt*CONFIG.SPEED.z*1.6*.12;f.face=a;
+ if(inArena(nx,ny,f.r)){f.x=nx;f.y=ny}else f.chT=0;   // el borde de la arena detiene la embestida
+ const t0=f.trail[0];if(!t0||Math.hypot(t0.x-f.x,t0.y-f.y)>2.5){f.trail.unshift({x:f.x,y:f.y});if(f.trail.length>10)f.trail.pop()}
+ if(Math.random()<.6)part(f.x-Math.cos(a)*5+rnd(-3,3),f.y-rnd(2,14),-Math.cos(a)*20,rnd(-14,4),rnd(.2,.4),pick(['#ffd24a','#7fd0ff','#ffffff']),1);
+ L.forEach(l=>{if(!l.dead&&dist(f,l)<=f.r+8){l.hp=0;boom(l)}});   // arrolla los zerglings explosivos (la explosion tambien le alcanza)
+ for(const t of F){if(t===f||t.hp<=0||t.ghost||dist(f,t)>f.r+t.r+2)continue;
+  hurt(t,ZL.chargeDamage);if(t.hp>0){t.stun=Math.max(t.stun,ZL.hitStun);t.stunFx=ZL.hitStun;t.chT=0;t.atkT=null;popups.push({x:t.x,y:t.y-34,txt:'¡Aturdido!',c:'#ffd24a',sz:12,life:.9})}   // mini stun del rival (ZL.hitStun)
+  AUDIO.play('zl_impact');shake=Math.max(shake,.25);
+  const kx=t.x+Math.cos(a)*ZL.chargeKnock,ky=t.y+Math.sin(a)*ZL.chargeKnock;if(inArena(kx,ky,t.r)){t.x=kx;t.y=ky}
+  burst(t.x,t.y-10,22,['#ffffff','#7fd0ff','#ffd24a'],110);RG.push({x:t.x,y:t.y,R:22,life:.35,max:.35,c:'255,226,140'});
+  f.chT=0;f.stun=ZL.chargeStun;f.cd=Math.max(f.cd,.3);break}
+ if(f.chT<=0&&f.stun<=0)f.stun=.15;
 }
 /* Evasion (estilo Butterfly de Dota): un DT camuflado esquiva ataques normales (disparos y cuchilladas) con probabilidad DT.evasion; el area (granada, acido, zergling) no se esquiva */
 function evade(f){AUDIO.play('dt_evade');popups.push({x:f.x+rnd(-4,4),y:f.y-34,txt:'¡Falla!',c:'#c9a8ff',sz:12,life:.9});burst(f.x,f.y-10,8,['#c97bff','#7a3dd0','#ffffff'],60)}
@@ -560,12 +589,13 @@ function setPortraits(){
 const SPR={};
 /* ---- Marine animado por fotogramas (CONFIG.MARINE_ART y ATLAS_MARINE) ---- */
 /* ---- Pasos: suenan en los fotogramas del ciclo de caminar donde el pie toca el suelo. n = fotogramas del ciclo, at = fotogramas con pisada (ajustalos a tu gusto) ---- */
-const STEPS={m:{snd:'step_marine',at:[0,4]},h:{snd:'step_hydra',at:[0,3]},d:{snd:'step_dt',at:[0,5]}};
+const STEPS={m:{snd:'step_marine',at:[0,4]},h:{snd:'step_hydra',at:[0,3]},d:{snd:'step_dt',at:[0,5]},z:{snd:'step_marine',at:[0,4]}};
 function stepSound(f){
  const S=STEPS[f.type];if(!S||f.mv<=0){f._sk=null;return}
  let k,n;
  if(f.type=='m'){n=ATLAS_MARINE.walkN;k=Math.floor(f.step/(.12*CONFIG.MARINE_ART.stride))}
  else if(f.type=='h'){n=ATLAS_HYDRA.walkN;k=Math.floor(f.step/(.12*CONFIG.HYDRA_ART.stride))}
+ else if(f.type=='z'){n=ATLAS_ZEAL.walkN;k=Math.floor(f.step/(.12*ZL.stride))}
  else{n=ATLAS_DT.walkN;k=Math.floor(time*ATLAS_DT.walkFps)}
  if(k===f._sk)return;f._sk=k;
  if(S.at.includes(((k%n)+n)%n))AUDIO.play(S.snd,f.type=='d'&&cloaked(f)?.5:1);   // el DT camuflado pisa mas bajo
@@ -607,6 +637,40 @@ function drawHydraAnim(f,x,y){
  g.drawImage(src,col*HA.w,row*HA.h,HA.w,HA.h,-HA.ax*k,-HA.ay*k+2,HA.w*k,HA.h*k);
  g.imageSmoothingEnabled=sm;g.restore();
 }
+/* ---- Zealot (CONFIG.ZL y ATLAS_ZEAL): caminar en 9 direcciones, ataque de dos tajos, carga con estela y muerte psionica.
+   Dos hojas, una por lado: el luchador izquierdo es azul y el derecho rojo (se generan con tools/build_zealot_atlas.py) ---- */
+const ZA=ATLAS_ZEAL,ZIM={azul:null,roja:null,death:null},ZFL={azul:null,roja:null},ZAC={azul:null,roja:null};
+['azul','roja'].forEach(k=>{const im=new Image();im.onload=()=>{ZIM[k]=im;
+ const mk2=fill=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);x.globalCompositeOperation='source-atop';x.fillStyle=fill;x.fillRect(0,0,c.width,c.height);return c};
+ ZFL[k]=mk2('#fff');ZAC[k]=mk2('rgba(130,255,60,.5)');if(k=='azul')zlPrep(im)};im.src=ASSETS.zealot[k]});
+{const im=new Image();im.onload=()=>{ZIM.death=im};im.src=ASSETS.zealot.death}
+function zlPrep(im){   // sprite de la pantalla de victoria y de la pila de derrotados: reposo mirando al sur, recortado al contenido y ampliado x2
+ const c=document.createElement('canvas');c.width=ZA.w;c.height=ZA.h;const x=c.getContext('2d');x.drawImage(im,8*ZA.w,0,ZA.w,ZA.h,0,0,ZA.w,ZA.h);
+ const x0=5,y0=4,x1=25,y1=37;   // caja del reposo (precalculada): getImageData esta bloqueado en Firefox al abrir index.html con doble clic (file://)
+ const bw=x1-x0+1,bh=y1-y0+1,v=document.createElement('canvas');v.width=bw*2;v.height=bh*2;const vx=v.getContext('2d');vx.imageSmoothingEnabled=false;vx.drawImage(c,x0,y0,bw,bh,0,0,v.width,v.height);
+ const dk=document.createElement('canvas');dk.width=v.width;dk.height=v.height;const dx=dk.getContext('2d');dx.drawImage(v,0,0);dx.globalCompositeOperation='source-atop';dx.fillStyle='rgba(35,0,0,.55)';dx.fillRect(0,0,dk.width,dk.height);
+ SPR.z={im:v,right:true,flash:null,dead:dk};
+}
+function drawZealot(f){
+ const x=f.x|0,y=f.y|0,k=f.side?'roja':'azul',sm=g.imageSmoothingEnabled;
+ if(f.hp<=0){   // muerte: explosion psionica (7 fotogramas)
+  if(!ZIM.death||f.dT==null)return;const i=Math.floor(f.dT*ZL.deathFps);if(i>=ZA.deathN)return;
+  const sc=ZL.deathScale;g.imageSmoothingEnabled=false;g.globalAlpha=1-Math.max(0,f.dT*ZL.deathFps-5)*.5;
+  g.drawImage(ZIM.death,i*ZA.dw,0,ZA.dw,ZA.dh,x-ZA.dax*sc,y-ZA.day*sc,ZA.dw*sc,ZA.dh*sc);g.globalAlpha=1;g.imageSmoothingEnabled=sm;return}
+ const im=ZIM[k];if(!im)return;
+ const mv=f.mv>0,atk=f.atkT!=null,ch=f.chT>0;let ax,ay;
+ if(ZL.faceMove&&mv&&!atk&&!(f.stun>0)){ax=f.mdx;ay=f.mdy}else{ax=Math.cos(f.face);ay=Math.sin(f.face)}   // caminando mira hacia donde va; quieto, atacando o aturdido, al rival
+ const col=Math.min(8,Math.round(Math.atan2(Math.abs(ax),-ay)/(Math.PI/8))),mir=ax<0;
+ const row=atk?ZA.atkRow+Math.min(ZA.atkN-1,(f.atkT*ZL.atkFps)|0):ZA.walkRow+(mv?((f.step/(.12*ZL.stride))|0)%ZA.walkN:0);
+ const bob=mv&&!atk?Math.abs(Math.sin(f.step*3))*ZL.bob:0,src=f.flash>0?(f.fk?ZAC[k]:ZFL[k])||im:im;
+ g.fillStyle='rgba(0,0,0,.4)';g.beginPath();g.ellipse(x,y,10,3.8,0,0,7);g.fill();
+ g.imageSmoothingEnabled=false;
+ if(ch)[7,4].forEach((ti,n)=>{const t=f.trail[ti];if(!t)return;g.save();g.globalAlpha=.32-n*.12;g.translate(t.x|0,t.y|0);if(mir)g.scale(-1,1);g.drawImage(im,col*ZA.w,row*ZA.h,ZA.w,ZA.h,-ZA.ax,-ZA.ay+2,ZA.w,ZA.h);g.restore()});   // imagenes residuales de la carga
+ g.save();g.translate(x,y-bob);if(mir)g.scale(-1,1);
+ g.drawImage(src,col*ZA.w,row*ZA.h,ZA.w,ZA.h,-ZA.ax,-ZA.ay+2,ZA.w,ZA.h);g.restore();
+ g.imageSmoothingEnabled=sm;
+ if(f.sh>0){g.fillStyle='rgba(90,200,255,.15)';g.strokeStyle='rgba(120,220,255,.85)';g.beginPath();g.ellipse(x,y-14,15,20,0,0,7);g.fill();g.stroke()}
+}
 function loadSpr(k,src,right){
  const im=new Image(),o={im,right,flash:null};SPR[k]=o;
  im.onload=()=>{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);x.globalCompositeOperation='source-in';x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);o.flash=c;const d=document.createElement('canvas');d.width=im.width;d.height=im.height;const y=d.getContext('2d');y.drawImage(im,0,0);y.globalCompositeOperation='source-atop';y.fillStyle='rgba(35,0,0,.55)';y.fillRect(0,0,d.width,d.height);o.dead=d;const t=document.createElement('canvas');t.width=im.width;t.height=im.height;const z=t.getContext('2d');z.drawImage(im,0,0);z.globalCompositeOperation='source-atop';z.fillStyle='rgba(130,255,60,.5)';z.fillRect(0,0,t.width,t.height);o.acid=t};
@@ -627,10 +691,24 @@ function vw(f){
  if(f.mv<=0)f.vw='';else if(ay>ax*1.3)f.vw=f.mdy>0?'f':'b';else if(ax>ay*.8)f.vw='';
  return f.vw||'';
 }
+/* ---- Estrellitas giratorias sobre la cabeza del rival aturdido por la carga del Zealot (CONFIG.ZL.stars) ---- */
+function drawStunStars(f){
+ if(!(f.stunFx>0)||f.hp<=0||f.ghost||!ZL.stars)return;
+ const n=3,cx=f.x,cy=f.y-(f.type=='m'?32:f.type=='h'?36:38),a0=time*7,al=Math.min(1,f.stunFx/.15);
+ g.save();g.globalAlpha=al;
+ for(let i=0;i<n;i++){
+  const a=a0+i*6.283/n,sx=cx+Math.cos(a)*9,sy=cy+Math.sin(a)*3.5,back=Math.sin(a)<0,r=back?2.2:3.2;
+  g.globalAlpha=al*(back?.6:1);g.fillStyle=i%2?'#ffe27a':'#fff6c0';g.strokeStyle='#b8860b';g.lineWidth=.6;
+  g.beginPath();for(let k=0;k<10;k++){const rr=k%2?r*.45:r,t=-Math.PI/2+k*Math.PI/5+time*3;g.lineTo(sx+Math.cos(t)*rr,sy+Math.sin(t)*rr)}
+  g.closePath();g.fill();g.stroke();
+ }
+ g.restore();
+}
 function drawF(f){
- if(f.hp<=0){if(f.type=='d'&&f.dT!=null)drawDT(f);return}
+ if(f.hp<=0){if(f.dT!=null){if(f.type=='d')drawDT(f);else if(f.type=='z')drawZealot(f)}return}
  if(f.ghost)return;
  if(f.type=='d'){drawDT(f);return}
+ if(f.type=='z'){drawZealot(f);return}
  const x=f.x|0,y=f.y|0,m=f.type=='m',s=SPR[f.type+vw(f)],d=Math.cos(f.face)>=0?1:-1;
  g.fillStyle='rgba(0,0,0,.4)';g.beginPath();g.ellipse(x,y,m?9:12,m?3.5:4,0,0,7);g.fill();
  if(CH[0]==CH[1]){g.strokeStyle=f.side?'rgba(255,90,60,.9)':'rgba(79,168,255,.9)';g.lineWidth=1.5;g.beginPath();g.ellipse(x,y,m?11:14,m?4.5:5.5,0,0,7);g.stroke();g.lineWidth=1}
@@ -790,7 +868,7 @@ function draw(){
  if(state=='victory'){drawVictory();g.restore();return}
  g.save();if(cam.on){const z=camZ(cam.t);g.translate(cam.x,cam.y);g.scale(z,z);g.translate(-cam.x,-cam.y)}
  drawAmbient();drawFloorFx();I.forEach(drawItem);L.forEach(drawLing);
- [...F].sort((a,b)=>a.y-b.y).forEach(drawF);
+ [...F].sort((a,b)=>a.y-b.y).forEach(drawF);F.forEach(drawStunStars);
  B.forEach(drawB);GR.forEach(drawProj);RG.forEach(drawRing);SPL.forEach(drawSplash);gDrawFx();
  if(state=='nuke'&&nk)drawNuke();
  P.forEach(p=>{g.globalAlpha=Math.max(0,p.life/p.max);g.fillStyle=p.c;g.fillRect(p.x|0,p.y|0,p.s,p.s)});
@@ -816,12 +894,13 @@ function banner(txt,sz,p,col,y){
 function drawVictory(){
  g.fillStyle='rgba(8,3,3,.65)';g.fillRect(0,0,W,H);
  const gl=g.createRadialGradient(CX,170,5,CX,170,160);gl.addColorStop(0,'rgba(255,200,80,.45)');gl.addColorStop(1,'rgba(255,120,20,0)');g.fillStyle=gl;g.fillRect(0,0,W,H);
- pile.forEach(p=>{const s=SPR[p.t];if(!s||!s.dead)return;const w=s.im.width/2,h=s.im.height/2;
+ const pk=winner=='h'?1.5:1;   // con la Hidralisco ganando, los caidos (sobre todo el Marine) se ven pequenos y oscuros: se dibujan mas grandes para que se lean
+ pile.forEach(p=>{const s=SPR[p.t];if(!s||!s.dead)return;const w=s.im.width/2*pk,h=s.im.height/2*pk;
   g.save();g.translate(p.x,p.y-h/3);g.rotate(p.rot);if(p.fl)g.scale(-1,1);g.drawImage(s.dead,-w/2,-h/2,w,h);g.restore()});
  if(winner&&SPR[winner]&&(SPR[winner].im.naturalWidth||SPR[winner].im.width)){   // el sprite del DT es un canvas (sin naturalWidth)
   const s=SPR[winner],k=1.7,w=s.im.width/2*k,h=s.im.height/2*k,bob=Math.sin(time*4)*1.5;
-  g.fillStyle='rgba(0,0,0,.45)';g.beginPath();g.ellipse(CX,178,w/2.2,5,0,0,7);g.fill();
-  g.save();g.translate(CX,178+bob);if(!s.right)g.scale(-1,1);g.drawImage(s.im,-w/2,-h+3,w,h);g.restore();
+  g.fillStyle='rgba(0,0,0,.45)';g.beginPath();g.ellipse(CX,winner=='h'?160:178,w/2.2,5,0,0,7);g.fill();
+  g.save();g.translate(CX,(winner=='h'?160:178)+bob);if(!s.right)g.scale(-1,1);g.drawImage(s.im,-w/2,-h+3,w,h);g.restore();
  }
  const t=winner?'¡Gana el '+NAMES[winner]+(CH[0]==CH[1]?(winSide?' derecho':' izquierdo'):'')+'!':'Empate';
  banner(t,30,Math.min(1,time/.5),['#fff2a0','#ffb43a','#b8260c'],38);
@@ -832,14 +911,14 @@ const KL=c=>c.replace('Key','').replace('Period','.');
 const D=()=>CONFIG.DIFF[diff]||CONFIG.DIFF.normal;
 const KOT=()=>CONFIG.KO_CAM?2.4:2;      // duracion del cartel K.O. (mas larga solo con la camara activa)
 /* HUD: los elementos se buscan UNA vez y cada valor se escribe en el DOM solo cuando cambia (antes: ~20 busquedas y escrituras por fotograma; en movil pesaba) */
-const HUDC=[0,1].map(i=>{const p=i?'#ph':'#pm';return{hp:$(p+' .hp i'),sh:$(p+' .sh i'),pt:$(p+' .pt'),lv:$(p+' .lv'),sp:$(p+' .spc'),spi:$(p+' .spc i'),bf:$(p+' .buff'),k:{}}}),TMEL=$('#tm'),TMK={};
+const HUDC=[0,1].map(i=>{const p=i?'#ph':'#pm';const hpi=$(p+' .hp i'),tr=document.createElement('u');tr.className='tr';hpi.parentNode.insertBefore(tr,hpi);return{tr,hp:hpi,sh:$(p+' .sh i'),pt:$(p+' .pt'),lv:$(p+' .lv'),sp:$(p+' .spc'),spi:$(p+' .spc i'),bf:$(p+' .buff'),k:{}}}),TMEL=$('#tm'),TMK={};
 function hput(c,key,el,prop,v){if(c[key]!==v){c[key]=v;if(prop=='t')el.textContent=v;else if(prop=='c')el.className=v;else el.style[prop]=v}}
 function hud(){
  hput(TMK,'t',TMEL,'t',Math.ceil(roundT));hput(TMK,'c',TMEL,'c',roundT<=10?'low':'');
  if(tcEl){const live=state=='play'||state=='intro'||state=='ko'||state=='nuke';hput(TMK,'v',tcEl,'visibility',live?'visible':'hidden');if(!live){TOUCH.dx=TOUCH.dy=0;TOUCH.fire=TOUCH.sp=false}}
  F.forEach((f,i)=>{
   const H=HUDC[i],c=H.k,r=Math.max(0,f.hp/f.max),pt=H.pt;
-  hput(c,'hw',H.hp,'width',r*100+'%');hput(c,'hb',H.hp,'background',r>.5?'var(--ok)':r>.25?'var(--warn)':'var(--bad)');
+  hput(c,'hw',H.hp,'width',r*100+'%');hput(c,'tw',H.tr,'width',r*100+'%');hput(c,'hb',H.hp,'background',r>.5?'var(--ok)':r>.25?'var(--warn)':'var(--bad)');
   hput(c,'sw',H.sh,'width',f.sh/40*100+'%');
   if(f.hp<hpP[i]-.5&&f.hp>0){pt.classList.remove('hit');void pt.offsetWidth;pt.classList.add('hit');setTimeout(()=>pt.classList.remove('hit'),360)}
   if(state=='play'&&f.hp>hpP[i]+.5&&hpP[i]>0){pt.classList.remove('heal');void pt.offsetWidth;pt.classList.add('heal');setTimeout(()=>pt.classList.remove('heal'),700)}
@@ -868,7 +947,13 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&state!='m
 $('#pb').onclick=()=>{if(state=='play'||state=='intro'||state=='paused')togglePause();else $('#pb').blur()};
 $('#rs').onclick=togglePause;
 $('#mn').onclick=()=>{AUDIO.resumeMusic('pausa');state='menu';AUDIO.playMusic('music_menu');$('#pz').classList.add('hide');$('#ov').classList.remove('end','hide');$('#t').textContent='Coliseo'};
-function start(m){document.activeElement&&document.activeElement.blur();mode=m;applyOpts();AUDIO.playMusic('music_arena');if(CH[0]=='m')AUDIO.voice('marine_what',true);else if(CH[0]=='d')AUDIO.voice('dt_ready',true);setTimeout(()=>{if(state=='menu')return;if(CH[1]=='h')AUDIO.voice('hydra_what');else if(CH[1]=='d')AUDIO.voice('dt_ready',CH[0]=='d')},CH[0]=='d'?2400:1800);reset();$('#ov').classList.remove('end');$('#ov').classList.add('hide')}
+let starting=false;
+/* transicion al jugar: la tarjeta sale, la pantalla se oscurece (solo opacity), en lo mas oscuro se prepara la partida y vuelve la luz con la cuenta atras */
+function start(m){if(starting)return;document.activeElement&&document.activeElement.blur();mode=m;applyOpts();AUDIO.playMusic('music_arena');
+ const ov=$('#ov'),st=document.querySelector('.stage');
+ const go=()=>{if(CH[0]=='m')AUDIO.voice('marine_what',true);else if(CH[0]=='d')AUDIO.voice('dt_ready',true);else if(CH[0]=='z')AUDIO.voice('zealot_what',true);setTimeout(()=>{if(state=='menu')return;if(CH[1]=='h')AUDIO.voice('hydra_what');else if(CH[1]=='d')AUDIO.voice('dt_ready',CH[0]=='d');else if(CH[1]=='z')AUDIO.voice('zealot_what',CH[0]=='z')},CH[0]=='d'?2400:1800);reset();ov.classList.remove('end','leaving');ov.classList.add('hide');starting=false};
+ if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){go();return}
+ starting=true;ov.classList.add('leaving');st.classList.add('entering');setTimeout(go,380);setTimeout(()=>st.classList.remove('entering'),1250)}
 document.querySelectorAll('button[data-m]').forEach(b=>b.onclick=()=>start(b.dataset.m));
 reset();state='menu';
 let last=0;
@@ -900,9 +985,9 @@ addEventListener('keydown',e=>{if(e.code=='KeyM'&&!e.repeat)toggleSound()});
 /* ---- Opciones: dificultad, vidas, marcador, volumen y pantalla completa (se recuerdan en el navegador) ---- */
 const store={get(k,d){try{const v=localStorage.getItem('coliseo.'+k);return v===null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem('coliseo.'+k,v)}catch(e){}}};
 function applyOpts(){diff=$('#dif').value||'normal';CONFIG.LIVES=+$('#liv').value||2;store.set('dif',diff);store.set('liv',CONFIG.LIVES);CH=[$('#cl').value||'m',$('#cr').value||'h'];store.set('cl',CH[0]);store.set('cr',CH[1])}
-function showScore(){$('#sc').textContent='Victorias en este navegador: Marine '+SCORE.m+' \u00b7 Hidralisco '+SCORE.h+' \u00b7 Dark Templar '+SCORE.d}
+function showScore(){$('#sc').textContent='Victorias en este navegador: Marine '+SCORE.m+' \u00b7 Hidralisco '+SCORE.h+' \u00b7 Dark Templar '+SCORE.d+' \u00b7 Zealot '+SCORE.z}
 function saveScore(){store.set('score',JSON.stringify(SCORE));showScore()}
-try{const s0=JSON.parse(store.get('score','{}'));SCORE.m=+s0.m||0;SCORE.h=+s0.h||0;SCORE.d=+s0.d||0}catch(e){}
+try{const s0=JSON.parse(store.get('score','{}'));SCORE.m=+s0.m||0;SCORE.h=+s0.h||0;SCORE.d=+s0.d||0;SCORE.z=+s0.z||0}catch(e){}
 $('#dif').value=store.get('dif','normal');$('#liv').value=store.get('liv','2');$('#cl').value=store.get('cl','m');$('#cr').value=store.get('cr','h');
 diff=$('#dif').value||'normal';CONFIG.LIVES=+$('#liv').value||2;
 /* Arena: fondo, elipse jugable y llamas de la arena elegida (CONFIG.ARENAS en config.js) */
@@ -924,7 +1009,7 @@ function syncRoster(){CH=[$('#cl').value||'m',$('#cr').value||'h'];$('button[dat
 $('#cl').onchange=$('#cr').onchange=()=>{syncRoster();applyOpts();document.activeElement&&document.activeElement.blur()};
 syncRoster();
 showScore();
-$('#rsc').onclick=()=>{SCORE.m=0;SCORE.h=0;SCORE.d=0;saveScore();$('#rsc').blur()};
+$('#rsc').onclick=()=>{SCORE.m=0;SCORE.h=0;SCORE.d=0;SCORE.z=0;saveScore();$('#rsc').blur()};
 $('#opt').onclick=()=>{$('#ov').classList.remove('end');$('#t').textContent='Coliseo';$('#opt').blur()};
 const vmus=$('#vm'),vsfx=$('#vs');
 AUDIO.musicVolume=(+store.get('vmus',35))/100;AUDIO.sfxVolume=(+store.get('vsfx',70))/100;

@@ -105,17 +105,23 @@ button:hover,button:focus-visible{background:#16261a;outline:2px solid var(--ok)
 @media (prefers-reduced-motion:reduce){#intro .ib.on{animation:none}#intro .t1,#intro .t2,#intro .t3 span,#intro .t4,#intro .go{animation-duration:.01s!important;animation-delay:0s!important}}
 
 /* ---- Sonido compacto en la esquina del menu (#snd): silenciar + volumen de musica y de efectos ---- */
-.snd{position:absolute;top:52px;right:14px;z-index:3;display:flex;align-items:center;gap:10px;padding:4px 12px 4px 6px;background:rgba(8,14,10,.62);border:1px solid var(--edge);border-radius:999px;backdrop-filter:blur(3px);opacity:.75;transition:opacity .2s}
+.snd{position:absolute;top:12px;left:14px;z-index:3;display:grid;grid-template-columns:22px 92px;align-items:center;gap:10px 8px;padding:10px 12px;background:rgba(8,14,10,.72);border:1px solid var(--edge);border-radius:10px;backdrop-filter:blur(3px);opacity:.85;transition:opacity .2s}   /* columna en el hueco libre a la izquierda de la tarjeta: iconos y deslizadores alineados, sin pisar HUD ni texto */
 .snd:hover,.snd:focus-within{opacity:1}
 #ov.end .snd{display:none}
-.snd svg{width:16px;height:16px;display:block;flex:none}
-.snd button{padding:4px;border:0;border-radius:50%;background:transparent;color:var(--ok);display:grid;place-items:center}
+.snd svg{width:16px;height:16px;display:block;flex:none;justify-self:center}
+.snd label{display:contents;color:#9fb59a}
+.snd button{grid-column:1/-1;justify-self:start;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--ok);display:grid;place-items:center}
+.snd button svg{width:18px;height:18px}
 .snd button:hover,.snd button:focus-visible{background:rgba(79,211,90,.18);outline:none}
-.snd label{display:flex;align-items:center;gap:5px;color:#9fb59a}
-.snd input{width:64px;height:14px;margin:0;accent-color:var(--ok)}
+.snd input{width:100%;height:14px;margin:0;accent-color:var(--ok)}
 .snd .offi{display:none}.snd.off .on{display:none}.snd.off .offi{display:block}.snd.off button{color:var(--bad)}
 .snd.off label{opacity:.4}
-@media (max-width:1000px){#ov:not(.end){flex-direction:column;justify-content:center;gap:8px}.snd{position:static;flex:none}}
+/* menu principal en escritorio: debajo del HUD y con la tarjeta contenida (scroll interno) para que no tape el reloj */
+@media (min-width:901px) and (min-height:481px) and (pointer:fine){
+  #ov:not(.end){top:var(--hud,46px)}
+  #ov:not(.end) .card{box-sizing:border-box;max-width:580px;max-height:calc(100% - 16px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--edge) transparent}
+}
+@media (max-width:900px){#ov:not(.end){flex-direction:column;justify-content:center;gap:8px}.snd{position:static;flex:none;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;padding:4px 12px 4px 6px;border-radius:999px}.snd label{display:flex;align-items:center;gap:5px}.snd button{grid-column:auto;width:auto;height:auto;padding:4px}.snd input{width:64px}}
 @media (max-width:560px){.snd{gap:6px;padding-right:8px}.snd input{width:44px}}
 
 /* ---- Cursores de StarCraft (js/cursores.js los anima con las variables --cur-*; sin ellas queda el cursor normal) ---- */
@@ -158,7 +164,7 @@ canvas{cursor:var(--cur-canvas,auto)}
   #ov:not(.end){flex-direction:column;justify-content:flex-start;gap:4px;padding:6px 0}
   .card{padding:8px 12px;margin:auto}
   .card h1,#ov h1{font-size:20px;margin:2px 0}
-  #s,.card .k,#ov .k{display:none}
+  #s,.card .k,#ov .k,.kd{display:none}
   .card p{font-size:13px;margin:3px 0}
   .opts{gap:6px 10px;margin:4px 0;font-size:13px}.opts select{font-size:13px;padding:1px 4px}
   .btns{margin:6px 0;gap:6px}
@@ -188,3 +194,74 @@ canvas{cursor:var(--cur-canvas,auto)}
   #jb{width:104px;height:104px}
   .tb button{width:72px;height:72px}
 }
+
+
+/* ==========================================================================
+   EMBELLECIMIENTO (solo transform/opacity y degradados estaticos: coste casi nulo)
+   ========================================================================== */
+/* ---- HUD ---- */
+.p{position:relative;background:linear-gradient(180deg,#101c14,#0a110d);box-shadow:inset 0 0 14px rgba(79,211,90,.07);transition:border-color .3s}
+.p::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
+ background:linear-gradient(var(--ok),var(--ok)) 0 0/10px 2px no-repeat,linear-gradient(var(--ok),var(--ok)) 0 0/2px 10px no-repeat,
+  linear-gradient(var(--ok),var(--ok)) 100% 0/10px 2px no-repeat,linear-gradient(var(--ok),var(--ok)) 100% 0/2px 10px no-repeat,
+  linear-gradient(var(--ok),var(--ok)) 0 100%/10px 2px no-repeat,linear-gradient(var(--ok),var(--ok)) 0 100%/2px 10px no-repeat,
+  linear-gradient(var(--ok),var(--ok)) 100% 100%/10px 2px no-repeat,linear-gradient(var(--ok),var(--ok)) 100% 100%/2px 10px no-repeat;opacity:.75}
+.p:has(.pt.low){border-color:var(--bad)}.p:has(.pt.low)::before{background-color:transparent;filter:hue-rotate(-100deg) saturate(2)}
+/* estela de dano: la franja clara se vacia despues de la barra (js/game.js mueve .tr) */
+.bar{overflow:hidden}
+.bar .tr{position:absolute;left:0;top:0;bottom:0;width:100%;background:#ffe9b0;opacity:.9;transition:width .7s .35s ease-out;text-decoration:none}
+.bar i{position:relative;z-index:1}
+.bar.hp i{transition:background-color .25s}
+.bar::after{z-index:2}
+/* el especial listo brilla */
+.spc.ready{box-shadow:0 0 7px #ffb43a}#ph .spc.ready{box-shadow:0 0 7px #9dff4a}
+/* reloj: latido en los ultimos 10 s */
+#tm{display:inline-block;transform-origin:center}
+#tm.low{animation:tmpulse 1s ease-in-out infinite;text-shadow:0 0 10px rgba(224,80,58,.8)}
+@keyframes tmpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.28)}}
+/* corazon recien perdido: se rompe con un golpe */
+.lv span{display:inline-block}
+.lv span:not(.off)+.off,.lv .off:first-child{animation:heartbreak .6s ease-out}
+@keyframes heartbreak{0%{transform:scale(2.1);color:#fff}40%{transform:scale(.7)}100%{transform:scale(1)}}
+
+/* ---- Menu principal ---- */
+#ov:not(.end){background:radial-gradient(ellipse at center,rgba(5,3,3,.55) 25%,rgba(5,3,3,.88) 100%)}
+#ov .card{background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px),linear-gradient(180deg,#0f1b14,#0a110d);
+ box-shadow:inset 0 2px 0 var(--ok),inset 0 0 40px rgba(79,211,90,.06),0 12px 40px rgba(0,0,0,.6)}
+#ov h1{font-family:Impact,'Arial Black',Rajdhani,sans-serif;font-weight:400;letter-spacing:.1em;text-transform:uppercase;text-shadow:0 0 16px rgba(79,211,90,.55),0 3px 0 #123a18}
+/* entrada escalonada (se repite cada vez que el menu se muestra, porque pasa por display:none) */
+#ov:not(.hide) .card{animation:cardin .45s cubic-bezier(.2,.8,.2,1) both}
+#ov:not(.hide) .card>*{animation:fin .45s ease both}
+#ov .card>:nth-child(1){animation-delay:.12s}#ov .card>:nth-child(2){animation-delay:.18s}#ov .card>:nth-child(3){animation-delay:.24s}
+#ov .card>:nth-child(4){animation-delay:.30s}#ov .card>:nth-child(5){animation-delay:.36s}#ov .card>:nth-child(6){animation-delay:.42s}
+#ov .card>:nth-child(7){animation-delay:.48s}#ov .card>:nth-child(8){animation-delay:.54s}
+@keyframes cardin{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+/* botones: barrido de luz y elevacion; cada luchador con su color */
+#ov .btns button,#ov .btns2 button{position:relative;overflow:hidden;transition:transform .15s,box-shadow .2s,background-color .2s}
+#ov .btns button::after,#ov .btns2 button::after{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);transform:translateX(-130%) skewX(-18deg);pointer-events:none}
+#ov .btns button:hover::after,#ov .btns button:focus-visible::after,#ov .btns2 button:hover::after{transform:translateX(320%) skewX(-18deg);transition:transform .6s ease}
+#ov .btns button:hover,#ov .btns button:focus-visible{transform:translateY(-2px);box-shadow:0 4px 14px rgba(79,211,90,.35)}
+#ov .btns button:active{transform:translateY(0)}
+#ov [data-m="1m"]{--c:#4fa8ff;color:#bfe0ff;border-color:var(--c)}
+#ov [data-m="1h"]{--c:#ff6a4a;color:#ffd0c2;border-color:var(--c)}
+#ov [data-m="1m"]:hover,#ov [data-m="1m"]:focus-visible{background:#10243a;outline:2px solid var(--c);box-shadow:0 4px 16px rgba(79,168,255,.45)}
+#ov [data-m="1h"]:hover,#ov [data-m="1h"]:focus-visible{background:#3a1710;outline:2px solid var(--c);box-shadow:0 4px 16px rgba(255,106,74,.45)}
+/* controles y reglas plegados */
+.kd{margin-top:8px}
+.kd summary{list-style:none;cursor:var(--cur-hover,pointer);color:#9fb59a;font-size:14px;letter-spacing:.12em;text-transform:uppercase;padding:4px 0}
+.kd summary::-webkit-details-marker{display:none}
+.kd summary::before{content:"\25B8  ";color:var(--ok)}.kd[open] summary::before{content:"\25BE  "}
+.kd summary:hover{color:var(--ok)}
+.kd .k{margin:4px 0 0}
+#ov.end .kd{display:none}
+@media (prefers-reduced-motion:reduce){#ov .card,#ov .card>*,#tm.low,.lv span{animation:none!important}.bar .tr,#ov .btns button,#ov .btns2 button{transition:none!important}}
+
+/* ---- Transicion menu -> partida (js/game.js start): salida de la tarjeta + fundido por oscuro, solo opacity/transform ---- */
+#ov.leaving{pointer-events:none;opacity:0;transition:opacity .38s ease-in}
+#ov.leaving .card{animation:cardout .38s ease-in both!important}
+@keyframes cardout{to{opacity:0;transform:translateY(-12px) scale(.95)}}
+.stage.entering canvas{animation:dipin 1.1s ease-in-out both}
+.stage.entering .hud{animation:hudin 1.1s ease-in-out both}
+@keyframes dipin{0%{opacity:1}35%{opacity:.1}100%{opacity:1}}
+@keyframes hudin{0%{opacity:1;transform:none}35%{opacity:.3;transform:translateY(-6px)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.stage.entering canvas,.stage.entering .hud{animation:none!important}}

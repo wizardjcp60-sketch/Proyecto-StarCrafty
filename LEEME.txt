@@ -43,7 +43,8 @@ coliseo-broodwar/
                               expansiva, mancha de quemado (solo visual). Se carga ANTES de game.js. Ver 6G.
   assets/
     images/
-      sprites/                Personajes: 3 vistas del Marine y 3 del Hidralisco, y la hoja de
+      sprites/                Zealot: zealot_atlas_azul/roja.png y zealot_muerte.png (ver 6H).
+                              Personajes: 3 vistas del Marine y 3 del Hidralisco, y la hoja de
                               fotogramas del Dark Templar (dark_templar_atlas.png y su versión
                               de capa roja dark_templar_atlas_roja.png).
       fx/                     Misil nuclear, hoja de la explosión y acido_impacto.png (salpicadura de ácido).
@@ -375,6 +376,41 @@ CONTROLES MÁS ROBUSTOS (solución a "a veces no me deja atacar")
 - Si el teclado manda la tecla sin código (algunos teclados virtuales o métodos de entrada), se usa la letra:
   F, A, W, S, D, G y Espacio siguen funcionando.
 - Al iniciar partida se quita el foco de cualquier botón, para que Espacio o Enter no lo vuelvan a pulsar.
+
+6H. ZEALOT (cuarto luchador)
+----------------------------
+Se elige en el menu como luchador izquierdo o derecho (tambien puede haber dos Zealots: el izquierdo es AZUL y el derecho ROJO).
+Sprites: hoja "Protoss Zealot" de ACE_Spark (assets/images/source/zealot/hoja_original_zealot.png): 9 direcciones x 8 fotogramas
+de caminar, 5 de ataque y 7 de muerte. Se convierten con  python3 tools/build_zealot_atlas.py  (Pillow y numpy), que crea
+assets/images/sprites/zealot_atlas_azul.png, zealot_atlas_roja.png (el magenta del equipo pasa a azul / rojo), zealot_muerte.png,
+y reescribe ATLAS_ZEAL en js/config.js.
+Retrato del HUD: assets/images/ui/retrato_zealot.jpg es el rostro del Zealot recortado de la hoja "StarCraft II Portraits" (ripped by Lexou;
+hoja completa en assets/images/source/hoja_retratos_starcraft2.png).
+- ESTADISTICAS (config.js, columna z): 112 de vida, velocidad 70, un ataque por segundo con 12,5 de dano TOTAL. Empieza cada ronda con la Carga ya lista.
+- ESTRELLITAS: el rival aturdido por la carga (ZL.hitStun) muestra estrellas girando sobre la cabeza; CONFIG.ZL.stars=false las quita.
+- ATAQUE AUTOMATICO: en 1 jugador el Zealot ataca solo cuando el rival esta a su alcance (CONFIG.ZL.autoAttack; false = solo con el boton).
+- ATAQUE (F, Espacio o boton de disparo): cuerpo a cuerpo con DOS tajos de cuchilla psi por ataque (CONFIG.ZL.hits = fotogramas del ciclo
+  en que cae cada tajo; cada uno hace la mitad del dano). Alcance corto (ZL.reach = 15 px). En 1 jugador ataca solo cuando el rival esta
+  a su alcance. Mientras ataca se mueve mas despacio. Sus cuchillas detonan los zerglings cercanos (la explosion tambien le da).
+- ESPECIAL: CARGA (G a la izquierda, punto a la derecha; recarga 9 s): embiste en LINEA RECTA hacia donde estaba el rival al lanzarla
+  (ZL.chargeSpeed 240, ZL.chargeTime .55 s), con imagenes residuales. Si alcanza al rival le hace ZL.chargeDamage = 22, lo empuja
+  ZL.chargeKnock = 14 px y el Zealot se queda quieto ZL.chargeStun = .35 s. Se esquiva apartandose; si no toca a nadie o llega al
+  borde de la arena, se detiene. Tambien arrolla zerglings explosivos. La IA la usa a distancia media.
+- STUN DE LA CARGA: si la carga alcanza al rival, este queda aturdido CONFIG.ZL.hitStun = 1 s (no se mueve, ataca ni usa el especial; si estaba cargando, se corta).
+- ESCUDO BASE: empieza cada ronda con CONFIG.ZL.baseShield = 20 (la mitad del objeto escudo, que da 40); si recoge el objeto sube al maximo (40).
+- NO tiene camuflaje, evasion ni critico (eso es solo del Dark Templar). El objeto Multidisparo se ANULA al recogerlo, igual que con el DT.
+- MUERTE: explosion psionica de 7 fotogramas (ZL.deathFps, ZL.deathScale). Victoria: sprite de reposo ampliado x2 sobre la pila.
+- SONIDO: voces en assets/audio/voices/zealot/ (zealot_what al empezar, zealot_charge al lanzar la carga, zealot_stim al recoger un
+  stimpack, zealot_win al ganar; claves en js/audio.js, CONFIG.VOICE_END.win.z). Efectos sintetizados con
+  python3 tools/build_zealot_sfx.py: zealot_ataque.wav, zealot_carga.wav, zealot_impacto.wav (reemplazables con el mismo nombre; despues
+  python3 tools/build_audio_data.py). Pasos: reutiliza el del Marine. Las voces no se incrustan en audio_data.js.
+- BALANCE (tools/sim_balance.js, 120 partidas por cruce, normal): Zealot-Marine 83-17, Zealot-Hidralisco 46-54, Zealot-Dark Templar 95-5 (150 partidas). Con reach 9 y velocidad menor que el Marine el Zealot casi no llegaba a tocar al rival que se aleja, por eso ahora tiene mas alcance y velocidad.
+  El Dark Templar ya era el mas debil en cuerpo a cuerpo (en el espejo dd gana siempre el lado derecho, igual que zz): las peleas
+  cuerpo a cuerpo se deciden casi por vida y por quien pega primero, asi que cualquier ajuste cambia mucho el resultado.
+  Para probar:  node tools/sim_balance.js 100 normal "HP.z=110,DAMAGE.z=11" zm zh zd zz
+  (el simulador no admite arrays como ZL.hits en la linea de ajustes: editalos en config.js).
+- Codigo (game.js): mk (tipo 'z'), melee()/reachOf(), meleeStart/swingStep/meleeHit (compartidos con el DT), chargeStart/chargeStep,
+  drawZealot, zlPrep (sprite de victoria).
 
 6F. MARINE ANIMADO POR FOTOGRAMAS
 ---------------------------------
@@ -753,7 +789,7 @@ Estados:         menu -> intro -> play -> (ko | nuke) -> intro ... -> victory;
 - Más objetos: mina Spider, EMP que anula escudos, medikit grande, bomba de humo.
 - Peligros del coliseo: géiseres de lava que avisan antes de salir, zonas de creep
   que ralentizan, torretas laterales.
-- Más personajes (Zealot, Firebat, Zergling, Ultralisco) reutilizando mk(),
+- Más personajes (Firebat, Zergling, Ultralisco) reutilizando mk(),
   fire() y las vistas de sprites.
 - Modo torneo/supervivencia: oleadas de enemigos o una cadena de combates.
 - Repetición (replay) de la última ronda y estadísticas de partida.

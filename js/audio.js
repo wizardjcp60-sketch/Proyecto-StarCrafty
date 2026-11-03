@@ -50,6 +50,10 @@ const AUDIO={
     ling_pop       :'assets/audio/sfx/ling_pop.wav',          // explosion debil por fin de mecha
     acid_sizzle    :'assets/audio/sfx/acido_chisporroteo.wav',// chisporroteo del charco de acido
     clock_warn     :'assets/audio/sfx/reloj_alerta.wav',      // ultimos 10 s de la ronda
+    // --- Zealot (sintetizados con tools/build_zealot_sfx.py) ---
+    zl_attack      :'assets/audio/sfx/zealot_ataque.wav',     // dos tajos de cuchillas psi
+    zl_charge      :'assets/audio/sfx/zealot_carga.wav',      // embestida (especial)
+    zl_impact      :'assets/audio/sfx/zealot_impacto.wav',    // choque al terminar la carga
     // --- pasos (sintetizados con tools/build_extra_sfx.py) ---
     step_marine    :'assets/audio/sfx/paso_marine.wav',
     step_hydra     :'assets/audio/sfx/paso_hidralisco.wav',
@@ -70,14 +74,19 @@ const AUDIO={
     // --- voces del Dark Templar (originales de StarCraft) ---
     dt_ready       :'assets/audio/voices/dark_templar/PDtRdy00.wav',   // al empezar la partida
     dt_yes0        :'assets/audio/voices/dark_templar/pdtyes00.wav',   // al lanzar el salto sombrio
-    dt_yes2        :'assets/audio/voices/dark_templar/pdtyes02.wav'    // al recoger un stimpack
+    dt_yes2        :'assets/audio/voices/dark_templar/pdtyes02.wav',   // al recoger un stimpack
+    // --- voces del Zealot ---
+    zealot_what    :'assets/audio/voices/zealot/what-battle-calls.mp3',   // al empezar la partida
+    zealot_charge  :'assets/audio/voices/zealot/my-life-for-aiur.mp3',    // al lanzar la carga (especial)
+    zealot_stim    :'assets/audio/voices/zealot/thus-i-serve.mp3',        // al recoger un stimpack
+    zealot_win     :'assets/audio/voices/zealot/zealot.mp3'               // al ganar la partida
   },
   // Ganancia relativa por sonido (1 = sin cambio; el volumen final nunca pasa de 1). Equilibra el combate: el Marine sonaba mucho mas que la hidra.
   gain:{shoot_marine:.62,shoot_hydralisk:1,grenade_throw:1,grenade_boom:.9,hit:1,crit:.9,ling_beep:.8,clock_warn:.7,acid_sizzle:.7,dt_cloak:.8,dt_reveal:.8,
         marine_what:.8,marine_stim:.8,marine_pissed:.8,hydra_what:1,hydra_yes:1,hydra_pissed:1.2,
         step_marine:.5,step_hydra:.6,step_dt:.45,crowd_ko:.75,crowd_crit:.6,crowd_nuke:.8,tension:.8},
   // Variacion en cada reproduccion: tono +-pitch y volumen +-vol (0 = sonido siempre identico). Solo disparos, golpes y recogidas; no cuenta atras ni fanfarrias.
-  vary:{shoot_marine:1,shoot_hydralisk:1,hit:1,crit:.6,dt_attack:1,dt_slash:.6,grenade_throw:.8,grenade_boom:.6,acid_spit:1,acid_land:.8,acid_sizzle:1,ling_land:1,ling_pop:.8,dt_evade:1,
+  vary:{shoot_marine:1,shoot_hydralisk:1,hit:1,crit:.6,dt_attack:1,dt_slash:.6,zl_attack:1,zl_impact:.6,grenade_throw:.8,grenade_boom:.6,acid_spit:1,acid_land:.8,acid_sizzle:1,ling_land:1,ling_pop:.8,dt_evade:1,
         pickup_shield:.5,pickup_stim:.5,pickup_medkit:.5,pickup_multi:.5,step_marine:1,step_hydra:1,step_dt:1},
   varPitch:.06,varVol:.12,
   // --- musica: fundido cruzado al repetir el bucle, cambio de pista con fundido y tension en los ultimos 10 s ---
@@ -120,7 +129,7 @@ const AUDIO={
   sfxGap:{def:.04,hit:.03,step_marine:.09,step_hydra:.09,step_dt:.09,crowd_ko:.5,crowd_crit:.5,crowd_nuke:.5,acid_sizzle:.12,ling_beep:.08},   // segundos entre dos sonidos iguales
   maxVoices:18,        // efectos simultaneos en total
   prio:{ko:1,victory:1,countdown:1,fight:1,round_start:1,nuke_warning:1,nuke_fall:1,special_ready:1,grenade_boom:1,ling_boom:1,crit:1},   // nunca se descartan ni se reemplazan
-  _isVoice:n=>/^(marine|hydra)_|^dt_(ready|yes)/.test(n),
+  _isVoice:n=>/^(marine|hydra|zealot)_|^dt_(ready|yes)/.test(n),
   _wa(){
     if(this._ctx!==undefined)return this._ctx;
     try{

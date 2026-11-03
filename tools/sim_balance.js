@@ -7,7 +7,7 @@
      partidas       partidas por combinacion (por defecto 100)
      dificultad     easy | normal | hard (por defecto normal)
      ajustes        valores de CONFIG separados por comas, p. ej. "DAMAGE.d=14,HP.m=110"
-     combinaciones  mh, dh, md, dd, mm, hh ... (m = Marine, h = Hidralisco, d = Dark Templar).
+     combinaciones  mh, dh, md, dd, mm, hh ... (m = Marine, h = Hidralisco, d = Dark Templar, z = Zealot).
                     Por defecto: mh dh md
    Ejemplos:
      node tools/sim_balance.js 200 normal
@@ -25,10 +25,10 @@ const args = process.argv.slice(2);
 const N = Math.max(1, parseInt(args[0], 10) || 100);
 const DIFF = ['easy', 'normal', 'hard'].includes(args[1]) ? args[1] : 'normal';
 const rest = args.slice(2);
-const combos = rest.filter(a => /^[mhd]{2}$/.test(a));
-const settings = rest.filter(a => !/^[mhd]{2}$/.test(a)).join(',').split(',').map(s => s.trim()).filter(Boolean);
+const combos = rest.filter(a => /^[mhdz]{2}$/.test(a));
+const settings = rest.filter(a => !/^[mhdz]{2}$/.test(a)).join(',').split(',').map(s => s.trim()).filter(Boolean);
 if (!combos.length) combos.push('mh', 'dh', 'md');
-const NAME = { m: 'Marine', h: 'Hidralisco', d: 'Dark Templar' };
+const NAME = { m: 'Marine', h: 'Hidralisco', d: 'Dark Templar', z: 'Zealot' };
 
 // ---- DOM falso: lo justo para que game.js se cargue y avance sin pantalla ----
 const noop = new Proxy(function () {}, { get: (t, k) => k === Symbol.toPrimitive ? () => 0 : noop, apply: () => noop, set: () => true });

@@ -7,10 +7,10 @@ const CONFIG={
   ROUND_TIME:45,              // segundos por ronda; al acabarse cae la bomba nuclear
   LIVES:2,                    // vidas por luchador
   COUNTDOWN:3,                // segundos de cuenta atras antes de FIGHT!
-  HP:      {m:125, h:140, d:100},    // vida: m = Marine, h = Hidralisco
-  SPEED:   {m:74, h:50, d:72},     // velocidad de movimiento (pixeles logicos por segundo)
-  COOLDOWN:{m:1.07, h:1.07, d:1},   // segundos entre disparos (mayor = dispara mas lento); antes .20/.75, ahora cadencia x0,7
-  DAMAGE:  {m:3.6, h:8.4, d:13.2},    // dano por proyectil (antes 6/14, ahora x0,6)
+  HP:      {m:125, h:140, d:100, z:112},    // vida: m = Marine, h = Hidralisco, d = Dark Templar, z = Zealot
+  SPEED:   {m:74, h:50, d:72, z:70},     // velocidad de movimiento (pixeles logicos por segundo)
+  COOLDOWN:{m:1.07, h:1.07, d:1, z:1},   // segundos entre disparos (mayor = dispara mas lento); antes .20/.75, ahora cadencia x0,7
+  DAMAGE:  {m:3.6, h:8.4, d:13.2, z:12.5},    // dano por proyectil (antes 6/14, ahora x0,6)
   LING_DAMAGE:30,             // dano de la explosion del zergling
   MEDKIT_HEAL:35,             // vida que cura el medical kit (varia +-5 al azar)
   SPECIAL_COOLDOWN:9,        // segundos para recargar el ataque especial
@@ -24,7 +24,7 @@ const CONFIG={
   NUKE_HIT:3.6,               // segundo del impacto (destello, explosion visual y sonido de la explosion)
   NUKE_SFX:{lead:.05, fadeAt:3.2, fadeDur:2.8},   // explosion: adelanto del sonido (s), y cuando empieza a apagarse y cuanto tarda (el mp3 dura 20 s)
   NUKE_TARGET:'percent',      // la nuclear cae sobre quien tenga MENOS VIDA al llegar el reloj a 0: 'percent' = menor porcentaje de la barra (justo con vidas maximas distintas), 'points' = menos puntos de vida
-  VOICE_END:{win:{m:'marine_what',h:'hydra_yes',d:'dt_yes0'},lose:{m:'marine_pissed',h:'hydra_pissed',d:null}},   // frases al terminar la partida (claves de AUDIO.files; null = sin voz). Cambialas por las que prefieras
+  VOICE_END:{win:{m:'marine_what',h:'hydra_yes',d:'dt_yes0',z:'zealot_win'},lose:{m:'marine_pissed',h:'hydra_pissed',d:null,z:null}},   // frases al terminar la partida (claves de AUDIO.files; null = sin voz). Cambialas por las que prefieras
   VOICE:{enabled:true, gap:3, hitMin:20, lowHp:.3, chance:.7},   // voces del Marine: pausa minima entre frases (s), golpe que le molesta, vida baja, probabilidad
   MARINE_ART:{                // ANIMACION DEL MARINE por fotogramas (hoja "Terran Marine"; se genera con tools/build_marine_atlas.py)
     on:true,                  // false = vuelve a las 3 imagenes fijas de antes
@@ -59,6 +59,26 @@ const CONFIG={
     blinkRadius:30,           // radio del golpe al aterrizar
     blinkT:.45,               // segundos entre desaparecer y reaparecer (se puede esquivar)
     behind:12                 // reaparece este numero de px DETRAS del rival
+  },
+  ZL:{                        // ZEALOT: luchador cuerpo a cuerpo con dos cuchillas psi (vida, velocidad, cadencia y dano TOTAL por ataque estan arriba, en la columna z)
+    on:true,                  // false = no se usa la animacion (el Zealot sigue funcionando pero sin dibujo: no lo desactives)
+    baseShield:20,            // escudo con el que empieza cada ronda (la mitad del objeto escudo, que da 40). Al recoger el objeto sube al maximo (40); 0 = sin escudo base
+    autoAttack:true,          // 1 jugador: el Zealot ataca solo cuando el rival esta a su alcance (como el Dark Templar); false = solo con el boton de ataque
+    reach:15,                 // alcance de las cuchillas (px logicos, de borde a borde)
+    atkFps:14,                // fotogramas por segundo del ciclo de ataque (5 fotogramas)
+    hits:[2,4],               // fotogramas del ataque en los que cae cada cuchilla (dos tajos); el dano total se reparte a partes iguales
+    stride:5,                 // px que avanza para cambiar de fotograma al caminar (8 fotogramas por ciclo)
+    bob:.4,                   // rebote vertical extra al caminar (px)
+    faceMove:true,            // al caminar mira hacia donde va; quieto o atacando, al rival
+    chargeDamage:25,          // CARGA (especial): dano al embestir al rival
+    chargeSpeed:240,          // velocidad de la embestida (px logicos por segundo)
+    chargeTime:.55,           // duracion maxima de la embestida (s); si no llega a nadie, se detiene
+    chargeKnock:14,           // empujon (px) que recibe el rival al ser embestido
+    stars:true,               // estrellitas girando sobre la cabeza del rival aturdido por la carga (solo visual)
+    hitStun:1,               // segundos que queda aturdido (sin moverse, atacar ni usar el especial) el rival al que alcanza la carga
+    chargeStun:.35,           // segundos que el Zealot se queda quieto tras chocar (recuperacion)
+    deathFps:9,               // velocidad de la animacion de muerte (7 fotogramas)
+    deathScale:.6             // tamano de la explosion de muerte (1 = tamano original de la hoja)
   },
   MFX:{                       // EFECTOS DEL DISPARO DEL MARINE (solo visuales, no cambian el dano)
     on:true,                  // false = disparo sencillo de antes
@@ -134,7 +154,7 @@ const CONFIG={
     title:'COLISEO',          // titulo grande
     subtitle:'STARCRAFTY',     // subtitulo
     credit:'by Wizass',       // firma debajo del subtitulo ('' = ninguna)
-    lines:['Marine \u00b7 Hidralisco \u00b7 Dark Templar','Un solo coliseo. Ningun superviviente.'],   // frases que aparecen debajo, una tras otra ([] = ninguna)
+    lines:['Marine \u00b7 Hidralisco \u00b7 Dark Templar \u00b7 Zealot','Un solo coliseo. Ningun superviviente.'],   // frases que aparecen debajo, una tras otra ([] = ninguna)
     prompt:'Pulsa cualquier tecla o toca la pantalla',   // texto parpadeante para empezar
     dim:.35                   // oscurecido de las imagenes (0 = ninguno, 1 = negro)
   },
@@ -187,12 +207,18 @@ const ASSETS={
     orig:'assets/images/sprites/dark_templar_atlas.png',     // capa magenta original
     red :'assets/images/sprites/dark_templar_atlas_roja.png' // capa roja: el DT de la derecha cuando hay dos DT
   },
+  zealot:{                                                   // hoja del Zealot (ver ATLAS_ZEAL): una por lado (el luchador izquierdo es azul y el derecho rojo)
+    azul :'assets/images/sprites/zealot_atlas_azul.png',
+    roja :'assets/images/sprites/zealot_atlas_roja.png',
+    death:'assets/images/sprites/zealot_muerte.png'           // 7 fotogramas de muerte (explosion psionica)
+  },
   ling:'assets/images/sprites/zergling_atlas.png',         // zergling explosivo: 9 direcciones (0 sur, 4 oeste, 8 norte; el este se espeja) x 7 fotogramas de caminar; se genera con tools/build_ling_atlas.py
   hydraAtlas:'assets/images/sprites/hidralisco_atlas.png',   // hoja del Hidralisco: 9 direcciones x (7 de caminar, 5 de ataque); se genera con tools/build_hydra_atlas.py
   portraits:{                                                // retratos del HUD
     m:'assets/images/ui/retrato_marine.jpg',
     h:'assets/images/ui/retrato_hidralisco.jpg',
-    d:'assets/images/ui/retrato_dark_templar.jpg'
+    d:'assets/images/ui/retrato_dark_templar.jpg',
+    z:'assets/images/ui/retrato_zealot.jpg'
   }
 };
 
@@ -212,3 +238,6 @@ const ATLAS_DT={fw:64,fh:80,cols:16,ax:32,ay:64,walkN:10,walkFps:12,attack:176,a
 /* Atlas del Hidralisco: celdas de w x h px; (ax,ay) = punto del suelo dentro de la celda; walkRow/walkN = caminar (el reposo usa el fotograma 0); atkRow/atkN = ataque */
 const ATLAS_HYDRA={w:34,h:43,ax:17,ay:33,walkRow:0,walkN:7,atkRow:7,atkN:5};
 const ATLAS_MARINE={cell:40,ax:20,ay:35,idleRow:0,walkRow:1,walkN:9,shootRow:10};
+
+/* Atlas del Zealot (ver tools/build_zealot_atlas.py): celdas w x h, pies (ax,ay), caminar 8 + ataque 5; muerte: 7 fotogramas de dw x dh con pivote (dax,day) */
+const ATLAS_ZEAL={w:41,h:43,ax:16,ay:34,walkRow:0,walkN:8,atkRow:8,atkN:5,dw:54,dh:72,dax:27,day:56,deathN:7};
