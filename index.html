@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0809">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Coliseo Brood War</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css"></head><body>
 <div class="stage">
@@ -16,7 +20,7 @@
  <div id="ov"><div id="snd" class="snd"><button type="button" id="sm" title="Silenciar / activar sonido (M)" aria-label="Silenciar o activar el sonido"><svg class="on" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="offi" viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9z" fill="currentColor"/><path d="M16 9l6 6m0-6l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><label title="Música"><svg viewBox="0 0 24 24"><path d="M9 17V5l10-2v12" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="7" cy="17" r="2.5" fill="currentColor"/><circle cx="17" cy="15" r="2.5" fill="currentColor"/></svg><input type="range" id="vm2" min="0" max="100" aria-label="Volumen de la música"></label><label title="Efectos"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6z" fill="currentColor"/></svg><input type="range" id="vs2" min="0" max="100" aria-label="Volumen de los efectos"></label><label title="Voces"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z" fill="currentColor"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="range" id="vv2" min="0" max="100" aria-label="Volumen de las voces"></label></div><div class="card">
   <h1 id="t">Coliseo</h1>
   <p id="s">Marine contra hidralisco. Caen objetos al azar: toma el escudo y el stimpack, y huye del zergling explosivo (un disparo lo detona).</p>
-  <div class="opts"><label>Luchador izquierdo <select id="cl"><option value="m">Marine</option><option value="h">Hidralisco</option><option value="d">Dark Templar</option></select></label><label>Luchador derecho <select id="cr"><option value="m">Marine</option><option value="h">Hidralisco</option><option value="d">Dark Templar</option></select></label><label>Dificultad de la IA <select id="dif"><option value="easy">Fácil</option><option value="normal">Normal</option><option value="hard">Difícil</option></select></label><label>Arena <select id="ar"><option value="coliseo">Coliseo Terran contra Zerg</option><option value="generada">Arena de piedra (más estrecha)</option></select></label><label>Vidas <select id="liv"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label></div>
+  <div class="opts"><label>Luchador izquierdo <select id="cl"><option value="m">Marine</option><option value="h">Hidralisco</option><option value="d">Dark Templar</option></select></label><label>Luchador derecho <select id="cr"><option value="m">Marine</option><option value="h">Hidralisco</option><option value="d">Dark Templar</option></select></label><label>Dificultad de la IA <select id="dif"><option value="easy">Fácil</option><option value="normal">Normal</option><option value="hard">Difícil</option></select></label><label>Arena <select id="ar"><option value="coliseo">Coliseo Terran contra Zerg</option><option value="generada">Arena de piedra (más estrecha)</option></select></label><label>Vidas <select id="liv"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></label></div>
   <div class="btns"><button data-m="1m">Jugar de Marine</button><button data-m="1h">Jugar de Hidralisco</button><button data-m="2p">2 jugadores</button></div>
   <p id="sc" class="sc"></p><div class="btns2"><button id="rsc" class="mini">Reiniciar marcador</button><button id="opt" class="mini">Cambiar opciones</button></div>
   <p class="k">Mover: WASD o flechas. Disparar: F o Espacio. Pausa: Enter. Especial (se recarga cada 9 s): G lanza la granada del Marine y . escupe el ácido del Hidralisco. Cada ronda dura 45 s: si se acaba el tiempo, cae una bomba nuclear sobre quien tenga menos vida. Apuntan solos al rival. En 2 jugadores: Marine con WASD + F, Hidralisco con flechas + Shift derecho. El Dark Templar pelea cuerpo a cuerpo (corta solo cuando el rival está a su alcance; en 2 jugadores, disparar = cuchillada), va camuflado (los disparos contra él se desvían hasta que ataca) y su especial es un salto sombrío que lo hace reaparecer detrás del rival. Mando: stick o cruceta mueve, A o gatillo dispara, X o B lanza el especial, Start pausa. En móvil salen controles táctiles (mejor en horizontal; en 2 jugadores controlan al Marine).</p>
@@ -26,8 +30,14 @@
   <div class="go"></div></div>
 </div>
 <div id="tc" hidden><div id="jb"><div id="jk"></div></div><div class="tb"><button id="bs">Especial</button><button id="bf">Disparo</button></div></div>
+<script>/* mide la altura real del HUD (en movil varia) para que el escenario quepa entero en la pantalla */
+(function(){var d=document.documentElement,h=document.querySelector('.hud');function f(){if(h)d.style.setProperty('--hud',h.offsetHeight+'px')}
+f();addEventListener('load',f);addEventListener('resize',f);addEventListener('orientationchange',function(){setTimeout(f,200)});
+if(window.ResizeObserver&&h)new ResizeObserver(f).observe(h)})();</script>
 <script src="js/config.js"></script>
+<script src="js/audio_data.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/granada_fx.js"></script>
 <script src="js/game.js"></script>
+<script src="js/cursores.js"></script>
 </body></html>

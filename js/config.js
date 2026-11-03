@@ -7,10 +7,10 @@ const CONFIG={
   ROUND_TIME:45,              // segundos por ronda; al acabarse cae la bomba nuclear
   LIVES:2,                    // vidas por luchador
   COUNTDOWN:3,                // segundos de cuenta atras antes de FIGHT!
-  HP:      {m:95, h:140, d:100},    // vida: m = Marine, h = Hidralisco
-  SPEED:   {m:60, h:50, d:72},     // velocidad de movimiento (pixeles logicos por segundo)
+  HP:      {m:125, h:140, d:100},    // vida: m = Marine, h = Hidralisco
+  SPEED:   {m:74, h:50, d:72},     // velocidad de movimiento (pixeles logicos por segundo)
   COOLDOWN:{m:1.07, h:1.07, d:1},   // segundos entre disparos (mayor = dispara mas lento); antes .20/.75, ahora cadencia x0,7
-  DAMAGE:  {m:3.6, h:8.4, d:15},    // dano por proyectil (antes 6/14, ahora x0,6)
+  DAMAGE:  {m:3.6, h:8.4, d:13.2},    // dano por proyectil (antes 6/14, ahora x0,6)
   LING_DAMAGE:30,             // dano de la explosion del zergling
   MEDKIT_HEAL:35,             // vida que cura el medical kit (varia +-5 al azar)
   SPECIAL_COOLDOWN:9,        // segundos para recargar el ataque especial
@@ -49,13 +49,13 @@ const CONFIG={
     cloak:true,               // camuflaje: semitransparente, y los disparos enemigos se desvian; false = siempre visible
     alpha:.5,                 // opacidad mientras esta camuflado (1 = totalmente visible)
     reveal:.8,                // segundos que se deja ver despues de atacar o saltar
-    evasion:.35,              // probabilidad (0-1) de que un disparo o cuchillada enemiga FALLE contra un DT camuflado (como el Butterfly de Dota); 0 = nunca
+    evasion:.28,              // probabilidad (0-1) de que un disparo o cuchillada enemiga FALLE contra un DT camuflado (como el Butterfly de Dota); 0 = nunca
     critChance:.25,           // CRITICO contra el DT visible: probabilidad (0-1) de que un disparo o cuchillada enemiga haga dano critico mientras el DT esta revelado (0 = nunca)
     critBonus:2,              // dano critico = dano base x critMult + critBonus  (critBonus = puntos extra fijos, +2 por defecto)
     critMult:1,               // multiplicador del dano critico (1 = solo suma critBonus; 2 = el doble, estilo Dota, etc.)
     aim:.14,                  // error de punteria (radianes) de los disparos contra un DT camuflado
     jit:12,                   // error extra (px) de granada, acido y salto contra un DT camuflado
-    blinkDamage:30,           // dano del salto sombrio (el especial del DT)
+    blinkDamage:20,           // dano del salto sombrio (el especial del DT)
     blinkRadius:30,           // radio del golpe al aterrizar
     blinkT:.45,               // segundos entre desaparecer y reaparecer (se puede esquivar)
     behind:12                 // reaparece este numero de px DETRAS del rival
@@ -137,6 +137,12 @@ const CONFIG={
     lines:['Marine \u00b7 Hidralisco \u00b7 Dark Templar','Un solo coliseo. Ningun superviviente.'],   // frases que aparecen debajo, una tras otra ([] = ninguna)
     prompt:'Pulsa cualquier tecla o toca la pantalla',   // texto parpadeante para empezar
     dim:.35                   // oscurecido de las imagenes (0 = ninguno, 1 = negro)
+  },
+  CURSORS:{                   // CURSORES DE STARCRAFT (hoja de ACE_Spark; js/cursores.js). Solo visual
+    on:true,                  // false = cursores normales del navegador
+    scale:2,                  // 2 = doble de tamano (pixel perfecto, se ve bien en pantallas modernas); 1 = tamano original
+    fps:{arrow:8, hover:3, ring:14},   // velocidad de cada animacion (fotogramas por segundo): flecha, elipse, anillo de punteria
+    canvasHover:true          // sobre un luchador el anillo pasa a elipse: verde si lo controla una persona, roja si es la IA. false = siempre el anillo
   },
   BG_IMAGE:'assets/images/background/arena.jpg',   // fondo del coliseo (960x540); null = version dibujada por codigo
   ARENA:{cx:241, cy:129.5, rx:182, ry:84},   // elipse jugable en coordenadas logicas (mitad de los px del fondo 960x540); debe caer sobre el suelo del fondo

@@ -3,7 +3,7 @@
 html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:Rajdhani,'Segoe UI',system-ui,sans-serif}
 body{display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
 select,input,option{user-select:auto;-webkit-user-select:auto}
-.stage{position:relative;width:min(100%,calc((100vh - 92px)*16/9))}
+.stage{position:relative;width:min(100%,calc((100vh - 92px)*16/9));width:min(100%,calc((100dvh - 92px)*16/9))}   /* dvh: en movil no cuenta la barra del navegador */
 .hud{display:flex;justify-content:space-between;gap:12px;padding:6px 4px;font-weight:700}
 .p{flex:1;max-width:44%;background:var(--panel);border:2px solid var(--edge);padding:4px 8px}
 
@@ -43,7 +43,7 @@ canvas{display:block;width:100%;aspect-ratio:16/9;border:2px solid var(--edge);b
 h1{margin:0 0 6px;font-size:clamp(22px,4vw,34px);color:var(--ok)}
 .card p{margin:6px 0;font-size:clamp(13px,1.8vw,16px);line-height:1.35}
 .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
-button{font:700 16px Rajdhani,sans-serif;color:var(--ok);background:#0a0f0b;border:2px solid var(--edge);padding:8px 14px;cursor:pointer}
+button{font:700 16px Rajdhani,sans-serif;color:var(--ok);background:#0a0f0b;border:2px solid var(--edge);padding:8px 14px}
 button:hover,button:focus-visible{background:#16261a;outline:2px solid var(--ok)}
 .k{color:#9fb59a}
 .lv{color:#e0503a;font-size:13px;letter-spacing:2px;margin-left:6px}.lv .off{color:#3a2a2a}
@@ -85,7 +85,7 @@ button:hover,button:focus-visible{background:#16261a;outline:2px solid var(--ok)
 #bs{width:72px;height:72px;color:#ffd98a;border-color:#ffd98a;font-size:14px}
 
 /* ---- Presentacion de entrada (#intro) ---- */
-#intro{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:99;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;overflow:hidden;background:#050303;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .7s ease}
+#intro{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:99;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;overflow:hidden;background:#050303;display:flex;align-items:center;justify-content:center;transition:opacity .7s ease}
 #intro[hidden]{display:none}
 #intro.out{opacity:0;pointer-events:none}
 #intro .ib{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity 1.4s ease;will-change:transform,opacity}
@@ -109,11 +109,82 @@ button:hover,button:focus-visible{background:#16261a;outline:2px solid var(--ok)
 .snd:hover,.snd:focus-within{opacity:1}
 #ov.end .snd{display:none}
 .snd svg{width:16px;height:16px;display:block;flex:none}
-.snd button{padding:4px;border:0;border-radius:50%;background:transparent;color:var(--ok);display:grid;place-items:center;cursor:pointer}
+.snd button{padding:4px;border:0;border-radius:50%;background:transparent;color:var(--ok);display:grid;place-items:center}
 .snd button:hover,.snd button:focus-visible{background:rgba(79,211,90,.18);outline:none}
 .snd label{display:flex;align-items:center;gap:5px;color:#9fb59a}
-.snd input{width:64px;height:14px;margin:0;accent-color:var(--ok);cursor:pointer}
+.snd input{width:64px;height:14px;margin:0;accent-color:var(--ok)}
 .snd .offi{display:none}.snd.off .on{display:none}.snd.off .offi{display:block}.snd.off button{color:var(--bad)}
 .snd.off label{opacity:.4}
 @media (max-width:1000px){#ov:not(.end){flex-direction:column;justify-content:center;gap:8px}.snd{position:static;flex:none}}
 @media (max-width:560px){.snd{gap:6px;padding-right:8px}.snd input{width:44px}}
+
+/* ---- Cursores de StarCraft (js/cursores.js los anima con las variables --cur-*; sin ellas queda el cursor normal) ---- */
+html,body,#intro{cursor:var(--cur-arrow,auto)}
+button,select,label,input[type=range],.snd{cursor:var(--cur-hover,pointer)}
+button:disabled,select:disabled,input:disabled{cursor:var(--cur-no,not-allowed)}
+canvas{cursor:var(--cur-canvas,auto)}
+/* listas desplegables propias (js/cursores.js): el menu nativo de un <select> no puede llevar el cursor de StarCraft */
+.opts .csel{font:700 15px Rajdhani,sans-serif;padding:3px 22px 3px 6px;text-align:left;position:relative;min-width:110px}
+.opts .csel::after{content:"";position:absolute;right:7px;top:50%;margin-top:-2px;border:4px solid transparent;border-top-color:var(--ok);border-bottom:0}
+.clist{position:fixed;z-index:1000;background:#0a0f0b;border:2px solid var(--edge);display:flex;flex-direction:column;max-height:60vh;overflow:auto}
+.clist button{font:700 15px Rajdhani,sans-serif;text-align:left;border:0;border-radius:0;padding:5px 10px;background:transparent;white-space:nowrap;outline:none}
+.clist button:hover,.clist button.sel{background:#16261a}
+.clist button.sel{color:var(--warn)}
+.clist,.clist *{cursor:var(--cur-hover,pointer)}
+
+/* ==========================================================================
+   MOVIL / TABLET (Android, iOS): que todo quepa en pantalla sin desplazarse.
+   Se activa en pantallas tactiles o estrechas; en ordenador no cambia nada.
+   ========================================================================== */
+@media (pointer:coarse),(max-width:700px){
+  html,body{overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
+  body{height:100vh;height:100dvh;position:fixed;inset:0;width:100%}
+  .p,.mid{min-width:0}.p{overflow:hidden}
+  #c{touch-action:none}
+  button,#c,#tc,#jb{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}   /* sin destello gris ni menu de pulsacion larga al tocar */
+}
+/* Movil en HORIZONTAL (o cualquier pantalla baja): HUD compacto y el escenario cabe en la altura real */
+@media (pointer:coarse) and (max-height:560px),(max-height:480px){
+  .stage{width:min(100%,calc((100vh - var(--hud,64px) - 6px)*16/9));width:min(100%,calc((100dvh - var(--hud,64px) - 6px)*16/9))}   /* --hud = altura real del HUD, medida por el script de index.html */
+  .hud{gap:6px;padding:2px 2px}
+  .p{padding:2px 6px;gap:6px;max-width:42%}
+  .pt{width:34px;border-width:1px}
+  .in{font-size:13px;line-height:1.1}.in span{font-size:13px}.lv{font-size:11px;margin-left:3px;letter-spacing:1px}
+  .bar{height:6px;margin-top:2px}
+  .mid{gap:0}#tm{font-size:20px}
+  button{font-size:13px;padding:3px 9px}
+  .row{gap:3px}
+  #ov,#pz{top:var(--hud,46px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+  #ov:not(.end){flex-direction:column;justify-content:flex-start;gap:4px;padding:6px 0}
+  .card{padding:8px 12px;margin:auto}
+  .card h1,#ov h1{font-size:20px;margin:2px 0}
+  #s,.card .k,#ov .k{display:none}
+  .card p{font-size:13px;margin:3px 0}
+  .opts{gap:6px 10px;margin:4px 0;font-size:13px}.opts select{font-size:13px;padding:1px 4px}
+  .btns{margin:6px 0;gap:6px}
+  .sc{font-size:13px;margin:2px 0}
+  .snd{padding:2px 8px 2px 4px}
+  #jb{width:96px;height:96px}#jk{width:40px;height:40px}
+  #tc{padding:0 10px calc(10px + env(safe-area-inset-bottom,0px)) calc(10px + env(safe-area-inset-left,0px))}
+  .tb{gap:8px;padding-right:calc(env(safe-area-inset-right,0px))}
+  .tb button{width:68px;height:68px;font-size:13px}
+}
+/* Movil en VERTICAL: HUD en dos columnas que no se salen, y mandos abajo */
+@media (max-width:600px) and (orientation:portrait){
+  .hud{gap:4px;padding:4px 2px}
+  .p{padding:3px 5px;gap:5px;max-width:none;flex:1 1 0}
+  .pt{width:34px;border-width:1px}
+  .in{font-size:12px;line-height:1.15}.in span{font-size:12px}.lv{font-size:10px;margin-left:2px;letter-spacing:1px}
+  .bar{height:6px}
+  #tm{font-size:20px}
+  .mid{flex:none}
+  button{font-size:13px;padding:4px 7px}
+  #ov:not(.end),#pz{position:fixed;inset:0;top:0;z-index:50;overflow-y:auto;-webkit-overflow-scrolling:touch}   /* menu y pausa a pantalla completa: asi caben los botones */
+  #ov:not(.end){justify-content:flex-start;padding:10px 0}
+  #ov.end{top:var(--hud,70px)}
+  .card{padding:10px 12px;margin:auto;max-width:94%}
+  .opts{font-size:13px;gap:6px 10px}.opts select{font-size:13px}
+  #s{font-size:13px}.card .k,#ov .k{font-size:12px}
+  #jb{width:104px;height:104px}
+  .tb button{width:72px;height:72px}
+}

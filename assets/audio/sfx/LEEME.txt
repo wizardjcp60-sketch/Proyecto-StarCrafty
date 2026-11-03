@@ -27,9 +27,6 @@ un compresor/limitador, así que muchos sonidos a la vez ya no distorsionan.
 - Pausa mínima entre dos sonidos iguales: AUDIO.sfxGap (0,04 s por defecto; más larga en pasos y público).
 - Si el audio aún está bloqueado por el navegador, o la pestaña está oculta, los sonidos se descartan en vez de
   encolarse, para que no salgan todos de golpe al reanudar.
-- Carga: los efectos se bajan una sola vez, 4 a la vez y por orden (AUDIO.loadFirst: primero los del combate; el
-  público y las explosiones largas, al final). Mientras un efecto aún no ha llegado (conexión lenta, p. ej. en
-  GitHub Pages) se descarta en vez de encolarse. La música ya no descarga dos veces el mismo archivo.
 - Abriendo index.html con doble clic (sin servidor) el navegador no deja a Web Audio leer los archivos: entonces se
   usa un respaldo con <audio> reutilizables (máx. 3 por sonido). Va bien, pero en GitHub Pages o con un servidor
   local (python3 -m http.server) suena mejor.

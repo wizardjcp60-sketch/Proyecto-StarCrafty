@@ -85,7 +85,7 @@ const AUDIO={
   musicXf:2.5,         // segundos de fundido cruzado al volver al inicio del bucle (0,5 s o menos = casi corte)
   voiceVolume:.9,      // volumen propio de las voces (0-1), independiente de los efectos
   _hold:{},            // motivos por los que la musica esta en pausa (pausa del juego)
-  _cache:{},_ctx:undefined,_mg:null,_buf:{},_ld:{},_q:[],_run:0,_act:[],_last:{},_pl:{},_trk:null,_out:[],_int:0,_tn:null,_tt:0,_iv:null,_ul:false,
+  _cache:{},_ctx:undefined,_mg:null,_buf:{},_act:[],_last:{},_pl:{},_trk:null,_out:[],_int:0,_tn:null,_tt:0,_iv:null,_ul:false,
   _vol(){return Math.min(1,this.musicVolume*(Object.keys(this._duck).length?.3:1)*(1+.3*this._int))},
   _mv(e){e.volume=Math.max(0,Math.min(1,this._vol()*(e._g==null?1:e._g)))},
   musicVol(){if(this._trk)this._trk.els.forEach(e=>this._mv(e))},
@@ -134,33 +134,17 @@ const AUDIO={
       return c;
     }catch(e){return this._ctx=null}
   },
-  // Estado de carga de cada efecto (_ld): 1 = cargando, 2 = Web Audio no pudo (usa el respaldo <audio>), 3 = listo
-  _load(name,done){
-    const fin=()=>{if(done)done()},c=this._wa(),url=this.files[name];
-    if(!url||this._ld[name]){fin();return}
-    if(!c){this._ld[name]=2;this._get(name);fin();return}
-    this._ld[name]=1;
-    fetch(url).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()})
+  _load(name){
+    const c=this._wa(),url=this.files[name];if(!c||!url||this._buf[name]!==undefined)return;
+    this._buf[name]=0;   // 0 = cargando o fallo: mientras tanto se usa el respaldo <audio>
+    // sin servidor (doble clic en index.html) fetch() no puede leer archivos locales: se usa js/audio_data.js (tools/build_audio_data.py)
+    const emb=()=>{const d=window.AUDIO_DATA&&window.AUDIO_DATA[name];if(!d)throw 0;const bin=atob(d),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer};
+    fetch(url).then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()},()=>emb())
       .then(ab=>new Promise((ok,no)=>{const p=c.decodeAudioData(ab,ok,no);if(p&&p.catch)p.catch(no)}))
-      .then(buf=>{this._buf[name]=buf;this._ld[name]=3})
-      .catch(()=>{this._ld[name]=2;this._get(name)})   // sin servidor (file://) o archivo ausente: respaldo con <audio>
-      .then(fin);
+      .then(b=>{this._buf[name]=b}).catch(()=>{this._buf[name]=0});
   },
-  // Efectos que se cargan primero (los del combate); el resto (publico, explosiones largas...) despues
-  loadFirst:['shoot_marine','shoot_hydralisk','hit','step_marine','step_hydra','step_dt','pickup_shield','pickup_stim','pickup_medkit','pickup_multi','special_ready','grenade_throw','acid_spit','acid_land','dt_attack','dt_blink','dt_slash','crit','round_start','countdown','fight','ko','victory'],
-  _pump(){
-    while(this._run<4&&this._q.length){this._run++;this._load(this._q.shift(),()=>{this._run--;this._pump()})}
-  },
-  // Carga los efectos: Web Audio (4 a la vez, por orden de importancia). Solo las voces y la explosion nuclear usan <audio>.
-  // Antes cada efecto se descargaba dos veces (Web Audio y <audio>) y la pagina bajaba ~15 MB de audio al abrirse.
-  preload(){
-    const all=Object.keys(this.files).filter(n=>n.indexOf('music')!==0&&n!=='tension');
-    const el=n=>this._isVoice(n)||n==='nuke_explosion';
-    all.filter(el).forEach(n=>this._get(n));
-    const f=this.loadFirst,rank=n=>{const i=f.indexOf(n);return i<0?999:i};
-    this._q=all.filter(n=>!el(n)).sort((a,b)=>rank(a)-rank(b));
-    this._pump();
-  },
+  // Carga de antemano todos los efectos y voces (la musica no): sin esto el primer uso de cada sonido llegaba 30-60 ms tarde
+  preload(){Object.keys(this.files).forEach(n=>{if(n.indexOf('music')!==0&&n!=='tension'){this._get(n);if(!this._isVoice(n)&&n!=='nuke_explosion')this._load(n)}})},
   _kill(v){   // apaga un efecto con un fundido de 30 ms (sin chasquido)
     const i=this._act.indexOf(v);if(i>=0)this._act.splice(i,1);
     try{const t=this._ctx.currentTime;v.gn.gain.cancelScheduledValues(t);v.gn.gain.setValueAtTime(v.gn.gain.value,t);v.gn.gain.linearRampToValueAtTime(0,t+.03);v.s.stop(t+.04)}catch(e){}
@@ -184,12 +168,11 @@ const AUDIO={
       try{s.start()}catch(e){this._kill(a)}
       return;
     }
-    if(c&&this._ld[name]!==2)return;   // aun se esta cargando: se descarta (no se encola para que no salga de golpe despues)
     this._playEl(name,v,rate,now);   // respaldo
   },
   // Respaldo con <audio>: grupo reducido y reutilizable por sonido (no se crean elementos nuevos en cada disparo)
   _playEl(name,v,rate,now){
-    const a=this._get(name);if(!a||a.readyState<3)return;   // sin cargar: se descarta
+    const a=this._get(name);if(!a)return;
     const P=this._pl[name]||(this._pl[name]=[]),lim=Math.min(this.sfxLimit[name]||this.sfxLimit.def,3);
     let e=P.find(x=>x.paused||x.ended);
     if(!e){if(P.length<lim){e=a.cloneNode();P.push(e)}else{e=P.shift();P.push(e)}}   // si estan todos ocupados, reutiliza el mas antiguo
@@ -207,8 +190,8 @@ const AUDIO={
     const T0=this._trk;
     if(T0&&T0.name===name){this._playTrk(T0);return}
     if(T0)T0.els.forEach(e=>{if(!e.paused)this._out.push({el:e,g:e._g==null?1:e._g,t:0})});   // la pista anterior se apaga en 1 s
-    const mk=n=>{const e=new Audio(url);e.preload=n?'auto':'metadata';e._g=0;return e};   // el 2.o elemento (fundido cruzado) no vuelve a descargar el archivo entero
-    this._trk={name,els:[mk(1),mk(0)],i:0,xf:-1,fi:T0?0:9,start:this.musicStarts[name]||0};   // fi: progreso del fundido de entrada
+    const mk=()=>{const e=new Audio(url);e.preload='auto';e._g=0;return e};
+    this._trk={name,els:[mk(),mk()],i:0,xf:-1,fi:T0?0:9,start:this.musicStarts[name]||0};   // fi: progreso del fundido de entrada
     if(!this._iv)this._iv=setInterval(()=>this._tick(),60);
     this._tt=performance.now();
     this._playTrk(this._trk);

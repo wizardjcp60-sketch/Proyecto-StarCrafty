@@ -36,8 +36,9 @@ coliseo-broodwar/
     style.css                 Estilos: HUD, retratos con efectos, menús, botones.
   js/
     config.js                 AJUSTES de balance y rutas de imágenes (edítalo aquí).
-    audio.js                  Sistema de sonido listo (sin archivos todavía).
+    audio.js                  Sistema de sonido (efectos con Web Audio, música con fundido cruzado y voces).
     game.js                   Lógica, IA, dibujo, estados y bucle principal.
+    cursores.js               Cursores de StarCraft animados (flecha, elipses, anillo de puntería). Se carga DESPUÉS de game.js. Ver 10B.
     granada_fx.js             Granada y explosión del Marine: vuelo, fuego, humo, chispas, escombros, onda
                               expansiva, mancha de quemado (solo visual). Se carga ANTES de game.js. Ver 6G.
   assets/
@@ -59,7 +60,10 @@ coliseo-broodwar/
     gen_arena.py              Generador del fondo (Python: numpy, scipy, pillow).
     build_grenade_sfx.py      Sintetiza granada_lanza.wav y granada_explota.wav (python3 tools/build_grenade_sfx.py).
     sim_balance.js            Simula partidas IA contra IA sin navegador para medir el balance
-                              (node tools/sim_balance.js 200 normal). Ver sección 6E.
+                              (node tools/sim_balance.js 200 normal). Ver sección 6E. Necesita solo Node.
+                              Opciones: dificultad, ajustes de CONFIG ("DAMAGE.d=14") y combinaciones (mh dh md dd mm hh);
+                              SEED=7 delante del comando repite los resultados.
+    build_cursors.py          Recorta los cursores de StarCraft de la hoja de ACE_Spark (python3 tools/build_cursors.py).
     build_acid_fx.py          Recorta la salpicadura de ácido de la hoja del Hidralisco (python3 tools/build_acid_fx.py).
     build_dist.py             Regenera dist/ con todo incrustado (python3 tools/build_dist.py).
   dist/                       (no se sube a GitHub: se genera con tools/build_dist.py)
@@ -95,14 +99,14 @@ coliseo-broodwar/
 -------------------
 - Cada ronda empieza con "Ronda N" y una cuenta atrás 3, 2, 1, luego "FIGHT!"
   (los controles se activan en ese momento).
-- Cada luchador tiene 2 vidas (corazones junto a su nombre). Quien llega a 0 de
+- Cada luchador tiene 2 vidas por defecto; en el menú se pueden elegir 1, 2, 3 o 4 (corazones junto a su nombre). Quien llega a 0 de
   vida pierde una vida: aparece "K.O." y empieza otra ronda con su cuenta atrás.
 - Gana quien deja al rival sin vidas. La pantalla final muestra al ganador de
   pie, agrandado, sobre una pila de enemigos muertos (marine sobre hidraliscos
   o hidralisco sobre marines). Si el ganador no perdió ninguna vida sale
   "Victoria perfecta". Si caen los dos a la vez en la última ronda: "Empate".
 - Estadísticas actuales (editables en js/config.js, que manda si estos números cambian):
-     Marine .... 95 de vida, velocidad 60, un disparo cada 1,07 s, 3,6 de daño.
+     Marine .... 125 de vida, velocidad 74, un disparo cada 1,07 s, 3,6 de daño.
      Hidralisco  140 de vida, velocidad 50, un disparo cada 1,07 s, 8,4 de daño.
   El Marine dispara rápido con balas finas; el Hidralisco tiene más vida y
   lanza espinas más lentas y fuertes.
@@ -143,8 +147,8 @@ Probabilidad: escudo 2/11, stimpack 2/11, zergling explosivo 3/11, medical kit 2
   assets/images/source/zergling/ y el atlas se regenera con  python3 tools/build_ling_atlas.py  (ahí se cambia
   también el color del equipo, TEAM_RGB; verde tóxico por defecto).
 - ZERGLING EXPLOSIVO (vaina morada): al aterrizar nace un zergling que persigue
-  al luchador más cercano (velocidad 85). Explota al tocarlo o a los 7 s: 35 de
-  daño en un radio de ~38. Tiene 12 de vida: un disparo lo detona donde esté
+  al luchador más cercano (velocidad 85). Explota al tocarlo (30 de
+  daño en un radio de ~38) o, si a los 4 s no alcanzó a nadie, con la mitad de daño en un radio de 22 (ver mecha más abajo). Tiene 12 de vida: un disparo lo detona donde esté
   (se puede usar como trampa). Si explota cerca de ti, te daña igualmente.
 - MULTIDISPARO (icono: el emblema dorado y azul de tres proyectiles, con resplandor; assets/images/fx/icono_multidisparo.png,
   generado con python3 tools/build_multi_icon.py desde assets/images/source/emblema_multidisparo_original.png;
@@ -315,8 +319,8 @@ roja y el retrato con marco rosa). Sus sprites son una hoja de 295 fotogramas co
 direcciones (caminar 10 fotogramas, reposo, ataque 7, muerte 7), cortada de la hoja
 "Protoss Dark Templar" de ACE_Spark; el juego elige la dirección según hacia dónde
 mira al rival. El retrato del HUD se recortó del fotograma de reposo.
-- ESTADÍSTICAS (config.js, columna d): 100 de vida, velocidad 72 (la más rápida), una
-  cuchillada cada 1 s con 15 de daño. Alcance corto: CONFIG.DT.reach = 10 px.
+- ESTADÍSTICAS (config.js, columna d): 100 de vida, velocidad 72, una
+  cuchillada cada 1 s con 13,2 de daño. Alcance corto: CONFIG.DT.reach = 10 px.
 - ATAQUE (F, Espacio o el botón de disparo; suena dark_templar_ataque.mp3 al empezar la cuchillada): cuerpo a cuerpo. Si el rival no está al
   alcance no pasa nada. La cuchillada tarda 0,25 s en caer (fotograma 4 de 7), así
   que se puede esquivar alejándose; durante el golpe se mueve más despacio. La
@@ -327,7 +331,7 @@ mira al rival. El retrato del HUD se recortó del fotograma de reposo.
   saltar. Con cloak:false siempre se ve y no desvía nada.
 - ESPECIAL: SALTO SOMBRÍO (tecla G a la izquierda, punto a la derecha; recarga 9 s):
   desaparece (no se le puede dañar) y 0,45 s después reaparece 12 px DETRÁS del
-  rival, con una cuchillada de área (30 de daño, radio 30). El punto de llegada se
+  rival, con una cuchillada de área (20 de daño, radio 30). El punto de llegada se
   marca en el suelo con un anillo morado discontinuo, así que se puede esquivar
   alejándose. Si el sitio queda fuera de la arena, reaparece dentro, hacia el centro.
 - IA: avanza directo hacia el rival con un ligero zigzag a media distancia, golpea al
@@ -345,7 +349,7 @@ mira al rival. El retrato del HUD se recortó del fotograma de reposo.
   Marine, no del Dark Templar; si quieres equilibrarlo, sube su daño o su vida en
   config.js. Para probar cambios: node tools/sim_balance.js 200 normal "DAMAGE.d=14" dh
   (ajustes de CONFIG separados por comas; combinaciones mh, dh, md, dd).
-- EVASIÓN (CONFIG.DT.evasion = 0,35): mientras está camuflado, cada disparo o cuchillada enemiga tiene un 35 % de fallar
+- EVASIÓN (CONFIG.DT.evasion = 0,28): mientras está camuflado, cada disparo o cuchillada enemiga tiene un 28 % de fallar
   (sale "¡Falla!"), como el Butterfly de Dota. Al atacar o saltar se deja ver (DT.reveal) y pierde la evasión. La
   granada, el ácido y el zergling explosivo no se esquivan.
 - CRÍTICO CONTRA EL DT VISIBLE (CONFIG.DT.critChance, critBonus, critMult): cuando el Dark Templar se hace visible
@@ -492,6 +496,34 @@ Valores que siguen dentro de js/game.js (búscalos por nombre de función):
    - frecuencia y probabilidad de objetos: bloque "spawnT" en update()
    - tamaño de la arena: CONFIG.ARENA (elipse de combate; en game.js se leen como CX, CY, RX, RY)
    - radios de colisión: función mk()  (Marine 6, Hidralisco 8)
+
+10B. CURSORES DE STARCRAFT (js/cursores.js)
+-------------------------------------------
+El ratón usa los cursores originales de StarCraft (hoja de ACE_Spark, en
+assets/images/source/cursores_starcraft_hoja.png). Es solo visual y no cambia el juego:
+  - Flecha verde animada ......... por toda la página (menú, pausa, presentación)
+  - Elipse verde ................. sobre botones, listas y deslizadores
+  - Flecha tachada ............... sobre controles desactivados
+  - Anillo de puntería giratorio . sobre el campo de batalla (verde)
+  - Elipse verde / roja .......... sobre un luchador: verde si lo controla una persona, roja si es la IA
+Ajustes en js/config.js, bloque CURSORS:  on (false = cursores normales), scale (1 = tamaño
+original, 2 = doble), fps (velocidad de cada animación) y canvasHover (false = siempre el anillo).
+Los fotogramas están en assets/images/cursors/x1 y x2. Si cambias la hoja, vuelve a generarlos
+con  python3 tools/build_cursors.py  (necesita pillow y numpy) y copia en CUR_SETS (js/cursores.js)
+la tabla que imprime. El cursor del ratón no existe en pantallas táctiles, donde no se nota.
+Las listas de «Luchador izquierdo/derecho», dificultad, arena y vidas son desplegables propios (los
+crea js/cursores.js sobre los <select> originales, que quedan ocultos): el menú nativo de un <select>
+lo dibuja el sistema y siempre muestra la flecha de Windows. En móvil/tácil se deja el selector nativo.
+
+10C. OPTIMIZACIONES PARA MÓVIL Y TABLET
+--------------------------------------
+  - El juego se pausa solo al cambiar de app o bloquear la pantalla (y la música también).
+  - La pantalla no se apaga mientras se juega (Screen Wake Lock; solo si el navegador lo admite).
+  - El HUD (barras, tiempo, vidas) solo toca el DOM cuando un valor cambia: menos trabajo por fotograma.
+  - js/cursores.js no hace nada en dispositivos sin ratón (no precarga imágenes ni corre su bucle).
+  - Sin destello gris ni menú de pulsación larga al tocar botones y controles.
+  - index.html: theme-color y metas para que «Añadir a pantalla de inicio» abra a pantalla completa (iPhone).
+dist/ (un solo archivo) los incrusta solos al ejecutar  python3 tools/build_dist.py .
 
 11. SONIDO: MÚSICA DE FONDO Y EFECTOS
 -------------------------------------
@@ -741,3 +773,17 @@ explosión y voces del Marine fueron aportados por el autor del proyecto. Si lo 
 revisa los derechos de esas imágenes y de la música (la banda sonora de StarCraft
 pertenece a Blizzard y a sus compositores; reemplaza arena.mp3 por una pista
 libre de derechos si vas a publicarlo).
+
+
+REBALANCEO (noviembre 2026)
+---------------------------
+Marine: vida 95->125, velocidad 60->74. Dark Templar: daño 15->13,2, evasión .35->.28, salto 30->20.
+Medido con tools/sim_balance.js (300 partidas por cruce, normal): Marine-Hidralisco 68-32, Dark Templar-Hidralisco 43-55,
+Marine-Dark Templar 44-55. Antes: 30-70, 74-25 y 0-100. Los cruces no son transitivos, por eso no sale 50-50 exacto.
+
+SONIDO AL ABRIR CON DOBLE CLIC (corrección)
+-------------------------------------------
+Al abrir index.html con doble clic (sin servidor) el navegador no deja a Web Audio leer los archivos locales, y los 38 efectos
+caían al modo de respaldo (<audio> reutilizables, con retrasos y cortes). Ahora js/audio_data.js lleva los efectos incrustados y se
+usan solo si la lectura normal falla. Si cambias un sonido de assets/audio/sfx/, ejecuta: python3 tools/build_audio_data.py
+(con servidor local o GitHub Pages no hace falta; ahí se leen los archivos directamente).
