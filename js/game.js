@@ -492,7 +492,7 @@ function drawLing(l){
 const AT=ATLAS_DT,DTI={orig:null,red:null},DTFL={c:null},GLOW={m:'#4fa8ff',h:'#ff5a3c',z:'#ffd24a'};
 function dtDir(a){const v=Math.atan2(Math.cos(a),-Math.sin(a));return Math.round(((v+6.283185307)%6.283185307)/(Math.PI/8))%16}
 function meleeStart(f,o){
- if(dist(f,o)>f.r+o.r+reachOf(f)+2)return;            // fuera de alcance: no golpea
+ if(dist(f,o)>f.r+o.r+reachOf(f)+2&&(f.ai||mode!='2p'))return;   // fuera de alcance: la IA y el modo 1 jugador no golpean al aire; en 2 jugadores el tajo sale siempre (si no, parece que no ataca) y solo hace dano si el rival esta a su alcance (meleeHit)
  f.cd=CONFIG.COOLDOWN[f.type]/(f.stim>0?1.7:1);f.cdm=f.cd;f.atkT=0;f.hitDone=false;f.hitN=0;
  if(f.type=='z')AUDIO.play('zl_attack');else{f.rev=Math.max(f.rev,DT.reveal);AUDIO.play('dt_attack')}
 }
