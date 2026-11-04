@@ -106,6 +106,7 @@ function human(f){
  const K=CONFIG.KEYS,m=f.side==0,pads=getPads().map(padRead);let r;
  if(mode=='2p'){
   r=ks(SETS[m?'A':'B']);r.sp=!!keys[m?K.marine:K.hydra];
+  if(keys[m?'Space':'ControlRight'])r.fire=true;   // tecla de ataque alternativa (algunos teclados no admiten WASD+F o flechas+Shift a la vez)
   const p=pads[m?0:1];if(p)mergeIn(r,p);
   if(m)mergeIn(r,TOUCH);                 // en 2 jugadores el tactil controla al Marine
  }else{
