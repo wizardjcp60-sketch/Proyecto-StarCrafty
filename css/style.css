@@ -70,7 +70,9 @@ button:hover,button:focus-visible{background:#16261a;outline:2px solid var(--ok)
 .btns2{display:flex;gap:8px;justify-content:center}
 #opt{display:none}
 #ov.end #opt{display:inline-block}
-#ov.end .opts,#ov.end #rsc{display:none}
+#ov.end #rsc{display:none}
+/* al terminar la partida se pueden cambiar los luchadores sin abrir las opciones */
+#ov.end .opts{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin:4px 0}#ov.end .opts label{flex-direction:row;align-items:center;gap:6px}#ov.end .opts label:nth-child(n+3){display:none}
 .vols{display:grid;gap:6px;margin:8px 0;font-size:15px;text-align:left}
 .vols input{width:100%}
 
