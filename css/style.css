@@ -87,6 +87,7 @@ button:hover,button:focus-visible{background:#16261a;outline:2px solid var(--ok)
 /* ---- Presentacion de entrada (#intro) ---- */
 #intro{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;z-index:99;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;overflow:hidden;background:#050303;display:flex;align-items:center;justify-content:center;transition:opacity .7s ease}
 #intro[hidden]{display:none}
+#intro:not(.run) .tt *{animation-play-state:paused}   /* la presentacion ya tapa el menu desde el primer pintado; sus animaciones esperan a que cargue el JS */
 #intro.out{opacity:0;pointer-events:none}
 #intro .ib{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity 1.4s ease;will-change:transform,opacity}
 #intro .ib.on{opacity:1;animation:kb var(--kbt,8s) ease-out forwards}

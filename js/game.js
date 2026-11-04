@@ -1063,9 +1063,9 @@ AUDIO.playMusic('music_menu');
 (function(){
  const C=CONFIG.INTRO,el=$('#intro');
  if(!el)return;
- try{if(!C||!C.on||(C.once&&sessionStorage.getItem('coliseo.intro')))return}catch(e){if(!C||!C.on)return}
+ try{if(!C||!C.on||(C.once&&sessionStorage.getItem('coliseo.intro'))){el.hidden=true;return}}catch(e){if(!C||!C.on){el.hidden=true;return}}
  try{sessionStorage.setItem('coliseo.intro','1')}catch(e){}
- el.hidden=false;
+ el.hidden=false;el.classList.add('run');
  el.style.setProperty('--idim',C.dim==null?.35:C.dim);
  $('#intro .t1').textContent=C.title||'';$('#intro .t2').textContent=C.subtitle||'';$('#intro .t4').textContent=C.credit||'';$('#intro .go').textContent=C.prompt||'';
  $('#intro .t3').innerHTML=(C.lines||[]).map((t,i)=>'<span style="animation-delay:'+(2.3+i*.7)+'s"></span>').join('');
