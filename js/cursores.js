@@ -79,12 +79,12 @@
           lista.appendChild(b);
         });
         const r=btn.getBoundingClientRect();lista.style.minWidth=r.width+'px';lista.style.left=r.left+'px';lista.style.top=r.bottom+'px';
-        document.body.appendChild(lista);btn.classList.add('open');abierta={btn,lista};
+        (document.fullscreenElement||document.body).appendChild(lista);btn.classList.add('open');abierta={btn,lista};
         const lr=lista.getBoundingClientRect();if(lr.bottom>innerHeight)lista.style.top=Math.max(0,r.top-lr.height)+'px';   // si no cabe debajo, se abre hacia arriba
       });
     });
     document.addEventListener('pointerdown',e=>{if(abierta&&!abierta.lista.contains(e.target)&&e.target!==abierta.btn)cerrar()},true);
-    addEventListener('resize',cerrar);
+    addEventListener('resize',cerrar);document.addEventListener('fullscreenchange',cerrar);
     addEventListener('keydown',e=>{if(e.key=='Escape')cerrar()},true);
   }
 })();
