@@ -1029,7 +1029,7 @@ function syncSnd(){$('#snd').classList.toggle('off',!AUDIO.enabled)}
 $('#sm').onclick=()=>{toggleSound();$('#sm').blur()};syncSnd();
 vsfx2.onchange=()=>{AUDIO.play('shoot_marine');vsfx2.blur()};vmus2.onchange=()=>vmus2.blur();   // suena un disparo de muestra y se suelta el foco (las flechas vuelven a ser del juego)
 const fsb=$('#fs');if(!document.fullscreenEnabled)fsb.style.display='none';
-fsb.onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else $('.stage').requestFullscreen().catch(()=>{})}catch(e){}fsb.blur()};
+fsb.onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else (isTouch?document.documentElement:$('.stage')).requestFullscreen().catch(()=>{})   /* en tactil, toda la pagina: los mandos (#tc) quedan fuera de .stage */}catch(e){}fsb.blur()};
 
 /* ---- Controles tactiles (joystick + botones) ---- */
 tcEl=$('#tc');
@@ -1043,7 +1043,7 @@ function jmove(e){
  let dx=(e.clientX-(r.left+r.width/2))/(r.width/2),dy=(e.clientY-(r.top+r.height/2))/(r.height/2);
  const m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m}
  TOUCH.dx=Math.abs(dx)<.2?0:dx;TOUCH.dy=Math.abs(dy)<.2?0:dy;
- jk.style.transform='translate(calc(-50% + '+dx*36+'px),calc(-50% + '+dy*36+'px))';
+ const off=Math.max(0,(r.width-jk.offsetWidth)/2);jk.style.transform='translate(calc(-50% + '+dx*off+'px),calc(-50% + '+dy*off+'px))';
 }
 const jend=e=>{if(e.pointerId===jid){jid=null;TOUCH.dx=TOUCH.dy=0;jk.style.transform='translate(-50%,-50%)'}};
 jb.addEventListener('pointerdown',e=>{e.preventDefault();jid=e.pointerId;try{jb.setPointerCapture(jid)}catch(x){}jmove(e)});
