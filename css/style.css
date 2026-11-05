@@ -343,3 +343,7 @@ canvas{cursor:var(--cur-canvas,auto)}
 
 .dsh.dsp{border-color:#e8d52c}
 .dsh.dsp.cd{border-color:#6b6420}
+
+/* el texto de estado (Carga, Dash, Stim...) fluye junto a los iconos y no se mete debajo */
+.buff{display:flow-root;white-space:normal;line-height:1.1}
+@media (max-width:600px) and (orientation:portrait){.buff{clear:both;white-space:normal}}
