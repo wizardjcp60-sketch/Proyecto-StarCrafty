@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0c0809">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Coliseo Brood War</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=2p6"></head><body>
+<link rel="stylesheet" href="css/style.css?v=2p7"></head><body>
 <div class="stage">
  <div class="hud">
   <div class="p" id="pm"><div class="pt" style="--glow:#4fa8ff"><img alt="Marine" src="assets/images/ui/retrato_marine.jpg"></div><div class="in"><span id="nm">Marine</span><span class="lv"></span><div class="bar hp"><i></i></div><div class="bar sh"><i></i></div><div class="bar spc"><i></i></div><div class="dsh" title="Dash"><img alt="Dash" src="assets/images/ui/dash_terran_protoss.png"><i class="dcv"></i><b class="dnum"></b></div><div class="buff"></div></div></div>
@@ -34,11 +34,17 @@
 (function(){var d=document.documentElement,h=document.querySelector('.hud');function f(){if(h)d.style.setProperty('--hud',h.offsetHeight+'px')}
 f();addEventListener('load',f);addEventListener('resize',f);addEventListener('orientationchange',function(){setTimeout(f,200)});
 if(window.ResizeObserver&&h)new ResizeObserver(f).observe(h)})();</script>
-<script src="js/config.js?v=2p6"></script>
-<script src="js/audio_data.js?v=2p6"></script>
-<script src="js/audio.js?v=2p6"></script>
-<script src="js/granada_fx.js?v=2p6"></script>
-<script src="js/battlecruiser.js?v=2p6"></script>
-<script src="js/game.js?v=2p6"></script>
-<script src="js/cursores.js?v=2p6"></script>
+<script>/* iPhone/iPad: sin zoom por doble toque ni por pellizco (Safari ignora user-scalable, hay que bloquear los gestos) */
+(function(){var last=0,ev=function(e){e.preventDefault()};
+['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,ev,{passive:false})});
+document.addEventListener('dblclick',ev,{passive:false});
+document.addEventListener('touchmove',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});
+document.addEventListener('touchend',function(e){var t=Date.now(),el=e.target&&e.target.closest?e.target.closest('button,select,input,textarea,label,a'):null;if(t-last<350&&!el)e.preventDefault();last=t},{passive:false})})();</script>
+<script src="js/config.js?v=2p7"></script>
+<script src="js/audio_data.js?v=2p7"></script>
+<script src="js/audio.js?v=2p7"></script>
+<script src="js/granada_fx.js?v=2p7"></script>
+<script src="js/battlecruiser.js?v=2p7"></script>
+<script src="js/game.js?v=2p7"></script>
+<script src="js/cursores.js?v=2p7"></script>
 </body></html>
