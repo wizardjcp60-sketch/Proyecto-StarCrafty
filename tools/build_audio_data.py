@@ -8,7 +8,7 @@ import re, os, base64
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src = open(os.path.join(ROOT, 'js/audio.js'), encoding='utf-8').read()
 files = dict(re.findall(r"^\s{4}(\w+)\s*:'(assets[^']+)'", src, re.M))
-isvoice = lambda n: re.match(r'^(marine|hydra|zealot)_|^dt_(ready|yes)', n)
+isvoice = lambda n: re.match(r'^(marine|hydra|zealot)_|^dt_(ready|yes)|^bcv_', n)
 data = {n: base64.b64encode(open(os.path.join(ROOT, u), 'rb').read()).decode()
         for n, u in files.items()
         if not n.startswith('music') and n != 'tension' and not isvoice(n) and n != 'nuke_explosion' and os.path.exists(os.path.join(ROOT, u))}

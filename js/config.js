@@ -15,6 +15,14 @@ const CONFIG={
   MEDKIT_HEAL:35,             // vida que cura el medical kit (varia +-5 al azar)
   SPECIAL_COOLDOWN:9,        // segundos para recargar el ataque especial
   KEYS:{marine:'KeyG', hydra:'Period'},   // tecla del especial: G (granada) y . (acido)
+  DASH:{                      // DASH de todos los luchadores: arranque corto para acercarse o esquivar (ver LEEME seccion 6I)
+    on:true,                  // false = sin dash
+    KEYS:{left:'KeyV', right:'Slash'},   // lado izquierdo: V (junto a WASD, F y G); lado derecho: / (junto al punto del especial). En 1 jugador valen las dos
+    cooldown:1.6,             // segundos de recarga (empieza a contar al hacer el dash)
+    time:.16, speed:300,      // duracion (s) y velocidad (px logicos/s): .16 x 300 = unos 48 px de recorrido
+    iframes:.12,              // segundos de invulnerabilidad desde el inicio: las balas lo atraviesan y los golpes y areas no le hacen dano
+    idle:'toward'             // direccion si no se mantiene ninguna: 'toward' (hacia el rival) o 'away' (alejandose)
+  },
   GRENADE_DAMAGE:35,          // dano de la granada del Marine (igual que LING_DAMAGE)
   GRENADE_RADIUS:40,          // radio de la explosion de la granada
   ACID_DPS:9,                 // dano por segundo del acido del Hidralisco
@@ -125,6 +133,55 @@ const CONFIG={
     scale:.72,                // tamano visual de los proyectiles extra (1 = igual que el principal)
     iconSize:20               // tamano del icono del objeto en el suelo (px logicos)
   },
+  BC:{                        // SUPER ATAQUE: BATTLECRUISER (objeto raro que cae). Quien lo recoge llama a un Battlecruiser que entra con salto tactico, cambia la musica y bombardea al rival (ver LEEME seccion 6J)
+    on:true,                  // false = el objeto no cae nunca
+    chance:.08,               // probabilidad de que un objeto que cae sea la baliza del Battlecruiser (los demas objetos se reparten el resto). Subela para que caiga mas; 0 = nunca
+    perRound:1,               // maximo de balizas por ronda
+    skipFirst:5,              // no cae en los primeros segundos de la ronda
+    minRoundTime:22,          // no cae si quedan menos de estos segundos de ronda (asi le da tiempo a actuar antes de la bomba nuclear)
+    life:12,                  // segundos que espera en el suelo (los demas objetos esperan 10)
+    scale:1,                  // tamano del sprite (1 = un pixel de la imagen por pixel logico; mejor dejar 1 para que se vea nitido)
+    alt:60,                   // altura a la que vuela mientras dispara (px logicos)
+    hoverY:-26,               // donde sobrevuela: desplazamiento vertical desde el centro de la arena (negativo = hacia el fondo)
+    enterT:2.4,               // duracion de la entrada (llega con salto tactico desde lo alto)
+    stayT:8,                  // segundos que se queda disparando
+    leaveT:1.2,               // duracion de la salida
+    slowmo:.45,               // velocidad del juego durante el primer instante de la entrada (1 = sin camara lenta)
+    slowT:.8,                 // segundos (de la entrada) que dura esa camara lenta
+    music:true,               // cambia la musica mientras esta en pantalla (assets/audio/music/bc.mp3) y la devuelve al terminar
+    bars:true,                // franjas de cine arriba y abajo durante la entrada
+    aiDodge:.2,               // cuanto esquiva la IA los ataques del Battlecruiser (1 = esquiva como siempre; 0 = no esquiva; menor = el Battlecruiser acierta mas a la IA)
+    fade:false,               // true = la nave se vuelve semitransparente cuando sobrevuela a un luchador (false = siempre opaca)
+    iconSize:32,              // tamano de la capsula (baliza) en el suelo (px logicos)
+    elec:{                    // RAYOS ELECTRICOS alrededor de la baliza (solo visual)
+      on:true,                // false = sin rayos
+      bolts:6,                // rayos a la vez
+      rate:14,                // veces por segundo que cambian de forma (titilan)
+      vis:.8,                 // probabilidad de que cada rayo se vea en cada cambio (0-1)
+      jit:2.6                 // quiebro del rayo en px (mas = mas torcido)
+    },
+    laser:{                   // BATERIA LASER: rafagas de proyectiles que caen sobre el rival (se ve la marca en el suelo y se pueden esquivar)
+      dmg:8,                  // DANO por impacto (ajustalo a tu gusto)
+      radius:20,              // radio del impacto (px logicos)
+      burst:3,                // proyectiles por rafaga
+      gap:.13,                // segundos entre proyectiles de una rafaga
+      rest:.6,                // segundos entre rafagas
+      flight:.45,             // segundos que tarda cada proyectil en caer (tiempo que tiene el rival para esquivar)
+      spread:6,               // dispersion (px) de los impactos de una rafaga alrededor del rival
+      lead:.7,                // cuanto adelanta la punteria hacia donde va el rival (0 = apunta a donde esta; 1 = a donde estara al caer)
+      follow:10,              // la marca del laser PERSIGUE a un rival de la IA mientras cae (mas = persigue mas rapido; 0 = marca fija, como antes)
+      followHuman:3,          // lo mismo si el rival es una persona (mas bajo: a una persona que se mueve se le puede esquivar)
+      lock:.08                // segundos finales en que la marca ya no se mueve (ultimo instante para esquivar)
+    },
+    yamato:{                  // CANON YAMATO: un solo disparo enorme a mitad de la visita
+      on:true,
+      dmg:42,                 // DANO del disparo (ajustalo a tu gusto)
+      radius:34,              // radio de la explosion
+      at:3,                   // segundos despues de llegar en que empieza a cargarlo
+      charge:1.7,             // segundos de carga (la marca sigue al rival y se fija en los ultimos .5 s)
+      lock:.35                // segundos finales en que la marca ya no se mueve (tiempo para esquivar)
+    }
+  },
   LING_FUSE:4,                // segundos de mecha: si el zergling no alcanza a nadie en ese tiempo, explota solo
   LING_FUSE_DMG:.5,           // dano de esa explosion por tiempo = LING_DAMAGE x este numero (.5 = la mitad del dano habitual)
   LING_FUSE_RADIUS:22,        // radio (px logicos) de esa explosion por tiempo (la explosion normal, al tocar a alguien o ser detonado, tiene radio 38)
@@ -135,9 +192,9 @@ const CONFIG={
   KO_CAM:false,               // zoom y camara lenta en el ultimo golpe de cada ronda (desactivada: no gusto)
   TOUCH_CONTROLS:'auto',      // controles tactiles: 'auto' (solo en pantallas tactiles), true o false
   DIFF:{                      // dificultad de la IA (se elige en el menu)
-    easy:  {aim:.26, jit:26, dodge:1.2, spRate:.02},   // punteria mala, esquiva poco, usa poco el especial
-    normal:{aim:.13, jit:14, dodge:3,   spRate:.05},   // valores originales
-    hard:  {aim:.06, jit:6,  dodge:4.5, spRate:.12}    // punteria fina, esquiva mucho, usa mas el especial
+    easy:  {aim:.26, jit:26, dodge:1.2, spRate:.02, dash:.02},   // punteria mala, esquiva poco, usa poco el especial
+    normal:{aim:.13, jit:14, dodge:3,   spRate:.05, dash:.07},   // valores originales
+    hard:  {aim:.06, jit:6,  dodge:4.5, spRate:.12, dash:.16}    // punteria fina, esquiva mucho, usa mas el especial
   },
   INTRO:{                     // PRESENTACION DE ENTRADA (aparece al abrir el juego, antes del menu)
     on:true,                  // false = el juego abre directo en el menu
@@ -200,6 +257,7 @@ const ASSETS={
   fx:{
     missile  :'assets/images/fx/misil_nuclear.png',
     explosion:'assets/images/fx/explosion_nuclear_hoja.jpg',
+    bcIcon   :'assets/images/fx/icono_baliza_bc.png',      // icono de la baliza del Battlecruiser (capsula; 96x96, se genera con tools/build_bc_icon.py)
     multiIcon:'assets/images/fx/icono_multidisparo.png',   // icono del objeto Multidisparo (64x64; se genera con tools/build_multi_icon.py)
     acidHit  :'assets/images/fx/acido_impacto.png'     // salpicadura de acido: 8 fotogramas de 31x32 (hoja de ACE_Spark; se regenera con tools/build_acid_fx.py)
   },
@@ -211,6 +269,10 @@ const ASSETS={
     azul :'assets/images/sprites/zealot_atlas_azul.png',
     roja :'assets/images/sprites/zealot_atlas_roja.png',
     death:'assets/images/sprites/zealot_muerte.png'           // 7 fotogramas de muerte (explosion psionica)
+  },
+  bc:{                                                       // hoja del Battlecruiser (ver ATLAS_BC): una por lado (el luchador izquierdo es azul y el derecho rojo); se genera con tools/build_bc_atlas.py
+    azul:'assets/images/sprites/battlecruiser_atlas_azul.png',
+    roja:'assets/images/sprites/battlecruiser_atlas_roja.png'
   },
   ling:'assets/images/sprites/zergling_atlas.png',         // zergling explosivo: 9 direcciones (0 sur, 4 oeste, 8 norte; el este se espeja) x 7 fotogramas de caminar; se genera con tools/build_ling_atlas.py
   hydraAtlas:'assets/images/sprites/hidralisco_atlas.png',   // hoja del Hidralisco: 9 direcciones x (7 de caminar, 5 de ataque); se genera con tools/build_hydra_atlas.py
@@ -241,3 +303,8 @@ const ATLAS_MARINE={cell:40,ax:20,ay:35,idleRow:0,walkRow:1,walkN:9,shootRow:10}
 
 /* Atlas del Zealot (ver tools/build_zealot_atlas.py): celdas w x h, pies (ax,ay), caminar 8 + ataque 5; muerte: 7 fotogramas de dw x dh con pivote (dax,day) */
 const ATLAS_ZEAL={w:41,h:43,ax:16,ay:34,walkRow:0,walkN:8,atkRow:8,atkN:5,dw:54,dh:72,dax:27,day:56,deathN:7};
+
+/* Atlas del Battlecruiser (ver tools/build_bc_atlas.py): una fila de 17 celdas de w x h px, la nave centrada en cada una (el pivote es el centro de la celda).
+   Los fotogramas giran en pasos de 11,25 grados: la PROA (el semicirculo ancho) mira al SUR en el 0, al OESTE en el 8 y al NORTE en el 16; el lado este se obtiene espejando
+   (ver bcFrame en battlecruiser.js). */
+const ATLAS_BC={w:100,h:80,n:17};

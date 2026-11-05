@@ -4,3 +4,5 @@ Para cambiar de pista reemplaza arena.mp3 con el mismo nombre. Detalle en LEEME.
 
 menu.mp3 = musica del menu (pista generada por código, sin derechos de terceros). Reemplazala por tu pista con el mismo nombre.
 El bucle usa fundido cruzado (AUDIO.musicXf en audio.js, 2,5 s) y cada pista tiene su segundo de inicio en AUDIO.musicStarts.
+
+bc.mp3 : musica del super ataque del Battlecruiser (sintetizada por codigo con tools/build_bc_audio.py, sin derechos de terceros). Suena mientras la nave esta en pantalla; reemplazala por tu pista con el mismo nombre.

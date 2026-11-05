@@ -17,6 +17,7 @@ Haz clic en la pantalla antes de esperar la música: los navegadores bloquean el
 - Cada luchador tiene **2 vidas** (configurable de 1 a 3) y cada ronda dura **45 segundos**.
 - Si se acaba el tiempo, cae un **misil nuclear** sobre quien tenga menos vida.
 - Caen objetos al azar: escudo, stimpack, botiquín, multidisparo y un zergling explosivo (un disparo lo detona).
+- **Super ataque raro:** de vez en cuando cae una baliza azul. Quien la recoge llama a un **Battlecruiser** que entra con salto táctico, cambia la música y bombardea al rival con láseres y el cañón Yamato (las marcas del suelo se pueden esquivar). Se ajusta en `CONFIG.BC` de `js/config.js`.
 - Dificultad de la IA: fácil, normal o difícil.
 - **Arena:** en el menú puedes elegir entre el coliseo Terran contra Zerg y una arena de piedra algo más estrecha.
 
@@ -34,7 +35,7 @@ Haz clic en la pantalla antes de esperar la música: los navegadores bloquean el
 - **Mando:** stick o cruceta para mover, `A` o gatillo para disparar, `X` o `B` para el especial, `Start` para pausar.
 - **Móvil:** salen controles táctiles (mejor en horizontal).
 
-![Efecto de la granada del Marine](docs/preview_granada.png)
+![Efecto de la granada del Marine](docs/preview_granada.jpg)
 
 ## Jugar en tu ordenador
 

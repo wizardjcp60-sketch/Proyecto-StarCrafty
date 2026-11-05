@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* sim_balance.js - simula partidas IA contra IA SIN navegador para medir el balance.
-   Carga js/config.js, js/granada_fx.js y js/game.js dentro de un contexto de Node con un DOM falso
+   Carga js/config.js, js/granada_fx.js, js/battlecruiser.js y js/game.js dentro de un contexto de Node con un DOM falso
    (no dibuja nada: solo avanza la logica del juego a 60 fotogramas por segundo simulados).
 
    Uso:  node tools/sim_balance.js [partidas] [dificultad] [ajustes] [combinaciones]
@@ -37,7 +37,8 @@ const mkEl = () => ({
   classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
   getAttribute() { return null; }, setAttribute() {}, addEventListener() {}, removeEventListener() {}, blur() {}, focus() {},
   querySelectorAll() { return []; }, querySelector() { return mkEl(); }, getContext() { return noop; },
-  getBoundingClientRect() { return { left: 0, top: 0, width: 1, height: 1 }; }, appendChild() {}
+  getBoundingClientRect() { return { left: 0, top: 0, width: 1, height: 1 }; }, appendChild() {},
+  parentNode: { insertBefore() {} }   // el HUD inserta una barra de 'dano reciente' junto a la de vida
 });
 const els = {};
 const store = {};
@@ -72,6 +73,7 @@ for (const s of settings) {
   try { run('CONFIG.' + s); } catch (e) { console.error('No se pudo aplicar "' + s + '": ' + e.message); process.exit(1); }
 }
 load('granada_fx.js');
+load('battlecruiser.js');
 load('game.js');
 
 // ambos luchadores controlados por la IA, y contador de bombas nucleares
@@ -85,6 +87,7 @@ function play(left, right) {
   while (steps < MAX && run('state') !== 'victory') {
     run(`(function(){
       let dt=1/60;if(GSTOP>0){GSTOP-=dt;dt*=GFX.stopScale}
+      dt*=bcScale();
       if(fightT>0)fightT-=dt;
       if(state=='play')update(dt);else if(state=='intro')intro(dt);else if(state=='ko')koStep(dt);else if(state=='nuke')nukeStep(dt);
     })()`);

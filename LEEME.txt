@@ -41,9 +41,12 @@ coliseo-broodwar/
     cursores.js               Cursores de StarCraft animados (flecha, elipses, anillo de puntería). Se carga DESPUÉS de game.js. Ver 10B.
     granada_fx.js             Granada y explosión del Marine: vuelo, fuego, humo, chispas, escombros, onda
                               expansiva, mancha de quemado (solo visual). Se carga ANTES de game.js. Ver 6G.
+    battlecruiser.js          SUPER ATAQUE del Battlecruiser: baliza que cae, entrada, láseres, Yamato, dibujo. Se carga ANTES de
+                              game.js (si lo quitas de index.html, game.js deja de funcionar). Ver 6J.
   assets/
     images/
       sprites/                Zealot: zealot_atlas_azul/roja.png y zealot_muerte.png (ver 6H).
+                              Battlecruiser: battlecruiser_atlas_azul/roja.png (17 fotogramas, ver 6J).
                               Personajes: 3 vistas del Marine y 3 del Hidralisco, y la hoja de
                               fotogramas del Dark Templar (dark_templar_atlas.png y su versión
                               de capa roja dark_templar_atlas_roja.png).
@@ -52,7 +55,7 @@ coliseo-broodwar/
       background/             Fondo del coliseo (arena.jpg y arena_generada.jpg, ver sección 12).
       source/                 Imágenes ORIGINALES que subiste (para recortar de nuevo).
     audio/
-      music/                  Música de fondo: arena.mp3 ya incluida (sección 11).
+      music/                  Música de fondo: arena.mp3 ya incluida (sección 11) y bc.mp3, la del Battlecruiser (ver 6J).
       sfx/                    Efectos de sonido (ver sección 11).
       voices/marine/          Voces originales de StarCraft del Marine (3 frases).
       voices/hydralisk/       Voces originales de StarCraft del Hidralisco (3 frases).
@@ -64,9 +67,14 @@ coliseo-broodwar/
                               (node tools/sim_balance.js 200 normal). Ver sección 6E. Necesita solo Node.
                               Opciones: dificultad, ajustes de CONFIG ("DAMAGE.d=14") y combinaciones (mh dh md dd mm hh);
                               SEED=7 delante del comando repite los resultados.
+    build_dash_sfx.py         Sintetiza dash.wav (python3 tools/build_dash_sfx.py; luego tools/build_audio_data.py).
+    test_dash.js              Prueba automática del dash sin navegador (node tools/test_dash.js).
     build_cursors.py          Recorta los cursores de StarCraft de la hoja de ACE_Spark (python3 tools/build_cursors.py).
     build_acid_fx.py          Recorta la salpicadura de ácido de la hoja del Hidralisco (python3 tools/build_acid_fx.py).
     build_dist.py             Regenera dist/ con todo incrustado (python3 tools/build_dist.py).
+    build_bc_atlas.py         Recorta la hoja del Battlecruiser y genera los atlas azul/rojo (python3 tools/build_bc_atlas.py).
+    build_bc_audio.py         Sintetiza bc.mp3 (música) y los 7 efectos del Battlecruiser (python3 tools/build_bc_audio.py; luego tools/build_audio_data.py).
+    test_bc.js                Prueba automática del Battlecruiser sin navegador (node tools/test_bc.js).
   dist/                       (no se sube a GitHub: se genera con tools/build_dist.py)
     coliseo-broodwar-un-solo-archivo.html   Versión todo-en-uno.
 
@@ -75,12 +83,13 @@ coliseo-broodwar/
   Mover ............ WASD o flechas (en 1 jugador valen las dos)
   Disparar ......... F o Espacio
   Pausa / continuar  Enter, o el botón "Pausa" de la barra superior
+  Dash ............. V (lado izquierdo) y / (lado derecho); en 1 jugador valen las dos. Ver 6I.
   Ataque especial .. G (Marine) y . punto (Hidralisco); en 1 jugador valen ambas.
                      Cambiables en CONFIG.KEYS (js/config.js).
   Mando ............ stick o cruceta mueve, A / RB / gatillo derecho dispara,
-                     X / B / Y / LB especial, Start pausa (y en el menú o la
+                     X / B / Y / LB especial, Atrás / pulsar un stick = dash, Start pausa (y en el menú o la
                      victoria vuelve a jugar con el último modo).
-  Móvil / tablet ... joystick a la izquierda y botones Disparo y Especial a la
+  Móvil / tablet ... joystick a la izquierda y botones Disparo, Especial y Dash a la
                      derecha; aparecen solos en pantallas táctiles.
   Sonido sí / no .... tecla M, o el botón de nota musical (♫) junto a Pausa;
                       el navegador recuerda tu elección.
@@ -120,6 +129,8 @@ coliseo-broodwar/
 Cada 2,2 a 4 s cae un objeto en un punto aleatorio (máximo 3 en el suelo). Se ve
 una sombra y un anillo parpadeante antes de que aterrice (tarda ~1,2 s).
 Probabilidad: escudo 2/11, stimpack 2/11, zergling explosivo 3/11, medical kit 2/11, multidisparo 2/11.
+Además, con poca frecuencia (CONFIG.BC.chance, un 8 % de los objetos y solo uno por ronda) puede caer la BALIZA DEL BATTLECRUISER,
+un super ataque (ver 6J).
 - ESCUDO (burbuja azul): absorbe hasta 40 de daño. Se ve como un aro azul sobre
   el personaje y como barra azul en el HUD.
 - STIMPACK (caja roja): 6 s con +50 por ciento de velocidad y +70 por ciento de
@@ -270,6 +281,88 @@ Probar sin efectos en el simulador:  node tools/sim_balance.js 100 normal "GFX.o
 Rendimiento medido (navegador sin GPU, el caso más lento): una explosión cuesta ~5 ms por
 fotograma (límite a 60 fps: 16 ms). Con GPU es bastante menos.
 NOTA: si quitas js/granada_fx.js del index.html, game.js dejará de funcionar (lo necesita).
+
+6I. DASH (todos los luchadores)
+-------------------------------
+Arranque corto para acercarse al rival o esquivar. Lo tienen el Marine, el Hidralisco, el Dark Templar y el Zealot.
+- TECLAS: V el lado izquierdo y / (barra, junto al punto) el derecho; en 1 jugador valen las dos. Mando: botón Atrás
+  o pulsar un stick. Móvil: botón "Dash" junto a Especial y Disparo. Cambiables en CONFIG.DASH.KEYS.
+- DIRECCIÓN: la que mantengas con WASD o las flechas (a un lado, hacia atrás, en diagonal). Si no mantienes
+  ninguna, va hacia el rival (CONFIG.DASH.idle = 'away' para que se aleje).
+- ALCANCE: .16 s a velocidad 300, unos 48 px lógicos (el Marine camina ~12 px en ese tiempo). Respeta el borde de
+  la arena (se desliza por él). Con stimpack llega un 25 % más rápido.
+- INVULNERABILIDAD: los primeros .12 s (CONFIG.DASH.iframes) no recibe daño: las balas lo atraviesan, y los tajos,
+  la carga del Zealot, la granada, el ácido y las explosiones no le hacen nada (sale "¡Esquivado!"). Quien sigue
+  dentro de un área cuando termina la invulnerabilidad, sí recibe daño.
+- RECARGA: 1,6 s desde que lo usas (CONFIG.DASH.cooldown). Se activa al PULSAR (mantener la tecla no repite).
+  El HUD muestra "Dash [V]" (o "[/]") cuando está listo.
+- DURANTE EL DASH no se dispara, no se usa el especial ni se mueve en otra dirección. Cancela el tajo cuerpo a
+  cuerpo que estuviera en curso. No se puede hacer dash aturdido, durante la Carga del Zealot ni en el salto sombrío del DT.
+- IA (CONFIG.DIFF.<nivel>.dash = probabilidad por fotograma de usarlo cuando le conviene: easy .02, normal .07,
+  hard .16): esquiva balas que van a darle (se desplaza de lado), los luchadores cuerpo a cuerpo se lanzan sobre el
+  rival al acercarse y, a veces (30 %), los de rango se separan de un rival pegado.
+- EFECTOS: estela de color según el luchador, onda y polvo al arrancar, partículas y sonido (assets/audio/sfx/dash.wav,
+  sintetizado con python3 tools/build_dash_sfx.py y luego python3 tools/build_audio_data.py).
+- AJUSTES (js/config.js, bloque DASH): on, KEYS, cooldown, time, speed, iframes, idle.
+  Código (game.js): aiDash(), dashStart(), dashStep(), drawDashFx(); la invulnerabilidad está en hurt() y en las
+  comprobaciones de balas, meleeHit() y chargeStep().
+- BALANCE (tools/sim_balance.js, IA contra IA, 150 partidas, normal, semilla 7): Marine-Hidralisco 67-33 (antes 73-27),
+  Dark Templar-Hidralisco 39-59 (antes 46-53), Marine-Dark Templar 43-56 (antes 45-54), Zealot-Marine 88-11 (antes 92-7).
+  Con "DASH.on=0" vuelve al balance anterior. Prueba automática del dash: node tools/test_dash.js
+
+6J. SUPER ATAQUE: BATTLECRUISER (objeto raro)
+---------------------------------------------
+QUÉ HACE: de vez en cuando cae una baliza azul (columna de luz, anillo en el suelo y una cápsula con el Battlecruiser flotando, rodeada de rayos eléctricos). Quien la recoge llama a un
+Battlecruiser que:
+  1. ENTRA con salto táctico: destello, cámara lenta un instante, franjas de cine arriba y abajo, cartel "BATTLECRUISER / OPERACIONAL",
+     bocina grave y onda de choque en el suelo cuando llega. La nave baja desde lo alto agrandándose.
+  2. CAMBIA LA MÚSICA a assets/audio/music/bc.mp3 (fundido cruzado). Al irse vuelve la de la arena por donde se había quedado.
+  3. BOMBARDEA AL RIVAL (nunca al dueño), sobrevolando el fondo de la arena y girando hacia él:
+     - BATERÍA LÁSER: ráfagas de 3 proyectiles que caen sobre el rival. Cada uno deja una marca naranja en el suelo y tarda 0,45 s en caer,
+       así que SE PUEDE ESQUIVAR (con el dash también). Hace daño de área, no le afecta la evasión del Dark Templar y detona los zerglings.
+     - CAÑÓN YAMATO: un disparo enorme a mitad de la visita. Carga 1,7 s con una esfera de energía en el cañón; la marca roja del suelo SIGUE al
+       rival y se fija (se pone blanca) los últimos 0,5 s. Cae un rayo desde la nave, con explosión grande, y quita mucho.
+  4. SE RETIRA (sube, se agranda y se desvanece). Total: unos 12 s con los valores por defecto (de una ronda de 45 s).
+En el HUD aparece "Battlecruiser N s" junto al nombre de quien lo llamó. La IA va a por la baliza como a cualquier objeto y esquiva las marcas
+(las laser/Yamato son entradas de la lista GR, igual que la granada y el ácido). Si hay K.O., bomba nuclear o nueva ronda, la nave se retira al
+instante y la música vuelve a la de la arena.
+
+CUÁNTO CAE Y CUÁNTO DAÑA (todo en js/config.js, bloque CONFIG.BC, con comentarios):
+  chance .08   probabilidad de que un objeto que cae sea la baliza (medido: cae en ~1 de cada 4-5 rondas; súbelo para que caiga más, 0 = nunca)
+  perRound 1   máximo por ronda.   skipFirst 5 / minRoundTime 22   solo cae entre el segundo 5 y el 23 de la ronda (así da tiempo a usarlo)
+  laser.dmg 8   daño por impacto (ráfagas de 3 cada ~1,3 s).   yamato.dmg 42   daño del Yamato.   yamato.radius 30   radio de la explosión
+  enterT 2,4 / stayT 8 / leaveT 1,2   duraciones.   laser.flight .45 y yamato.lock .5   tiempo que tiene el rival para esquivar
+  laser.lead .5   cuánto adelanta la puntería hacia donde va el rival.   music / bars / slowmo   música, franjas de cine y cámara lenta (se pueden apagar).
+  on false   apaga todo el super ataque (la baliza no cae nunca).
+  PUNTERÍA: laser.follow 10 / laser.followHuman 3   la marca de cada láser PERSIGUE al rival mientras cae (10 = contra la IA, 3 = contra una persona, que así aún puede esquivar
+                moviéndose; 0 = marca fija).   laser.lock .08   últimos segundos en que la marca se queda quieta.   laser.radius 20 / spread 6 / lead .7   radio del impacto,
+                dispersión y adelanto de la puntería.   aiDodge .2   cuánto esquiva la IA al Battlecruiser (1 = como al resto de ataques; menor = acierta más).
+                Medido contra la IA normal: ~50 de daño por visita al Hidralisco, ~30 al Marine y ~80 al Dark Templar (antes: 4, 0,3 y 2).
+  fade false   true = la nave se vuelve semitransparente cuando sobrevuela a un luchador (por defecto siempre opaca).
+  iconSize 32   tamaño de la cápsula en el suelo.   elec {on, bolts 6, rate 14, vis .8, jit 2.6}   rayos alrededor de la baliza (elec.on false = sin rayos; bolts = cuántos a la vez;
+                rate = cuántas veces por segundo cambian; jit = lo torcidos que salen). El icono es assets/images/fx/icono_baliza_bc.png (96x96), generado con
+                tools/build_bc_icon.py desde assets/images/source/capsula_baliza_original.jpg; si no carga, se dibuja la mini nave de antes.
+  Con un rival que se queda quieto: ~14 láseres x 8 + Yamato 42 pueden pasar de 100 de daño; un jugador que esquiva recibe una fracción.
+  Para probar sin más cambios:  node tools/sim_balance.js 150 normal "BC.laser.dmg=5,BC.yamato.dmg=30"   o   "BC.on=false"
+BALANCE (IA contra IA, 150 partidas, normal, semilla 7; ajustes por defecto): Marine-Hidralisco 66-34 (antes 67-33), Dark Templar-Hidralisco 27-71 (antes 39-59),
+Marine-Dark Templar 34-65 (antes 43-56). Con "BC.on=false" vuelve exactamente al balance anterior. Pendiente de ajustar los números a tu gusto: el que más lo
+sufre es el Dark Templar (el daño de área ignora su evasión).
+
+SPRITE: la hoja "Terran Battlecruiser" (extraída por Colton, "credit appreciated") está en assets/images/source/battlecruiser/hoja_original_battlecruiser.png.
+tools/build_bc_atlas.py la recorta (17 fotogramas: la proa, el semicírculo ancho, mira al sur en el 0, al oeste en el 8 y al norte en el 16; el este se espeja), quita el fondo blanco y genera
+battlecruiser_atlas_roja.png (color original) y battlecruiser_atlas_azul.png (color de equipo girado a azul). El luchador izquierdo usa la azul y el
+derecho la roja. Cada celda mide 100 x 80 px (ATLAS_BC en config.js). La nave se dibuja a escala 1 (CONFIG.BC.scale) con un borde luminoso del color del
+equipo y se vuelve semitransparente si un luchador pasa justo debajo.
+
+AUDIO (sintetizado por código, sin derechos de terceros, con tools/build_bc_audio.py):
+  music/bc.mp3 (51 s, 150 BPM, mi menor, igualada en volumen a arena.mp3), sfx/bc_entrada, bc_bocina, bc_laser, bc_laser_impacto, bc_yamato_carga,
+  bc_yamato_disparo, bc_salida. Es una pista de relleno hecha por código: PUEDES REEMPLAZARLA por la música Terran que prefieras guardando tu archivo con
+  el mismo nombre (assets/audio/music/bc.mp3); lo mismo con cualquier efecto (luego python3 tools/build_audio_data.py).
+  VOZ: el "Battlecruiser operational" original está en assets/audio/voices/battlecruiser/operational.mp3 (recortado, 2,7 s) y suena al llegar la nave,
+  junto con el cartel "OPERACIONAL". Para cambiarla, reemplaza ese archivo conservando el nombre.
+
+DÓNDE ESTÁ EN EL CÓDIGO: js/battlecruiser.js (todo) y 12 pequeños enganches en js/game.js (buscar "bc": caída en update(), recogida, land(), drawProj(),
+marcas en drawFloorFx(), drawItem(), draw(), hud(), loopBody (cámara lenta), newRound/startNuke/K.O. (reinicio)). Prueba automática: node tools/test_bc.js
 
 6C. OPCIONES Y EXTRAS
 ----------------------
@@ -523,6 +616,7 @@ js/config.js  (lo más común)
    DAMAGE_NUMBERS cifras flotantes (true)   KO_CAM zoom del K.O. (false)
    TOUCH_CONTROLS controles táctiles ('auto', true o false)
    SPECIAL_COOLDOWN recarga del especial (9)   KEYS teclas {marine:'KeyG', hydra:'Period'}
+   DASH  arranque corto de todos los luchadores (sección 6I): on, KEYS, cooldown, time, speed, iframes, idle
    GRENADE_DAMAGE/GRENADE_RADIUS (35/40)   ACID_DPS/ACID_TIME/ACID_RADIUS (9/6/38)
    HFX  efectos de la escupida de ácido del Hidralisco (sección 6F)
 Valores que siguen dentro de js/game.js (búscalos por nombre de función):
@@ -563,6 +657,9 @@ dist/ (un solo archivo) los incrusta solos al ejecutar  python3 tools/build_dist
 
 11. SONIDO: MÚSICA DE FONDO Y EFECTOS
 -------------------------------------
+MÚSICA DEL BATTLECRUISER: assets/audio/music/bc.mp3 (sintetizada con tools/build_bc_audio.py; ver 6J). Suena mientras la nave está en pantalla y
+   al irse la arena vuelve por donde se había quedado (AUDIO.playMusic(nombre, true) reanuda la pista). Reemplázala por la tuya con el mismo nombre.
+
 MÚSICA DE FONDO (ya incluida): assets/audio/music/arena.mp3
    Es "Main Title" de la banda sonora de StarCraft Remastered (Derek Duke,
    Jason Hayes y Glenn Stafford), aportada por el autor del proyecto. Dura
@@ -798,6 +895,7 @@ Estados:         menu -> intro -> play -> (ko | nuke) -> intro ... -> victory;
 
 17. CRÉDITOS Y AVISO
 --------------------
+La hoja "Terran Battlecruiser" (assets/images/source/battlecruiser/) fue extraída por Colton (la propia hoja pide que se le dé crédito).
 La hoja "Zerg Hydralisk" (assets/images/source/hidralisco/) también es de ACE_Spark. Los fotogramas del Marine
 (assets/images/source/marine/) son la hoja "Terran Marine" extraída por Colton (pide que se le dé crédito). Los sprites del Dark Templar proceden de la hoja "Protoss Dark Templar" extraída y
 compilada por ACE_Spark (según el paquete DarkTemplar_StarCraft); la hoja original está
@@ -823,3 +921,11 @@ Al abrir index.html con doble clic (sin servidor) el navegador no deja a Web Aud
 caían al modo de respaldo (<audio> reutilizables, con retrasos y cortes). Ahora js/audio_data.js lleva los efectos incrustados y se
 usan solo si la lectura normal falla. Si cambias un sonido de assets/audio/sfx/, ejecuta: python3 tools/build_audio_data.py
 (con servidor local o GitHub Pages no hace falta; ahí se leen los archivos directamente).
+
+SUPER ATAQUE: BATTLECRUISER (noviembre 2026)
+--------------------------------------------
+Objeto raro que llama a un Battlecruiser con entrada cinematográfica, cambio de música, láseres y cañón Yamato (sección 6J). Archivos nuevos: js/battlecruiser.js,
+sprites battlecruiser_atlas_azul/roja.png, música bc.mp3, 7 efectos bc_*.wav y las herramientas build_bc_atlas.py, build_bc_audio.py y test_bc.js.
+Cambios en archivos existentes: config.js (bloque BC, ASSETS.bc, ATLAS_BC), audio.js (pistas y sonidos nuevos; playMusic(nombre, true) reanuda una pista),
+game.js (enganches), index.html (script nuevo, versión de caché 2p4), audio_data.js (regenerado), build_dist.py (ahora admite el ?v= de index.html y el script nuevo),
+sim_balance.js y test_dash.js (cargan battlecruiser.js).

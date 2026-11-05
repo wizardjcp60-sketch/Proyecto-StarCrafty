@@ -15,66 +15,78 @@ const AUDIO={
     // --- musica (en bucle) ---
     music_arena    :'assets/audio/music/arena.mp3',
     music_menu     :'assets/audio/music/menu.mp3',        // musica del menu (reemplazala por la tuya con el mismo nombre)
+    music_bc       :'assets/audio/music/bc.mp3',          // musica mientras el Battlecruiser esta en pantalla (sintetizada con tools/build_bc_audio.py; reemplazala por la tuya con el mismo nombre)
     // --- efectos ---
-    shoot_marine   :'assets/audio/sfx/disparo_marine.wav',
+    shoot_marine   :'assets/audio/sfx/disparo_marine.mp3',
     shoot_hydralisk:'assets/audio/sfx/disparo_hidralisco.mp3',
-    hit            :'assets/audio/sfx/impacto.wav',
-    pickup_shield  :'assets/audio/sfx/recoger_escudo.wav',
-    pickup_stim    :'assets/audio/sfx/recoger_stimpack.wav',
-    pickup_medkit  :'assets/audio/sfx/recoger_medkit.wav',
-    pickup_multi   :'assets/audio/sfx/recoger_multidisparo.wav',
-    special_ready  :'assets/audio/sfx/especial_listo.wav',
-    grenade_throw  :'assets/audio/sfx/granada_lanza.wav',
-    grenade_boom   :'assets/audio/sfx/granada_explota.wav',
-    acid_spit      :'assets/audio/sfx/acido_escupe.wav',
-    acid_land      :'assets/audio/sfx/acido_cae.wav',
-    ling_land      :'assets/audio/sfx/zergling_cae.wav',
-    ling_boom      :'assets/audio/sfx/zergling_explota.wav',
-    round_start    :'assets/audio/sfx/inicio_ronda.wav',
-    countdown      :'assets/audio/sfx/cuenta_atras.wav',
-    fight          :'assets/audio/sfx/fight.wav',
-    ko             :'assets/audio/sfx/ko.wav',
+    hit            :'assets/audio/sfx/impacto.mp3',
+    pickup_shield  :'assets/audio/sfx/recoger_escudo.mp3',
+    pickup_stim    :'assets/audio/sfx/recoger_stimpack.mp3',
+    pickup_medkit  :'assets/audio/sfx/recoger_medkit.mp3',
+    pickup_multi   :'assets/audio/sfx/recoger_multidisparo.mp3',
+    special_ready  :'assets/audio/sfx/especial_listo.mp3',
+    grenade_throw  :'assets/audio/sfx/granada_lanza.mp3',
+    grenade_boom   :'assets/audio/sfx/granada_explota.mp3',
+    acid_spit      :'assets/audio/sfx/acido_escupe.mp3',
+    acid_land      :'assets/audio/sfx/acido_cae.mp3',
+    ling_land      :'assets/audio/sfx/zergling_cae.mp3',
+    ling_boom      :'assets/audio/sfx/zergling_explota.mp3',
+    round_start    :'assets/audio/sfx/inicio_ronda.mp3',
+    countdown      :'assets/audio/sfx/cuenta_atras.mp3',
+    fight          :'assets/audio/sfx/fight.mp3',
+    ko             :'assets/audio/sfx/ko.mp3',
     nuke_warning   :'assets/audio/sfx/nuclear_detected.mp3',
-    nuke_fall      :'assets/audio/sfx/nuclear_cae.wav',
+    nuke_fall      :'assets/audio/sfx/nuclear_cae.mp3',
     nuke_explosion :'assets/audio/sfx/explosion_nuclear_sonido.mp3',
-    victory        :'assets/audio/sfx/victoria.wav',
+    victory        :'assets/audio/sfx/victoria.mp3',
     dt_attack      :'assets/audio/sfx/dark_templar_ataque.mp3',   // ataque (cuchillada) del Dark Templar
-    dt_slash       :'assets/audio/sfx/dt_slash.wav',      // onda de la llegada del salto sombrio (sintetizado)
-    dt_blink       :'assets/audio/sfx/dt_blink.wav',      // salto sombrio del Dark Templar (sintetizado)
+    dt_slash       :'assets/audio/sfx/dt_slash.mp3',      // onda de la llegada del salto sombrio (sintetizado)
+    dt_blink       :'assets/audio/sfx/dt_blink.mp3',      // salto sombrio del Dark Templar (sintetizado)
     // --- nuevos (sintetizados con tools/build_missing_sfx.py) ---
-    dt_evade       :'assets/audio/sfx/dt_evade.wav',          // el DT camuflado esquiva un ataque
-    crit           :'assets/audio/sfx/critico.wav',           // golpe critico al DT visible
-    dt_cloak       :'assets/audio/sfx/dt_cloak.wav',          // el DT vuelve a ocultarse
-    dt_reveal      :'assets/audio/sfx/dt_reveal.wav',         // el DT se revela
-    ling_beep      :'assets/audio/sfx/ling_beep.wav',         // pitido de la cuenta atras del zergling
-    ling_pop       :'assets/audio/sfx/ling_pop.wav',          // explosion debil por fin de mecha
-    acid_sizzle    :'assets/audio/sfx/acido_chisporroteo.wav',// chisporroteo del charco de acido
-    clock_warn     :'assets/audio/sfx/reloj_alerta.wav',      // ultimos 10 s de la ronda
+    dt_evade       :'assets/audio/sfx/dt_evade.mp3',          // el DT camuflado esquiva un ataque
+    dash           :'assets/audio/sfx/dash.mp3',              // dash de todos los luchadores (sintetizado con tools/build_dash_sfx.py)
+    crit           :'assets/audio/sfx/critico.mp3',           // golpe critico al DT visible
+    dt_cloak       :'assets/audio/sfx/dt_cloak.mp3',          // el DT vuelve a ocultarse
+    dt_reveal      :'assets/audio/sfx/dt_reveal.mp3',         // el DT se revela
+    ling_beep      :'assets/audio/sfx/ling_beep.mp3',         // pitido de la cuenta atras del zergling
+    ling_pop       :'assets/audio/sfx/ling_pop.mp3',          // explosion debil por fin de mecha
+    acid_sizzle    :'assets/audio/sfx/acido_chisporroteo.mp3',// chisporroteo del charco de acido
+    clock_warn     :'assets/audio/sfx/reloj_alerta.mp3',      // ultimos 10 s de la ronda
     // --- Zealot (sintetizados con tools/build_zealot_sfx.py) ---
-    zl_attack      :'assets/audio/sfx/zealot_ataque.wav',     // dos tajos de cuchillas psi
-    zl_charge      :'assets/audio/sfx/zealot_carga.wav',      // embestida (especial)
-    zl_impact      :'assets/audio/sfx/zealot_impacto.wav',    // choque al terminar la carga
+    zl_attack      :'assets/audio/sfx/zealot_ataque.mp3',     // dos tajos de cuchillas psi
+    zl_charge      :'assets/audio/sfx/zealot_carga.mp3',      // embestida (especial)
+    zl_impact      :'assets/audio/sfx/zealot_impacto.mp3',    // choque al terminar la carga
+    // --- Battlecruiser (sintetizados con tools/build_bc_audio.py) ---
+    bc_entrada     :'assets/audio/sfx/bc_entrada.mp3',         // salto tactico: llega la nave
+    bc_bocina      :'assets/audio/sfx/bc_bocina.mp3',          // bocina grave del cartel
+    bc_laser       :'assets/audio/sfx/bc_laser.mp3',           // disparo de la bateria laser
+    bc_laser_hit   :'assets/audio/sfx/bc_laser_impacto.mp3',   // impacto del laser
+    bc_yamato_charge:'assets/audio/sfx/bc_yamato_carga.mp3',   // carga del canon Yamato
+    bc_yamato_fire :'assets/audio/sfx/bc_yamato_disparo.mp3',  // disparo del canon Yamato
+    bc_leave       :'assets/audio/sfx/bc_salida.mp3',          // la nave se retira
     // --- pasos (sintetizados con tools/build_extra_sfx.py) ---
-    step_marine    :'assets/audio/sfx/paso_marine.wav',
-    step_hydra     :'assets/audio/sfx/paso_hidralisco.wav',
-    step_dt        :'assets/audio/sfx/paso_dt.wav',
+    step_marine    :'assets/audio/sfx/paso_marine.mp3',
+    step_hydra     :'assets/audio/sfx/paso_hidralisco.mp3',
+    step_dt        :'assets/audio/sfx/paso_dt.mp3',
     // --- publico del coliseo y tension de fin de ronda ---
-    crowd_ko       :'assets/audio/sfx/publico_ko.wav',
-    crowd_crit     :'assets/audio/sfx/publico_critico.wav',
-    crowd_nuke     :'assets/audio/sfx/publico_nuclear.wav',
+    crowd_ko       :'assets/audio/sfx/publico_ko.mp3',
+    crowd_crit     :'assets/audio/sfx/publico_critico.mp3',
+    crowd_nuke     :'assets/audio/sfx/publico_nuclear.mp3',
     tension        :'assets/audio/sfx/tension.wav',       // latido en bucle (ultimos 10 s)
     // --- voces del Marine (originales de StarCraft) ---
-    marine_what    :'assets/audio/voices/marine/tmawht02.wav',
-    marine_stim    :'assets/audio/voices/marine/tmasti01.wav',
-    marine_pissed  :'assets/audio/voices/marine/tmapss05.wav',
+    marine_what    :'assets/audio/voices/marine/tmawht02.mp3',
+    marine_stim    :'assets/audio/voices/marine/tmasti01.mp3',
+    marine_pissed  :'assets/audio/voices/marine/tmapss05.mp3',
     // --- voces del Hidralisco (originales de StarCraft) ---
-    hydra_what     :'assets/audio/voices/hydralisk/zhywht01.wav',
-    hydra_yes      :'assets/audio/voices/hydralisk/zhyyes00.wav',
-    hydra_pissed   :'assets/audio/voices/hydralisk/zhypss01.wav',
+    hydra_what     :'assets/audio/voices/hydralisk/zhywht01.mp3',
+    hydra_yes      :'assets/audio/voices/hydralisk/zhyyes00.mp3',
+    hydra_pissed   :'assets/audio/voices/hydralisk/zhypss01.mp3',
     // --- voces del Dark Templar (originales de StarCraft) ---
-    dt_ready       :'assets/audio/voices/dark_templar/PDtRdy00.wav',   // al empezar la partida
-    dt_yes0        :'assets/audio/voices/dark_templar/pdtyes00.wav',   // al lanzar el salto sombrio
-    dt_yes2        :'assets/audio/voices/dark_templar/pdtyes02.wav',   // al recoger un stimpack
+    dt_ready       :'assets/audio/voices/dark_templar/PDtRdy00.mp3',   // al empezar la partida
+    dt_yes0        :'assets/audio/voices/dark_templar/pdtyes00.mp3',   // al lanzar el salto sombrio
+    dt_yes2        :'assets/audio/voices/dark_templar/pdtyes02.mp3',   // al recoger un stimpack
+    // --- voz original del Battlecruiser ("Battlecruiser operational"): suena al llegar la nave (reemplazala por la tuya con el mismo nombre) ---
+    bcv_ready      :'assets/audio/voices/battlecruiser/operational.mp3',
     // --- voces del Zealot ---
     zealot_what    :'assets/audio/voices/zealot/what-battle-calls.mp3',   // al empezar la partida
     zealot_charge  :'assets/audio/voices/zealot/my-life-for-aiur.mp3',    // al lanzar la carga (especial)
@@ -84,17 +96,17 @@ const AUDIO={
   // Ganancia relativa por sonido (1 = sin cambio; el volumen final nunca pasa de 1). Equilibra el combate: el Marine sonaba mucho mas que la hidra.
   gain:{shoot_marine:.62,shoot_hydralisk:1,grenade_throw:1,grenade_boom:.9,hit:1,crit:.9,ling_beep:.8,clock_warn:.7,acid_sizzle:.7,dt_cloak:.8,dt_reveal:.8,
         marine_what:.8,marine_stim:.8,marine_pissed:.8,hydra_what:1,hydra_yes:1,hydra_pissed:1.2,
-        step_marine:.5,step_hydra:.6,step_dt:.45,crowd_ko:.75,crowd_crit:.6,crowd_nuke:.8,tension:.8},
+        step_marine:.5,step_hydra:.6,step_dt:.45,crowd_ko:.75,crowd_crit:.6,crowd_nuke:.8,tension:.8,bc_entrada:.9,bc_bocina:.8,bc_laser:.5,bc_laser_hit:.7,bc_yamato_charge:.85,bc_yamato_fire:1,bc_leave:.8,bcv_ready:1},
   // Variacion en cada reproduccion: tono +-pitch y volumen +-vol (0 = sonido siempre identico). Solo disparos, golpes y recogidas; no cuenta atras ni fanfarrias.
   vary:{shoot_marine:1,shoot_hydralisk:1,hit:1,crit:.6,dt_attack:1,dt_slash:.6,zl_attack:1,zl_impact:.6,grenade_throw:.8,grenade_boom:.6,acid_spit:1,acid_land:.8,acid_sizzle:1,ling_land:1,ling_pop:.8,dt_evade:1,
-        pickup_shield:.5,pickup_stim:.5,pickup_medkit:.5,pickup_multi:.5,step_marine:1,step_hydra:1,step_dt:1},
+        pickup_shield:.5,pickup_stim:.5,pickup_medkit:.5,pickup_multi:.5,step_marine:1,step_hydra:1,step_dt:1,bc_laser:1,bc_laser_hit:.8},
   varPitch:.06,varVol:.12,
   // --- musica: fundido cruzado al repetir el bucle, cambio de pista con fundido y tension en los ultimos 10 s ---
-  musicStarts:{music_arena:5,music_menu:0},   // segundo donde empieza (y donde vuelve a empezar) el bucle de cada pista
+  musicStarts:{music_arena:5,music_menu:0,music_bc:0},   // segundo donde empieza (y donde vuelve a empezar) el bucle de cada pista
   musicXf:2.5,         // segundos de fundido cruzado al volver al inicio del bucle (0,5 s o menos = casi corte)
   voiceVolume:.9,      // volumen propio de las voces (0-1), independiente de los efectos
   _hold:{},            // motivos por los que la musica esta en pausa (pausa del juego)
-  _cache:{},_ctx:undefined,_mg:null,_buf:{},_act:[],_last:{},_pl:{},_trk:null,_out:[],_int:0,_tn:null,_tt:0,_iv:null,_ul:false,
+  _cache:{},_ctx:undefined,_mg:null,_buf:{},_act:[],_last:{},_pl:{},_trk:null,_pos:{},_out:[],_int:0,_tn:null,_tt:0,_iv:null,_ul:false,
   _vol(){return Math.min(1,this.musicVolume*(Object.keys(this._duck).length?.3:1)*(1+.3*this._int))},
   _mv(e){e.volume=Math.max(0,Math.min(1,this._vol()*(e._g==null?1:e._g)))},
   musicVol(){if(this._trk)this._trk.els.forEach(e=>this._mv(e))},
@@ -125,11 +137,11 @@ const AUDIO={
   //  - si el audio aun esta bloqueado o la pestana esta oculta, el sonido se DESCARTA (no se encola);
   //  - si Web Audio no puede cargar un archivo (p. ej. abriendo index.html con doble clic, sin servidor)
   //    se usa un grupo reducido de <audio> reutilizables.
-  sfxLimit:{def:3,shoot_marine:4,shoot_hydralisk:4,hit:4,step_marine:2,step_hydra:2,step_dt:2,crowd_ko:1,crowd_crit:1,crowd_nuke:1,clock_warn:1,acid_sizzle:2,ling_beep:2,pickup_shield:2,pickup_stim:2,pickup_medkit:2,pickup_multi:2},
-  sfxGap:{def:.04,hit:.03,step_marine:.09,step_hydra:.09,step_dt:.09,crowd_ko:.5,crowd_crit:.5,crowd_nuke:.5,acid_sizzle:.12,ling_beep:.08},   // segundos entre dos sonidos iguales
+  sfxLimit:{def:3,shoot_marine:4,shoot_hydralisk:4,hit:4,step_marine:2,step_hydra:2,step_dt:2,crowd_ko:1,crowd_crit:1,crowd_nuke:1,clock_warn:1,acid_sizzle:2,ling_beep:2,pickup_shield:2,pickup_stim:2,pickup_medkit:2,pickup_multi:2,bc_laser:4,bc_laser_hit:3},
+  sfxGap:{def:.04,hit:.03,step_marine:.09,step_hydra:.09,step_dt:.09,crowd_ko:.5,crowd_crit:.5,crowd_nuke:.5,acid_sizzle:.12,ling_beep:.08,bc_laser:.05,bc_laser_hit:.06},   // segundos entre dos sonidos iguales
   maxVoices:18,        // efectos simultaneos en total
-  prio:{ko:1,victory:1,countdown:1,fight:1,round_start:1,nuke_warning:1,nuke_fall:1,special_ready:1,grenade_boom:1,ling_boom:1,crit:1},   // nunca se descartan ni se reemplazan
-  _isVoice:n=>/^(marine|hydra|zealot)_|^dt_(ready|yes)/.test(n),
+  prio:{ko:1,victory:1,countdown:1,fight:1,round_start:1,nuke_warning:1,nuke_fall:1,special_ready:1,grenade_boom:1,ling_boom:1,crit:1,bc_entrada:1,bc_bocina:1,bc_yamato_charge:1,bc_yamato_fire:1,bc_leave:1},   // nunca se descartan ni se reemplazan
+  _isVoice:n=>/^(marine|hydra|zealot)_|^dt_(ready|yes)|^bcv_/.test(n),
   _wa(){
     if(this._ctx!==undefined)return this._ctx;
     try{
@@ -193,14 +205,16 @@ const AUDIO={
     const p=e.play();if(p&&p.catch)p.catch(()=>{});
   },
   // Musica: cada pista usa DOS elementos Audio; al acercarse al final el segundo entra con fundido (potencia constante) mientras el primero se apaga
-  playMusic(name){
+  // resume = true: si esa pista ya sono antes, vuelve a entrar por donde se quedo (la usa el Battlecruiser para devolver la musica de la arena sin reiniciarla)
+  playMusic(name,resume){
     if(!this.enabled)return;
     const url=this.files[name];if(!url)return;
     const T0=this._trk;
     if(T0&&T0.name===name){this._playTrk(T0);return}
+    if(T0){const a=T0.els[T0.i];if(a&&a._started&&isFinite(a.currentTime))this._pos[T0.name]=a.currentTime}   // recuerda donde se quedo
     if(T0)T0.els.forEach(e=>{if(!e.paused)this._out.push({el:e,g:e._g==null?1:e._g,t:0})});   // la pista anterior se apaga en 1 s
     const mk=()=>{const e=new Audio(url);e.preload='auto';e._g=0;return e};
-    this._trk={name,els:[mk(),mk()],i:0,xf:-1,fi:T0?0:9,start:this.musicStarts[name]||0};   // fi: progreso del fundido de entrada
+    this._trk={name,els:[mk(),mk()],i:0,xf:-1,fi:T0?0:9,start:this.musicStarts[name]||0,first:resume&&this._pos[name]!=null?this._pos[name]:null};   // fi: progreso del fundido de entrada
     if(!this._iv)this._iv=setInterval(()=>this._tick(),60);
     this._tt=performance.now();
     this._playTrk(this._trk);
@@ -211,7 +225,7 @@ const AUDIO={
   },
   _go(e,T){
     if(e.readyState<1){if(!e._w){e._w=1;e.addEventListener('loadedmetadata',()=>{e._w=0;if(this._trk===T)this._playTrk(T)},{once:true})}return}
-    if(!e._started){e._started=1;try{e.currentTime=T.start}catch(x){}}
+    if(!e._started){e._started=1;let p=T.start;if(T.first!=null&&e===T.els[0]&&!e._f){e._f=1;p=T.first}try{e.currentTime=p}catch(x){}}
     e.playbackRate=1+.06*this._int;this._mv(e);
     const p=e.play();if(p&&p.catch)p.catch(()=>this._unlock());
   },
