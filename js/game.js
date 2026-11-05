@@ -993,7 +993,7 @@ const KL=c=>c.replace('Key','').replace('Period','.').replace('Slash','/');
 const D=()=>CONFIG.DIFF[diff]||CONFIG.DIFF.normal;
 const KOT=()=>CONFIG.KO_CAM?2.4:2;      // duracion del cartel K.O. (mas larga solo con la camara activa)
 /* HUD: los elementos se buscan UNA vez y cada valor se escribe en el DOM solo cuando cambia (antes: ~20 busquedas y escrituras por fotograma; en movil pesaba) */
-const HUDC=[0,1].map(i=>{const p=i?'#ph':'#pm';const hpi=$(p+' .hp i'),tr=document.createElement('u');tr.className='tr';hpi.parentNode.insertBefore(tr,hpi);return{tr,hp:hpi,sh:$(p+' .sh i'),pt:$(p+' .pt'),lv:$(p+' .lv'),sp:$(p+' .spc'),spi:$(p+' .spc i'),bf:$(p+' .buff'),k:{}}}),TMEL=$('#tm'),TMK={};
+const HUDC=[0,1].map(i=>{const p=i?'#ph':'#pm';const hpi=$(p+' .hp i'),tr=document.createElement('u');tr.className='tr';hpi.parentNode.insertBefore(tr,hpi);return{tr,hp:hpi,sh:$(p+' .sh i'),pt:$(p+' .pt'),lv:$(p+' .lv'),sp:$(p+' .spc'),spi:$(p+' .spc i'),dsh:$(p+' .dsh'),dimg:$(p+' .dsh img'),dcv:$(p+' .dsh .dcv'),dnum:$(p+' .dsh .dnum'),bf:$(p+' .buff'),k:{}}}),TMEL=$('#tm'),TMK={};
 function hput(c,key,el,prop,v){if(c[key]!==v){c[key]=v;if(prop=='t')el.textContent=v;else if(prop=='c')el.className=v;else el.style[prop]=v}}
 function hud(){
  hput(TMK,'t',TMEL,'t',Math.ceil(roundT));hput(TMK,'c',TMEL,'c',roundT<=10?'low':'');
@@ -1009,6 +1009,12 @@ function hud(){
   const hs=Array.from({length:CONFIG.LIVES},(_,k)=>k).map(k=>'<span'+(k<lives[i]?'':' class="off"')+'>♥</span>').join('');if(H.lv.dataset.v!==hs){H.lv.dataset.v=hs;H.lv.innerHTML=hs}
   const rdy=f.spT>=CONFIG.SPECIAL_COOLDOWN;hput(c,'pw',H.spi,'width',Math.min(1,f.spT/CONFIG.SPECIAL_COOLDOWN)*100+'%');
   if(c.rdy!==rdy){c.rdy=rdy;H.sp.classList.toggle('ready',rdy)}
+  /* icono del DASH bajo las barras: Hidralisco usa el suyo, el resto el de Terran/Protoss; en recarga se atenua y muestra los segundos que faltan */
+  if(c.dty!==f.type){c.dty=f.type;H.dimg.src=f.type=='h'?'assets/images/ui/dash_hidralisco.gif':'assets/images/ui/dash_terran_protoss.png'}
+  {const on=CONFIG.DASH.on,cd=Math.max(0,f.dashCd||0),cdr=cd>0;if(c.don!==on){c.don=on;H.dsh.style.display=on?'':'none'}
+   if(c.dcd!==cdr){c.dcd=cdr;H.dsh.classList.toggle('cd',cdr)}
+   hput(c,'dcv',H.dcv,'height',cdr?Math.min(100,cd/CONFIG.DASH.cooldown*100)+'%':'0%');
+   hput(c,'dnm',H.dnum,'t',cdr?cd.toFixed(1):'')}
   hput(c,'bf',H.bf,'t',(rdy&&f.hp>0?(NAMES_SP[f.type]+' ['+KL(f.side?CONFIG.KEYS.hydra:CONFIG.KEYS.marine)+']  '):'')+(CONFIG.DASH.on&&!f.ai&&f.hp>0&&f.dashCd<=0?'Dash ['+KL(f.side?CONFIG.DASH.KEYS.right:CONFIG.DASH.KEYS.left)+']  ':'')+(f.stim>0?'Stim '+Math.ceil(f.stim)+' s  ':'')+(f.multi>0?'Multi '+Math.ceil(f.multi)+' s  ':'')+(BCR&&BCR.own===f?'Battlecruiser '+bcLeft()+' s  ':'')+(f.sh>0?'Escudo':''));
  });
 }
