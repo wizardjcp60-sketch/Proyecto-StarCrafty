@@ -278,7 +278,16 @@ canvas{cursor:var(--cur-canvas,auto)}
 }
 /* vertical con mandos: el escenario se centra en el hueco que queda sobre los mandos */
 @media (pointer:coarse) and (orientation:portrait){
-  body{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+  body{padding-bottom:calc(min(58vw,226px) + 44px + env(safe-area-inset-bottom,0px))}
+  /* mandos en vertical: joystick a la izquierda y los botones en arco para el pulgar derecho, bien separados */
+  #tc{padding:0 calc(12px + env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px));opacity:.88}
+  #jb{width:min(36vw,140px);height:min(36vw,140px);margin-bottom:8px}
+  #jk{width:40%;height:40%}
+  .tb{position:relative;display:block;gap:0;width:min(58vw,226px);height:min(58vw,226px)}
+  .tb button{position:absolute;font-size:15px}
+  #bf{width:min(27vw,108px);height:min(27vw,108px);right:1%;bottom:4%}
+  #bs{width:min(21vw,84px);height:min(21vw,84px);right:55%;bottom:0;font-size:14px}
+  #bd{width:min(19.5vw,78px);height:min(19.5vw,78px);right:22%;bottom:56%;font-size:14px}
 }
 
 /* ---------- HORIZONTAL (movil o ventana baja) ---------- */
