@@ -993,7 +993,7 @@ const KL=c=>c.replace('Key','').replace('Period','.').replace('Slash','/');
 const D=()=>CONFIG.DIFF[diff]||CONFIG.DIFF.normal;
 const KOT=()=>CONFIG.KO_CAM?2.4:2;      // duracion del cartel K.O. (mas larga solo con la camara activa)
 /* HUD: los elementos se buscan UNA vez y cada valor se escribe en el DOM solo cuando cambia (antes: ~20 busquedas y escrituras por fotograma; en movil pesaba) */
-const HUDC=[0,1].map(i=>{const p=i?'#ph':'#pm';const hpi=$(p+' .hp i'),tr=document.createElement('u');tr.className='tr';hpi.parentNode.insertBefore(tr,hpi);return{tr,hp:hpi,sh:$(p+' .sh i'),pt:$(p+' .pt'),lv:$(p+' .lv'),sp:$(p+' .spc'),spi:$(p+' .spc i'),dsh:$(p+' .dsh'),dimg:$(p+' .dsh img'),dcv:$(p+' .dsh .dcv'),dnum:$(p+' .dsh .dnum'),bf:$(p+' .buff'),k:{}}}),TMEL=$('#tm'),TMK={};
+const HUDC=[0,1].map(i=>{const p=i?'#ph':'#pm';const hpi=$(p+' .hp i'),tr=document.createElement('u');tr.className='tr';hpi.parentNode.insertBefore(tr,hpi);return{tr,hp:hpi,sh:$(p+' .sh i'),pt:$(p+' .pt'),lv:$(p+' .lv'),sp:$(p+' .spc'),spi:$(p+' .spc i'),dsh:$(p+' .dsh'),dimg:$(p+' .dsh img'),dcv:$(p+' .dsh .dcv'),dnum:$(p+' .dsh .dnum'),dsp:$(p+' .dsp'),dspcv:$(p+' .dsp .dcv'),dspnum:$(p+' .dsp .dnum'),bf:$(p+' .buff'),k:{}}}),TMEL=$('#tm'),TMK={};
 function hput(c,key,el,prop,v){if(c[key]!==v){c[key]=v;if(prop=='t')el.textContent=v;else if(prop=='c')el.className=v;else el.style[prop]=v}}
 function hud(){
  hput(TMK,'t',TMEL,'t',Math.ceil(roundT));hput(TMK,'c',TMEL,'c',roundT<=10?'low':'');
@@ -1015,6 +1015,11 @@ function hud(){
    if(c.dcd!==cdr){c.dcd=cdr;H.dsh.classList.toggle('cd',cdr)}
    hput(c,'dcv',H.dcv,'height',cdr?Math.min(100,cd/CONFIG.DASH.cooldown*100)+'%':'0%');
    hput(c,'dnm',H.dnum,'t',cdr?cd.toFixed(1):'')}
+  /* icono del especial del Dark Templar (salto sombrio), junto al del dash: mismo aspecto de recarga */
+  {const on=f.type=='d',rem=Math.max(0,CONFIG.SPECIAL_COOLDOWN-f.spT),cdr=rem>0;if(c.sdon!==on){c.sdon=on;H.dsp.style.display=on?'':'none'}
+   if(on){if(c.sdcd!==cdr){c.sdcd=cdr;H.dsp.classList.toggle('cd',cdr)}
+    hput(c,'sdcv',H.dspcv,'height',cdr?Math.min(100,rem/CONFIG.SPECIAL_COOLDOWN*100)+'%':'0%');
+    hput(c,'sdnm',H.dspnum,'t',cdr?rem.toFixed(1):'')}}
   hput(c,'bf',H.bf,'t',(rdy&&f.hp>0?(NAMES_SP[f.type]+' ['+KL(f.side?CONFIG.KEYS.hydra:CONFIG.KEYS.marine)+']  '):'')+(CONFIG.DASH.on&&!f.ai&&f.hp>0&&f.dashCd<=0?'Dash ['+KL(f.side?CONFIG.DASH.KEYS.right:CONFIG.DASH.KEYS.left)+']  ':'')+(f.stim>0?'Stim '+Math.ceil(f.stim)+' s  ':'')+(f.multi>0?'Multi '+Math.ceil(f.multi)+' s  ':'')+(BCR&&BCR.own===f?'Battlecruiser '+bcLeft()+' s  ':'')+(f.sh>0?'Escudo':''));
  });
 }
