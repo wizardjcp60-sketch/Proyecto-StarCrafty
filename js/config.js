@@ -138,6 +138,17 @@ const CONFIG={
     burnDps:2,                // dano por segundo del acido (burnTime x burnDps = dano total; con 4 y 2 son 8)
     burnTick:.5               // cada cuantos segundos baja la vida (dano por golpe = burnDps x burnTick)
   },
+  MBIG:{                      // MINA DEL MARINE: cada cierto numero de ataques dispara una mina en vez de una bala. Si impacta explota (dano inmediato) y deja QUEMADURA (dano por segundo)
+    on:true,                  // false = el Marine siempre dispara balas normales
+    every:5,                  // cada cuantos ataques sale la mina (la 5.a, la 10.a...)
+    blastDmg:4,               // dano de la explosion al impactar (reemplaza al dano de la bala de ese disparo)
+    scale:1.3,                // tamano de la mina (1 = tamano base)
+    speed:.8,                 // velocidad respecto a la bala normal (menos de 1 = mas lenta, se puede esquivar)
+    burnTime:4,               // segundos que dura la quemadura (otro impacto reinicia el tiempo, no se acumula)
+    burnDps:2,                // dano por segundo de la quemadura (burnTime x burnDps = dano total; con 4 y 2 son 8)
+    burnTick:.5,              // cada cuantos segundos baja la vida (dano por golpe = burnDps x burnTick)
+    blastR:22                 // radio visual de la explosion (px logicos)
+  },
   MULTI:{                     // MULTIDISPARO (objeto que cae): el ataque normal mas proyectiles extra a los costados. Solo sirve a Marine e Hidralisco; si lo recoge el Dark Templar (cuerpo a cuerpo) se ANULA: desaparece sin efecto
     time:5,                   // segundos que dura el efecto
     pairs:1,                  // pares de proyectiles extra (1 = uno a cada lado; 2 = dos a cada lado)
