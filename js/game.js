@@ -14,7 +14,7 @@ const ZL=CONFIG.ZL,melee=f=>f.type=='d'||f.type=='z',reachOf=f=>f.type=='z'?ZL.r
 const HFX=CONFIG.HFX,DT=CONFIG.DT,cloaked=f=>DT.cloak&&f.type=='d'&&!(f.rev>0);   // un DT camuflado que no ha atacado hace poco
 const GRR=k=>k=='g'?CONFIG.GRENADE_RADIUS:k=='b'?DT.blinkRadius:k=='l'?CONFIG.BC.laser.radius:k=='y'?CONFIG.BC.yamato.radius:CONFIG.ACID_RADIUS;
 let bg=mkBg();
-let mode='1m',state='menu',F,B,I,L,P,spawnT,time=0,shake=0,lives=[CONFIG.LIVES,CONFIG.LIVES],roundT=CONFIG.ROUND_TIME,nk=null,introT=0,fightT=0,roundN=1,koT=0,pile=[],winner=null,popups=[],GR=[],AC=[],RG=[],SPL=[],diff='normal',SCORE={m:0,h:0,d:0,z:0},CH=['m','h'],winSide=-1,cam={on:false,t:0,x:0,y:0},TOUCH={dx:0,dy:0,fire:false,sp:false,dash:false},padPrev=false;
+let mode='1m',state='menu',F,B,I,L,P,spawnT,time=0,shake=0,lives=[CONFIG.LIVES,CONFIG.LIVES],roundT=CONFIG.ROUND_TIME,nk=null,introT=0,fightT=0,roundN=1,koT=0,pile=[],winner=null,popups=[],GR=[],AC=[],RG=[],SPL=[],MN=[],diff='normal',SCORE={m:0,h:0,d:0,z:0},CH=['m','h'],winSide=-1,cam={on:false,t:0,x:0,y:0},TOUCH={dx:0,dy:0,fire:false,sp:false,dash:false},padPrev=false;
 var tcEl=null;
 const keys={};
 const kc=e=>e.code||(e.key&&e.key.length==1?(e.key==' '?'Space':/[a-z]/i.test(e.key)?'Key'+e.key.toUpperCase():''):'');   // respaldo: algunos teclados/IME mandan e.code vacio
@@ -57,7 +57,7 @@ function newRound(q){
  F=[mk(CH[0],CX-95,CY+4,CONFIG.HP[CH[0]]),mk(CH[1],CX+95,CY+4,CONFIG.HP[CH[1]])];F[0].side=0;F[1].side=1;F.forEach(f=>f.dtc=(CH[0]=='d'&&CH[1]=='d'&&f.side==1)?'red':'orig');
  F[0].ai=mode=='1h';F[1].ai=mode=='1m';
  F[0].face=0;F[1].face=Math.PI;
- B=[];I=[];L=[];P=[];popups=[];GR=[];AC=[];RG=[];SPL=[];BX=[];GSTOP=0;GFLASH=0;cam.on=false;AUDIO.duck('ko',false);spawnT=1.5;shake=0;introT=CONFIG.COUNTDOWN;fightT=0;koT=0;roundT=CONFIG.ROUND_TIME;nk=null;AUDIO.duck('nuclear',false);state='intro';if(!q)AUDIO.play('round_start');
+ B=[];I=[];L=[];P=[];popups=[];GR=[];AC=[];RG=[];SPL=[];MN=[];BX=[];GSTOP=0;GFLASH=0;cam.on=false;AUDIO.duck('ko',false);spawnT=1.5;shake=0;introT=CONFIG.COUNTDOWN;fightT=0;koT=0;roundT=CONFIG.ROUND_TIME;nk=null;AUDIO.duck('nuclear',false);state='intro';if(!q)AUDIO.play('round_start');
  $('#nm').textContent=NAMES[CH[0]]+(F[0].ai?' (IA)':'');$('#nh').textContent=NAMES[CH[1]]+(F[1].ai?' (IA)':'');setPortraits();
  hud();
 }
@@ -205,6 +205,39 @@ function mineBoom(x,y,k=1){   // explosion de la mina: bola de fuego, anillo, ch
  burst(x,y-8,Math.round(8*k),['#4a3a34','#6a5a50'],45);   // humo
  RG.push({x,y,R:MB.blastR*k,life:.35,max:.35,c:'255,170,60'});
  if(k>=1)RG.push({x,y,R:MB.blastR*.55,life:.18,max:.18,c:'255,240,170'});
+}
+/* ---- MINA CON TEMPORIZADOR (CONFIG.MBIG.fuse): al impactar se pega al rival y explota cuando se acaba la cuenta atras ---- */
+function plantMine(b,f){
+ const MB=CONFIG.MBIG;
+ MN.push({f,own:b.own,dmg:b.dmg,ox:b.x-f.x,oy:Math.max(-4,Math.min(4,b.y-f.y)),x:b.x,y:b.y,t:MB.fuse,max:MB.fuse,nb:MB.fuse});
+ AUDIO.play('ling_beep');popups.push({x:f.x,y:f.y-34,txt:'¡Pegada!',c:'#ff6a3a',sz:10,life:.7});
+ burst(b.x,b.y-10,6,['#ffb43a','#ffe27a'],40);
+}
+function mineStep(dt){
+ MN=MN.filter(m=>{
+  const f=m.f;m.t-=dt;m.x=f.x+m.ox;m.y=f.y+m.oy;
+  if(m.t>0){
+   if(m.t<=m.nb){AUDIO.play('ling_beep');m.nb=m.t-(.12+m.t*.22)}   // pitidos que se aceleran al acercarse el final
+   if(Math.random()<dt*14)part(m.x+rnd(-3,3),m.y-12,rnd(-10,10),rnd(-22,-8),rnd(.15,.3),pick(['#ffe27a','#ffb43a','#ff7a1a']),1);   // chispas de la mecha
+   return true;
+  }
+  if(f.hp>0&&!f.ghost){hurt(f,dtDmg(f,m.dmg),false);if(!(f.dashI>0))burnApply(f,m.own);mineBoom(m.x,m.y-4)}
+  else mineBoom(m.x,m.y,.6);   // el rival ya no esta: explosion debil
+  return false;
+ });
+}
+function drawMineArmed(m){   // mina pegada: luz roja que parpadea mas rapido cuanto menos queda
+ const MB=CONFIG.MBIG,k=MB.scale*.9,hx=m.x,hy=m.y-12,u=Math.max(0,Math.min(1,1-m.t/m.max)),on=((time*(4+u*16))|0)&1;
+ g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(m.x,m.y,3*k,1.3*k,0,0,7);g.fill();
+ g.save();g.globalCompositeOperation='lighter';
+ const hg=g.createRadialGradient(hx,hy,0,hx,hy,(8+u*5)*k);hg.addColorStop(0,'rgba(255,70,40,'+(on?.75:.25)+')');hg.addColorStop(1,'rgba(255,60,20,0)');g.fillStyle=hg;g.fillRect(hx-13*k,hy-13*k,26*k,26*k);
+ g.restore();
+ g.save();g.translate(hx,hy);
+ g.fillStyle='#2b2f36';for(let i=0;i<6;i++){g.save();g.rotate(i*1.047);g.fillRect(2.6*k,-.7,2.2*k,1.4);g.restore()}
+ g.fillStyle='#4a515c';g.beginPath();g.arc(0,0,3.2*k,0,7);g.fill();
+ g.fillStyle='#7d8795';g.beginPath();g.arc(-.8*k,-.9*k,1.3*k,0,7);g.fill();
+ g.fillStyle=on?'#ff3a2a':'#7a1a14';g.beginPath();g.arc(.9*k,.5*k,1.1*k,0,7);g.fill();
+ g.restore();
 }
 function drawMine(b){   // mina: esfera metalica con pinchos que gira, luz roja parpadeante y estela de chispas
  const MB=CONFIG.MBIG,age=1.4-b.life,k=MB.scale,hx=b.x,hy=b.y-12+Math.sin(age*20)*.6,on=((age*8)|0)&1;
@@ -368,11 +401,12 @@ function update(dt){
   if(b.mar&&CONFIG.MFX.on&&Math.random()<.6)part(b.x,b.y-12,rnd(-8,8),rnd(-8,8)-5,rnd(.12,.25),pick(['#ffe27a','#ffb43a','#fff6c0']),1);
   if(!b.mar&&HFX.on&&Math.random()<.7){const q=P.length;part(b.x,b.y-HFX.z,rnd(-6,6),rnd(-4,4),rnd(.2,.4),pick(HFX.cols),1);P[q].g=220}   // goteo de acido
   if(b.life<=0||!inArena(b.x,b.y,-30)){if(b.mine&&b.life>0)mineBoom(b.x,b.y,.6);else if(b.mar&&CONFIG.MFX.on&&b.life>0)sparkHit(b.x,b.y-12,.5);else if(!b.mar&&HFX.on&&b.life>0)acidSplash(b.x,b.y-4,b.vx,b.vy,b.big?1.4:.6);return false}
-  for(const f of F)if(f!==b.own&&f.hp>0&&!f.ghost&&!(f.dashI>0)&&Math.hypot(b.x-f.x,b.y-f.y)<f.r+(b.big||b.mine?4:2)){if(cloaked(f)){if(b.ev)continue;b.ev=1;if(Math.random()<DT.evasion){evade(f);continue}}hurt(f,dtDmg(f,b.dmg),false,!b.mar&&HFX.on?'#b8ff6a':undefined);if(b.big)acidApply(f,b.own);if(b.mine){burnApply(f,b.own);mineBoom(b.x,f.y-4)}else if(b.mar&&CONFIG.MFX.on)sparkHit(b.x,f.y-8,b.sc||1);else if(!b.mar&&HFX.on)acidSplash(b.x,f.y-8,b.vx,b.vy,b.big?1.8:(b.sc||1));else burst(f.x,f.y-7,4,b.mar?['#ffe27a']:['#d6ff6a','#b8452a'],50);return false}
+  for(const f of F)if(f!==b.own&&f.hp>0&&!f.ghost&&!(f.dashI>0)&&Math.hypot(b.x-f.x,b.y-f.y)<f.r+(b.big||b.mine?4:2)){if(cloaked(f)){if(b.ev)continue;b.ev=1;if(Math.random()<DT.evasion){evade(f);continue}}if(b.mine&&(CONFIG.MBIG.fuse||0)>0){plantMine(b,f);return false}hurt(f,dtDmg(f,b.dmg),false,!b.mar&&HFX.on?'#b8ff6a':undefined);if(b.big)acidApply(f,b.own);if(b.mine){burnApply(f,b.own);mineBoom(b.x,f.y-4)}else if(b.mar&&CONFIG.MFX.on)sparkHit(b.x,f.y-8,b.sc||1);else if(!b.mar&&HFX.on)acidSplash(b.x,f.y-8,b.vx,b.vy,b.big?1.8:(b.sc||1));else burst(f.x,f.y-7,4,b.mar?['#ffe27a']:['#d6ff6a','#b8452a'],50);return false}
   for(const l of L)if(!l.dead&&Math.hypot(b.x-l.x,b.y-l.y)<6){l.hp-=b.dmg;if(b.mar&&CONFIG.MFX.on)sparkHit(b.x,b.y-8,.6);else if(!b.mar&&HFX.on)acidSplash(b.x,b.y-8,b.vx,b.vy,.7);if(b.mine)mineBoom(b.x,b.y,.7);if(l.hp<=0)boom(l);return false}
   return true;
  });
  L=L.filter(l=>!l.dead);
+ mineStep(dt);
  const dead=F.filter(f=>f.hp<=0);
  if(dead.length){
   dead.forEach(f=>{const hy=f.type=='h';burst(f.x,f.y-6,hy?22:50,f.type=='m'?['#3b66ad','#6c9be0','#ffb43a']:f.type=='d'?['#b44aff','#7fd0ff','#ffffff']:f.type=='z'?['#7fd0ff','#ffd24a','#ffffff']:['#7a5236','#b8452a','#d9a441'],hy?70:120);lives[F.indexOf(f)]--;f.chT=0;f.stun=0;f.dT=0});F.forEach(f=>f.ghost=0);
@@ -1219,7 +1253,7 @@ function draw(){
  g.save();if(cam.on){const z=camZ(cam.t);g.translate(cam.x,cam.y);g.scale(z,z);g.translate(-cam.x,-cam.y)}
  drawAmbient();drawFloorFx();I.forEach(drawItem);L.forEach(drawLing);
  [...F].sort((a,b)=>a.y-b.y).forEach(drawF);F.forEach(drawAcidOn);F.forEach(drawBurnOn);F.forEach(drawStunStars);
- B.forEach(drawB);GR.forEach(drawProj);RG.forEach(drawRing);SPL.forEach(drawSplash);gDrawFx();
+ B.forEach(drawB);MN.forEach(drawMineArmed);GR.forEach(drawProj);RG.forEach(drawRing);SPL.forEach(drawSplash);gDrawFx();
  bcDraw();
  if(state=='nuke'&&nk)drawNuke();
  P.forEach(p=>{g.globalAlpha=Math.max(0,p.life/p.max);g.fillStyle=p.c;g.fillRect(p.x|0,p.y|0,p.s,p.s)});

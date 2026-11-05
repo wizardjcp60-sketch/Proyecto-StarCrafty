@@ -1,4 +1,5 @@
 ﻿FONDO
 arena.jpg (960x540) = fondo actual (coliseo Terran contra Zerg sobre lava, aportado por el autor; original en ../source/).
-arena_generada.jpg = alternativa creada por código con tools/gen_arena.py.
+arena_dual.jpg (960x540) = segunda arena del menú (coliseo alienígena de arena dual; original en ../source/).
+arena_generada.jpg = arena anterior creada por código con tools/gen_arena.py (ya no se usa en el menú).
 Para cambiarlo: pon tu imagen aquí, ajusta BG_IMAGE, ARENA y TORCHES en js/config.js. Detalle en LEEME.txt, sección 12.

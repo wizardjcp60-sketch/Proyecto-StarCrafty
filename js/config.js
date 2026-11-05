@@ -138,9 +138,10 @@ const CONFIG={
     burnDps:2,                // dano por segundo del acido (burnTime x burnDps = dano total; con 4 y 2 son 8)
     burnTick:.5               // cada cuantos segundos baja la vida (dano por golpe = burnDps x burnTick)
   },
-  MBIG:{                      // MINA DEL MARINE: cada cierto numero de ataques dispara una mina en vez de una bala. Si impacta explota (dano inmediato) y deja QUEMADURA (dano por segundo)
+  MBIG:{                      // MINA DEL MARINE: cada cierto numero de ataques dispara una mina en vez de una bala. Si impacta se PEGA al rival y explota tras MBIG.fuse segundos (dano inmediato) y deja QUEMADURA (dano por segundo)
     on:true,                  // false = el Marine siempre dispara balas normales
     every:5,                  // cada cuantos ataques sale la mina (la 5.a, la 10.a...)
+    fuse:2,                   // TEMPORIZADOR: segundos que tarda en explotar desde que se pega al rival (parpadea y pita cada vez mas rapido; 0 = explota al instante como antes)
     blastDmg:4,               // dano de la explosion al impactar (reemplaza al dano de la bala de ese disparo)
     scale:1.3,                // tamano de la mina (1 = tamano base)
     speed:.8,                 // velocidad respecto a la bala normal (menos de 1 = mas lenta, se puede esquivar)
@@ -261,9 +262,9 @@ const CONFIG={
 CONFIG.ARENA_DEFAULT='coliseo';
 CONFIG.ARENAS={
   coliseo:  {nombre:'Coliseo Terran contra Zerg', bg:CONFIG.BG_IMAGE, arena:CONFIG.ARENA, torches:CONFIG.TORCHES},
-  generada: {nombre:'Arena de piedra (más estrecha)', bg:'assets/images/background/arena_generada.jpg',
-             arena:{cx:240, cy:146, rx:165, ry:84},
-             torches:[[414,181],[311,234],[166,233],[65,179],[66,103],[169,50],[314,51],[415,105]]}
+  generada: {nombre:'Coliseo alienígena de arena dual (Terran / Zerg)', bg:'assets/images/background/arena_dual.jpg',
+             arena:{cx:240, cy:128, rx:166, ry:72},
+             torches:[[115,16],[365,15],[29,66],[451,67],[31,147],[449,148],[32,230],[447,230]]}
 };
 
 /* Rutas de las imagenes. Para cambiar un sprite, reemplaza el archivo
