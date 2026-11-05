@@ -7,10 +7,10 @@ const CONFIG={
   ROUND_TIME:45,              // segundos por ronda; al acabarse cae la bomba nuclear
   LIVES:2,                    // vidas por luchador
   COUNTDOWN:3,                // segundos de cuenta atras antes de FIGHT!
-  HP:      {m:125, h:140, d:100, z:112},    // vida: m = Marine, h = Hidralisco, d = Dark Templar, z = Zealot
+  HP:      {m:125, h:140, d:115, z:112},    // vida: m = Marine, h = Hidralisco, d = Dark Templar, z = Zealot
   SPEED:   {m:74, h:50, d:72, z:70},     // velocidad de movimiento (pixeles logicos por segundo)
   COOLDOWN:{m:1.07, h:1.07, d:1, z:1},   // segundos entre disparos (mayor = dispara mas lento); antes .20/.75, ahora cadencia x0,7
-  DAMAGE:  {m:3.6, h:8.4, d:13.2, z:12.5},    // dano por proyectil (antes 6/14, ahora x0,6)
+  DAMAGE:  {m:3.6, h:8.4, d:15, z:12.5},    // dano por proyectil (antes 6/14, ahora x0,6)
   LING_DAMAGE:30,             // dano de la explosion del zergling
   MEDKIT_HEAL:35,             // vida que cura el medical kit (varia +-5 al azar)
   SPECIAL_COOLDOWN:9,        // segundos para recargar el ataque especial
@@ -41,6 +41,7 @@ const CONFIG={
     faceMove:true,            // al caminar mira hacia donde camina (true) o siempre hacia el rival (false)
     aim:.5,                   // segundos que sigue mirando al rival despues de disparar
     shootT:.14,               // segundos que muestra la pose de disparo
+    deathFps:9,               // velocidad de la animacion de muerte (8 fotogramas)
     scale:1                   // tamano del sprite (1 = pixel perfecto, 2 pantallas por pixel)
   },
   HYDRA_ART:{                 // ANIMACION DEL HIDRALISCO por fotogramas (hoja "Zerg Hydralisk"; se genera con tools/build_hydra_atlas.py)
@@ -50,6 +51,7 @@ const CONFIG={
     faceMove:true,            // al caminar mira hacia donde camina (true) o siempre hacia el rival (false)
     aim:.5,                   // segundos que sigue mirando al rival despues de escupir
     attackT:.32,              // segundos que dura la animacion de ataque (5 fotogramas: la cabeza se lanza)
+    deathFps:9,               // velocidad de la animacion de muerte (12 fotogramas: explosion, restos y charco)
     scale:1                   // tamano de dibujo (deja 1 para que se vea nitido; el tamano real se cambia con SCALE en tools/build_hydra_atlas.py y regenerando el atlas)
   },
   DT:{                        // DARK TEMPLAR: luchador cuerpo a cuerpo y camuflado (vida, velocidad, cadencia y dano estan arriba, en la columna d)
@@ -57,15 +59,16 @@ const CONFIG={
     cloak:true,               // camuflaje: semitransparente, y los disparos enemigos se desvian; false = siempre visible
     alpha:.5,                 // opacidad mientras esta camuflado (1 = totalmente visible)
     reveal:.8,                // segundos que se deja ver despues de atacar o saltar
-    evasion:.28,              // probabilidad (0-1) de que un disparo o cuchillada enemiga FALLE contra un DT camuflado (como el Butterfly de Dota); 0 = nunca
+    evasion:.33,              // probabilidad (0-1) de que un disparo o cuchillada enemiga FALLE contra un DT camuflado (como el Butterfly de Dota); 0 = nunca
     critChance:.25,           // CRITICO contra el DT visible: probabilidad (0-1) de que un disparo o cuchillada enemiga haga dano critico mientras el DT esta revelado (0 = nunca)
     critBonus:2,              // dano critico = dano base x critMult + critBonus  (critBonus = puntos extra fijos, +2 por defecto)
     critMult:1,               // multiplicador del dano critico (1 = solo suma critBonus; 2 = el doble, estilo Dota, etc.)
     aim:.14,                  // error de punteria (radianes) de los disparos contra un DT camuflado
     jit:12,                   // error extra (px) de granada, acido y salto contra un DT camuflado
-    blinkDamage:20,           // dano del salto sombrio (el especial del DT)
-    blinkRadius:30,           // radio del golpe al aterrizar
+    blinkDamage:28,           // dano del salto sombrio (el especial del DT)
+    blinkRadius:34,           // radio del golpe al aterrizar
     blinkT:.45,               // segundos entre desaparecer y reaparecer (se puede esquivar)
+    blinkTrack:70,            // el punto de aterrizaje sigue al rival hasta este numero de px por segundo mientras dura el salto (0 = sin seguimiento; mas = falla menos)
     behind:12                 // reaparece este numero de px DETRAS del rival
   },
   ZL:{                        // ZEALOT: luchador cuerpo a cuerpo con dos cuchillas psi (vida, velocidad, cadencia y dano TOTAL por ataque estan arriba, en la columna z)
@@ -124,6 +127,16 @@ const CONFIG={
     stainT:1.4,               // segundos que dura la mancha de acido en el suelo (0 = sin mancha)
     cols:['#9dff4a','#6fcf2a','#d6ff6a','#3f9a1e'],  // colores de las gotas
     poolFx:true               // efectos del CHARCO del ataque especial (aparicion, burbujas, vapor, brillo, ondas...); false = charco sencillo de antes
+  },
+  HBIG:{                      // ESCUPIDA GRANDE del Hidralisco: cada cierto numero de ataques lanza una bola de acido mas gorda; si impacta deja ACIDO ENCIMA (dano por segundo)
+    on:true,                  // false = el Hidralisco siempre escupe normal
+    every:5,                  // cada cuantos ataques sale la grande (la 5.a, la 10.a...)
+    dmgMul:1.2,               // dano del impacto = dano normal del Hidralisco x este numero
+    scale:1.8,                // tamano de la bola (1 = como la normal)
+    speed:.85,                // velocidad respecto a la normal (menos de 1 = mas lenta, se puede esquivar)
+    burnTime:4,               // segundos que dura el acido encima del rival (otro impacto grande reinicia el tiempo, no se acumula)
+    burnDps:2,                // dano por segundo del acido (burnTime x burnDps = dano total; con 4 y 2 son 8)
+    burnTick:.5               // cada cuantos segundos baja la vida (dano por golpe = burnDps x burnTick)
   },
   MULTI:{                     // MULTIDISPARO (objeto que cae): el ataque normal mas proyectiles extra a los costados. Solo sirve a Marine e Hidralisco; si lo recoge el Dark Templar (cuerpo a cuerpo) se ANULA: desaparece sin efecto
     time:5,                   // segundos que dura el efecto
@@ -254,6 +267,8 @@ const ASSETS={
     hb:'assets/images/sprites/hidralisco_espalda.png'
   },
   marineAtlas:'assets/images/sprites/marine_atlas.png',   // hoja del Marine: 9 direcciones x (reposo, 9 de caminar, disparo)
+  marineDeath:'assets/images/sprites/marine_muerte.png',   // muerte del Marine: 8 fotogramas en fila (se genera con tools/build_death_sprites.py)
+  hydraDeath:'assets/images/sprites/hidralisco_muerte.png', // muerte del Hidralisco: 12 fotogramas en fila (se genera con tools/build_death_sprites.py)
   fx:{
     missile  :'assets/images/fx/misil_nuclear.png',
     explosion:'assets/images/fx/explosion_nuclear_hoja.jpg',
@@ -300,6 +315,9 @@ const ATLAS_DT={fw:64,fh:80,cols:16,ax:32,ay:64,walkN:10,walkFps:12,attack:176,a
 /* Atlas del Hidralisco: celdas de w x h px; (ax,ay) = punto del suelo dentro de la celda; walkRow/walkN = caminar (el reposo usa el fotograma 0); atkRow/atkN = ataque */
 const ATLAS_HYDRA={w:34,h:43,ax:17,ay:33,walkRow:0,walkN:7,atkRow:7,atkN:5};
 const ATLAS_MARINE={cell:40,ax:20,ay:35,idleRow:0,walkRow:1,walkN:9,shootRow:10};
+/* Muertes del Marine y del Hidralisco (ver tools/build_death_sprites.py): una fila de n fotogramas de w x h px con los pies en (ax,ay) */
+const ATLAS_MARINE_DEATH={w:64,h:40,ax:32,ay:35,n:8};
+const ATLAS_HYDRA_DEATH={w:50,h:38,ax:25,ay:26,n:12};
 
 /* Atlas del Zealot (ver tools/build_zealot_atlas.py): celdas w x h, pies (ax,ay), caminar 8 + ataque 5; muerte: 7 fotogramas de dw x dh con pivote (dax,day) */
 const ATLAS_ZEAL={w:41,h:43,ax:16,ay:34,walkRow:0,walkN:8,atkRow:8,atkN:5,dw:54,dh:72,dax:27,day:56,deathN:7};

@@ -347,3 +347,10 @@ canvas{cursor:var(--cur-canvas,auto)}
 /* el texto de estado (Carga, Dash, Stim...) fluye junto a los iconos y no se mete debajo */
 .buff{display:flow-root;white-space:normal;line-height:1.1}
 @media (max-width:600px) and (orientation:portrait){.buff{clear:both;white-space:normal;min-height:30px}}
+
+/* marca del boton elegido con el mando en los menus (ver padNavPoll en game.js) */
+.padf{background:#16261a!important;outline:2px solid var(--c,var(--ok))!important;outline-offset:1px;box-shadow:0 0 12px rgba(79,211,90,.55)}
+#ov .btns button.padf{transform:translateY(-2px)}
+.snd button.padf{background:rgba(79,211,90,.18)!important}
+input[type=range].padf{background:transparent!important;outline-offset:4px;box-shadow:none}
+.clist button.padf{box-shadow:none}

@@ -929,3 +929,12 @@ sprites battlecruiser_atlas_azul/roja.png, música bc.mp3, 7 efectos bc_*.wav y 
 Cambios en archivos existentes: config.js (bloque BC, ASSETS.bc, ATLAS_BC), audio.js (pistas y sonidos nuevos; playMusic(nombre, true) reanuda una pista),
 game.js (enganches), index.html (script nuevo, versión de caché 2p4), audio_data.js (regenerado), build_dist.py (ahora admite el ?v= de index.html y el script nuevo),
 sim_balance.js y test_dash.js (cargan battlecruiser.js).
+
+PANTALLA DE VICTORIA (drawVictory / vicStep en js/game.js)
+- El ganador cae desde arriba con destello blanco, onda en el suelo, temblor de cámara y rugido del público; luego respira y le orbitan destellos.
+- Detrás gira un abanico de rayos de luz y hay un aura del color del ganador (VCOL: Marine azul, Hidralisco verde, Dark Templar violeta, Zealot celeste/dorado).
+- Cae confeti y explotan fuegos artificiales (solo si hay ganador); sobre la pila de caídos hay brillo de fuego, brasas y humo.
+- Cartel con subrayado dorado; "★ Victoria perfecta ★" si no perdió ninguna vida, o sus corazones restantes si perdió alguna.
+- En un empate solo se ven las brasas y el humo, con el cartel "Empate".
+- La pila de caídos lleva calaveras (con los ojos brillando del color del caído), huesos sueltos y cruzados, un charco de sangre que se extiende y
+  dos estacas laterales con calavera y estandarte del color del ganador (gris en un empate). Se genera en vicStart() y se dibuja en vicBack() / vicFront().
