@@ -363,3 +363,9 @@ input[type=range].padf{background:transparent!important;outline-offset:4px;box-s
 #ol{padding:4px 12px;font-size:14px}
 
 #pg{position:fixed;left:3px;top:2px;z-index:5;font:700 11px/1 Rajdhani,Arial,sans-serif;color:#cfe;background:rgba(0,0,0,.55);padding:3px 7px;border-radius:4px;pointer-events:none;letter-spacing:.5px}#pg[hidden]{display:none}#pg.mal{color:#ff8a6a}#pg.med{color:#ffd98a}
+
+/* menu online: solo se ve lo necesario segun el papel (data-on = menu | host | guest) */
+#ov[data-on] #s,#ov[data-on] #sc,#ov[data-on] #sc+.btns2,#ov[data-on] .kd,#ov[data-on] .btns,#ov[data-on] #onb,#ov[data-on] .opts label{display:none}
+#ov[data-on=host] .opts .l-cl,#ov[data-on=host] .opts .l-ar,#ov[data-on=host] .opts .l-liv,#ov[data-on=host] .opts .l-fps,#ov[data-on=guest] .opts .l-cr,#ov[data-on=guest] .opts .l-fps{display:flex!important}
+#ov[data-on=host] #onrow,#ov[data-on=guest] #onrow{display:none}
+#onv{font-weight:700;color:#ffd98a}

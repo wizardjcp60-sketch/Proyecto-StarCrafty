@@ -86,8 +86,8 @@ var ONLINE=(function(){
   conn=c;
   c.on('open',()=>{
    lastRx=performance.now();
-   if(host){guestReady=false;say('\u00a1Alguien se uni\u00f3 a tu sala! Espera a que elija su personaje y est\u00e9 listo\u2026')}
-   else{showReady(true);say('Conectado. Elige tu personaje en \u00abLuchador derecho\u00bb y pulsa \u00abEstoy listo\u00bb.');send({k:'join'})}
+   if(host){guestReady=false;send({k:'hc',c:$$('#cl').value||'m'});say('\u00a1Alguien se uni\u00f3 a tu sala! Espera a que elija su personaje y est\u00e9 listo\u2026')}
+   else{setMode('guest');showReady(true);say('Conectado. Elige tu personaje en \u00abLuchador derecho\u00bb y pulsa \u00abEstoy listo\u00bb.');send({k:'join'})}
   });
   c.on('data',m=>{
    lastRx=performance.now();
@@ -97,22 +97,24 @@ var ONLINE=(function(){
    else if(m.k=='q'){const v=Math.round(performance.now()-m.t);pingMs=pingMs==null?v:Math.round(pingMs*.6+v*.4)}   // latencia de ida y vuelta, suavizada
    else if(m.k=='start'&&!host){begin(m.o)}
    else if(host&&m.k=='ready'&&/^[mhdz]$/.test(m.c)){   // el invitado eligio y esta listo
-    guestCh=m.c;guestReady=true;
+    guestCh=m.c;guestReady=true;{const v=$$('#onv');if(v)v.textContent='Tu rival: '+NAMES[m.c]}
     if(!O.active)say('\u00a1Tu rival est\u00e1 listo con '+NAMES[m.c]+'! Pulsa \u00ab2 jugadores\u00bb para empezar.')}
-   else if(host&&m.k=='unready'){guestReady=false;if(!O.active)say('Tu rival est\u00e1 cambiando de personaje\u2026 espera a que vuelva a estar listo.')}
+   else if(!host&&m.k=='hc'&&/^[mhdz]$/.test(m.c)){const v=$$('#onv');if(v)v.textContent='Tu rival ser\u00e1: '+NAMES[m.c]}
+   else if(host&&m.k=='unready'){guestReady=false;{const v=$$('#onv');if(v)v.textContent=''};if(!O.active)say('Tu rival est\u00e1 cambiando de personaje\u2026 espera a que vuelva a estar listo.')}
   });
   c.on('close',()=>{if(conn===c)leave('El rival se desconect\u00f3.')});
   c.on('error',()=>{if(conn===c)leave('Error de conexi\u00f3n.')});
  }
- function leave(msg){
+ function leave(msg,full){
   const was=O.active;O.active=false;
   try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}
   conn=null;peer=null;host=false;guestCh=null;guestReady=false;showReady(false);pingMs=null;{const e=$$('#pg');if(e)e.hidden=true}local={};remote={};
   const pb=$$('#pb');if(pb)pb.style.display='';const ol=$$('#ol');if(ol)ol.style.display='none';
   if(was){bcReset(true);state='menu';mode='1m';AUDIO.playMusic('music_menu');$$('#pz').classList.add('hide');
    $$('#ov').classList.remove('end','hide');$$('#t').textContent='Coliseo';syncRoster()}
-  btns(true);say(msg||'');
+  btns(true);say(msg||'');setMode(full?'':'menu');{const v=$$('#onv');if(v)v.textContent=''}
  }
+ const setMode=m=>{const ov=$$('#ov');if(!ov)return;if(m){ov.setAttribute('data-on',m);const p=$$('#onp');if(p)p.hidden=false}else ov.removeAttribute('data-on');const st=$$('#onst');if(st)st.hidden=m!='host'};
  const showReady=on=>{const b=$$('#onr');if(b){b.hidden=!on;b.disabled=false;b.textContent='Estoy listo'}};
  const btns=on=>{['#onh','#onj','#onc'].forEach(s=>{const e=$$(s);if(e)e.disabled=!on})};
  function lib(){if(typeof Peer=='undefined'){say('No se pudo cargar PeerJS (\u00bfsin internet?).');return false}return true}
@@ -120,7 +122,7 @@ var ONLINE=(function(){
  function create(tries){
   if(!lib())return;btns(false);
   const code=Array.from({length:4},()=>ALPHA[nat()*ALPHA.length|0]).join('');
-  host=true;peer=new Peer(PREFIX+code);
+  host=true;setMode('host');peer=new Peer(PREFIX+code);
   peer.on('open',()=>say('Tu c\u00f3digo: '+code+'  \u2014  p\u00edsaselo a tu rival y espera.'));
   peer.on('connection',c=>{if(conn){c.close();return}attach(c)});
   peer.on('error',e=>{
@@ -142,7 +144,10 @@ var ONLINE=(function(){
  /* ---- menu ---- */
  function ui(){
   const b=$$('#onb');if(!b)return;
-  b.onclick=()=>{const p=$$('#onp');p.hidden=!p.hidden;b.blur()};
+  b.onclick=()=>{setMode('menu');b.blur()};
+  $$('#onx').onclick=()=>{leave('',true);const p=$$('#onp');if(p)p.hidden=true;$$('#onx').blur()};
+  $$('#onst').onclick=()=>{start('2p');$$('#onst').blur()};
+  $$('#cl').addEventListener('change',()=>{if(conn&&conn.open&&host)send({k:'hc',c:$$('#cl').value||'m'})});
   $$('#onh').onclick=()=>{create(0);$$('#onh').blur()};
   $$('#onj').onclick=()=>{join();$$('#onj').blur()};
   $$('#onc').onkeydown=e=>{e.stopPropagation();if(e.key=='Enter')join()};   // escribir el codigo no mueve a nadie
