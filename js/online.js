@@ -37,6 +37,7 @@ var ONLINE=(function(){
    startMatch();return}
   return _start(m)};
 
+ function showPg(fps){const e=$$('#pg');if(!e)return;e.hidden=false;e.textContent=(pingMs==null?'-- ms':pingMs+' ms')+' \u00b7 '+fps+' FPS';e.className=pingMs>150?'mal':pingMs>80?'med':''}
  function send(m){try{if(conn&&conn.open)conn.send(m)}catch(e){}}
 
  /* ---- un paso de simulacion con los controles de los dos ---- */
@@ -46,7 +47,11 @@ var ONLINE=(function(){
   useSim=true;try{simStep(STEP)}finally{useSim=false}
   O.tk++;
  }
+ let pingT=0,fr=0,frT=0,pingMs=null;
  O.frame=function(dt){
+  const now=performance.now();
+  fr++;if(now-frT>=1000){const fps=Math.round(fr*1000/(now-frT));fr=0;frT=now;showPg(fps)}   // fotogramas por segundo reales
+  if(now-pingT>=1000){pingT=now;send({k:'p',t:now})}   // cada segundo mide la latencia con el rival
   acc=Math.min(acc+dt,STEP*6);
   while(acc>=STEP){
    while(capT<=O.tk+DELAY){const v=localIn();local[capT]=v;send({k:'in',e:epoch,t:capT,i:v});capT++}   // controles con DELAY pasos de adelanto
@@ -88,6 +93,8 @@ var ONLINE=(function(){
    lastRx=performance.now();
    if(!m)return;
    if(m.k=='in'){if(m.e===epoch)remote[m.t]=m.i}
+   else if(m.k=='p')send({k:'q',t:m.t})
+   else if(m.k=='q'){const v=Math.round(performance.now()-m.t);pingMs=pingMs==null?v:Math.round(pingMs*.6+v*.4)}   // latencia de ida y vuelta, suavizada
    else if(m.k=='start'&&!host){begin(m.o)}
    else if(host&&m.k=='ready'&&/^[mhdz]$/.test(m.c)){   // el invitado eligio y esta listo
     guestCh=m.c;guestReady=true;
@@ -100,7 +107,7 @@ var ONLINE=(function(){
  function leave(msg){
   const was=O.active;O.active=false;
   try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}
-  conn=null;peer=null;host=false;guestCh=null;guestReady=false;showReady(false);local={};remote={};
+  conn=null;peer=null;host=false;guestCh=null;guestReady=false;showReady(false);pingMs=null;{const e=$$('#pg');if(e)e.hidden=true}local={};remote={};
   const pb=$$('#pb');if(pb)pb.style.display='';const ol=$$('#ol');if(ol)ol.style.display='none';
   if(was){bcReset(true);state='menu';mode='1m';AUDIO.playMusic('music_menu');$$('#pz').classList.add('hide');
    $$('#ov').classList.remove('end','hide');$$('#t').textContent='Coliseo';syncRoster()}

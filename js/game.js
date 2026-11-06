@@ -1479,8 +1479,10 @@ function start(m){if(starting)return;document.activeElement&&document.activeElem
  starting=true;ov.classList.add('leaving');st.classList.add('entering');setTimeout(go,380);setTimeout(()=>st.classList.remove('entering'),1250)}
 document.querySelectorAll('button[data-m]').forEach(b=>b.onclick=()=>start(b.dataset.m));
 reset();state='menu';
-let last=0;
+let last=0,fpsCap=60,lastDraw=0;   // fpsCap: 30 o 60 fotogramas por segundo (opcion del menu, solo afecta a este navegador)
 function loop(ts){
+ if(fpsCap<60&&ts-lastDraw<1000/fpsCap-3){requestAnimationFrame(loop);return}   // 30 FPS: se salta uno de cada dos fotogramas
+ lastDraw=ts;
  try{loopBody(ts)}catch(err){if(!window.__loopErr){window.__loopErr=1;console.error('Coliseo: error en el bucle (el juego sigue)',err)}}   // un fallo en un fotograma ya no congela todo
  requestAnimationFrame(loop);
 }
@@ -1519,6 +1521,8 @@ function saveScore(){store.set('score',JSON.stringify(SCORE));showScore()}
 try{const s0=JSON.parse(store.get('score','{}'));SCORE.m=+s0.m||0;SCORE.h=+s0.h||0;SCORE.d=+s0.d||0;SCORE.z=+s0.z||0}catch(e){}
 $('#dif').value=store.get('dif','normal');$('#liv').value=store.get('liv','2');$('#cl').value=store.get('cl','m');$('#cr').value=store.get('cr','h');
 diff=$('#dif').value||'normal';CONFIG.LIVES=+$('#liv').value||2;
+$('#fps').value=store.get('fps','60')=='30'?'30':'60';fpsCap=+$('#fps').value;
+$('#fps').onchange=()=>{fpsCap=$('#fps').value=='30'?30:60;store.set('fps',fpsCap);document.activeElement&&document.activeElement.blur()};
 /* Arena: fondo, elipse jugable y llamas de la arena elegida (CONFIG.ARENAS en config.js) */
 const ARIMG={},arImg=s=>ARIMG[s]||(ARIMG[s]=Object.assign(new Image(),{src:s}));
 function applyArena(k){
