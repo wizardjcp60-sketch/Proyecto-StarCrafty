@@ -1,0 +1,28 @@
+HUEVO ZERG + PRE-NACIMIENTO  (extraido, NO implementado en el juego)
+====================================================================
+Origen: PC___Computer_-_StarCraft_-_Zerg_-_Zerg_Larvae__Eggs____Births.png
+Sheet original extraido y compilado por ACE_Spark.
+
+Contenido (41 frames, PNG con transparencia real; el verde 74,221,1 del sheet pasa a alfa 0):
+
+  transformacion_huevo   4 frames  33x37   larva -> huevo
+  huevo_ciclo           12 frames  33x37   huevo en pie (ciclo de idle)
+  huevo_muerte          12 frames  67x56   huevo destruido (leer en orden: fila 1 y luego fila 2)
+  prenacimiento          8 frames  33x37   huevo a punto de eclosionar; despues se continua
+                                           con los frames de nacimiento de cada unidad
+  capa_inferior          5 frames  59x29   restos del huevo; van DEBAJO de los frames de
+                                           nacimiento (indicacion del sheet original)
+
+Estructura:
+  frames/<grupo>/<grupo>_NN.png   frames sueltos (orden de animacion = numero NN)
+  <grupo>_tira.png                tira horizontal por grupo, frames del mismo tamano pegados
+  atlas.json                      tamanos, cantidad y rutas de cada grupo
+  vista_previa.png                contacto x3 sobre tablero (solo para revisar)
+
+Notas:
+  - Los pixeles magenta/morado son el color de jugador (placeholder del sheet original,
+    "Replace these with colours below"). Estan sin tocar.
+  - Tamano original 1x (pixel art). Si el juego usa escala x2, escalar con vecino mas
+    cercano (NEAREST), nunca con suavizado.
+  - Los frames de nacimiento de cada unidad (Drone, Zergling, etc.) NO se incluyeron.
+  - No se modifico el proyecto Proyecto-StarCrafty-arena2.zip.

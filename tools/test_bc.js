@@ -58,6 +58,7 @@ for (const s of settings) {
 }
 load('granada_fx.js');
 load('battlecruiser.js');
+load('mascota.js');
 load('game.js');
 
 

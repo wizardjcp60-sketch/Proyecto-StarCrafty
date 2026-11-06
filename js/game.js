@@ -53,7 +53,7 @@ function mkBg(){
 function mk(type,x,y,hp){return{type,x,y,hp,max:hp,sh:type=='z'?CONFIG.ZL.baseShield:0,stim:0,cd:0,cdm:.16,spT:type=='z'||type=='d'?CONFIG.SPECIAL_COOLDOWN:0,flash:0,face:0,step:0,trail:[],seed:rnd(0,6),r:type=='m'?6:type=='d'||type=='z'?7:8,chT:0,cha:0,stun:0,hitN:0,mv:0,side:0,rev:0,ghost:0,atkT:null,hitDone:false,dT:null,mf:0,mfa:0,hf:0,hfa:0,multi:0,aimT:0,shT:0,dashT:0,dashCd:0,dashI:0,dashA:0,dp:false}}
 function reset(){lives=[CONFIG.LIVES,CONFIG.LIVES];roundN=1;CRT=[];newRound()}
 function newRound(q){
- bcReset();
+ bcReset();petReset();
  F=[mk(CH[0],CX-95,CY+4,CONFIG.HP[CH[0]]),mk(CH[1],CX+95,CY+4,CONFIG.HP[CH[1]])];F[0].side=0;F[1].side=1;F.forEach(f=>f.dtc=(CH[0]=='d'&&CH[1]=='d'&&f.side==1)?'red':'orig');
  F[0].ai=mode=='1h';F[1].ai=mode=='1m';
  F[0].face=0;F[1].face=Math.PI;
@@ -282,12 +282,24 @@ function human(f){
 }
 function ai(f,o){
  const dm=melee(f),d=dist(f,o),a=Math.atan2(o.y-f.y,o.x-f.x),pref=f.type=='h'?105:85,rch=f.r+o.r+reachOf(f);
- const dir=dm?(d>rch-3?1:0):(d>pref+15?1:d<pref-25?-1:0),s=Math.sin(time*.9+f.seed)>0?1:-1,sw=dm?(d<110&&d>rch+10?.35:0):.8;
+ let dir;
+ if(dm)dir=d>rch-3?1:0;
+ else{dir=f.aiDir||0;   // con histeresis: antes cambiaba de acercarse a rodear en cada fotograma en el limite de la banda y el luchador (y su sprite) temblaba
+  if(dir==1&&d<=pref+15)dir=0;else if(dir==-1&&d>=pref-25)dir=0;
+  if(!dir)dir=d>pref+25?1:d<pref-35?-1:0;
+  f.aiDir=dir}
+ const sw=dm?(d<110&&d>rch+10?.35:0):.8;let s=Math.sin(time*.9+f.seed)>0?1:-1;
+ if(sw){   // si rodear al rival lleva contra la pared, rodea por el otro lado y mantiene ese giro .9 s (antes chocaba con el empuje del borde y alternaba cada fotograma)
+  if(time<(f.sUntil||0))s=f.sS;
+  else if(!inArena(f.x-Math.sin(a)*s*14,f.y+Math.cos(a)*s*14,24)){s=-s;f.sS=s;f.sUntil=time+.9}
+ }
  let dx=Math.cos(a)*dir-Math.sin(a)*s*sw,dy=Math.sin(a)*dir+Math.cos(a)*s*sw;
  L.forEach(l=>{const q=dist(l,f);if(q<60){dx+=(f.x-l.x)/(q||1)*2.5;dy+=(f.y-l.y)/(q||1)*2.5}});
  let best=null,bd=130;I.forEach(it=>{if(it.z==0&&(it.t!='medkit'||f.hp<f.max*.85)&&(it.t!='multi'||!melee(f))){const q=dist(it,f);if(q<bd){bd=q;best=it}}});
  if(best&&d>50){dx+=(best.x-f.x)/bd*1.5;dy+=(best.y-f.y)/bd*1.5}
- if(!inArena(f.x,f.y,24)){dx+=(CX-f.x)/RX*2;dy+=(CY-f.y)/RY*2}
+ {const np=petLure(f);if(np){const q=dist(np,f)||1;dx+=(np.x-f.x)/q*PTC.aiPull;dy+=(np.y-f.y)/q*PTC.aiPull}}   // mascota sin dueno cerca: va a tocarla
+ if(!inArena(f.x,f.y,24))f.edge=1;else if(inArena(f.x,f.y,34))f.edge=0;   // histeresis: una vez junto al borde sigue volviendo hasta estar 10 px mas dentro
+ if(f.edge){dx+=(CX-f.x)/RX*2;dy+=(CY-f.y)/RY*2}
  AC.forEach(p=>{if(p.own!==f){const q=Math.hypot(f.x-p.x,(f.y-p.y)/.6);if(q<p.R+12){dx+=(f.x-p.x)/(q||1)*D().dodge;dy+=(f.y-p.y)/(q||1)*D().dodge}}});
  GR.forEach(r=>{if(r.own!==f){const q=Math.hypot(f.x-r.x1,(f.y-r.y1)/.6),R=GRR(r.kind)+14,dg=D().dodge*((r.kind=='l'||r.kind=='y')?CONFIG.BC.aiDodge:1);if(q<R){dx+=(f.x-r.x1)/(q||1)*dg;dy+=(f.y-r.y1)/(q||1)*dg}}});
  const dd=aiDash(f,o,d,dm,rch);
@@ -329,11 +341,12 @@ function boom(l,weak){   // weak = true: se le acabo el tiempo sin alcanzar a na
  burst(l.x,l.y-4,weak?24:45,['#9dff4a','#ffb43a','#fff2a0','#6fcf2a'],weak?80:110);
  if(weak)RG.push({x:l.x,y:l.y,R,life:.35,max:.35,c:'157,255,74'});
  F.forEach(f=>{if(f.hp>0&&!f.ghost&&dist(f,l)<R){hurt(f,dmg);burst(f.x,f.y-6,10,['#e0503a','#ffb43a'],70)}});
+ petsArea(l.x,l.y,R,dmg,-2);
 }
 function update(dt){
  time+=dt;bcUpdate(dt);
  F.forEach((f,i)=>{
-  const o=F[1-i];f.cd-=dt;f.mf-=dt;f.hf-=dt;f.aimT-=dt;f.shT-=dt;f.flash-=dt;f.stim-=dt;f.shHit-=dt;f.multi-=dt;f.mv-=dt;f.rev-=dt;f.stun-=dt;f.dashCd-=dt;f.dashI-=dt;if(f.stunFx>0)f.stunFx-=dt;
+  const o0=F[1-i],o=petAim(f,o0);f.cd-=dt;f.mf-=dt;f.hf-=dt;f.aimT-=dt;f.shT-=dt;f.flash-=dt;f.stim-=dt;f.shHit-=dt;f.multi-=dt;f.mv-=dt;f.rev-=dt;f.stun-=dt;f.dashCd-=dt;f.dashI-=dt;if(f.stunFx>0)f.stunFx-=dt;
   acidStep(f,dt);burnStep(f,dt);
   if(f.type=='d'&&DT.cloak){const cl=f.rev<=0&&!f.ghost;if(f._cl===undefined)f._cl=cl;else if(f._cl!==cl&&!f.ghost){f._cl=cl;AUDIO.play(cl?'dt_cloak':'dt_reveal')}}   // destello sonoro al ocultarse y al revelarse
   if(f.ghost)return;
@@ -350,7 +363,7 @@ function update(dt){
   move(f,c.dx,c.dy,dt);stepSound(f);if(c.fire)fire(f,o);
   if(f.atkT!=null)swingStep(f,o,dt);
   if(f.spT<CONFIG.SPECIAL_COOLDOWN){f.spT+=dt;if(f.spT>=CONFIG.SPECIAL_COOLDOWN){f.spT=CONFIG.SPECIAL_COOLDOWN;AUDIO.play('special_ready');popups.push({x:f.x,y:f.y-30,txt:'¡Especial listo!',c:'#ffd98a',life:1.3})}}
-  else if(c.sp)special(f,o);
+  else if(c.sp)special(f,o0);
   if(f.multi>0&&Math.random()<.25)part(f.x+rnd(-6,6),f.y-rnd(0,26),rnd(-6,6),-18,.45,f.type=='h'?'#9dff4a':'#ffd24a',1);
   if(f.stim>0&&Math.random()<.4)part(f.x+rnd(-5,5),f.y-rnd(0,26),0,-20,.4,'#ff5a4a');
  });
@@ -363,7 +376,7 @@ function update(dt){
    if(Math.random()<dt*16){const a=rnd(0,6.283),r=Math.sqrt(Math.random())*p.R*.9,k=P.length;part(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r*.6,rnd(-4,4),rnd(-26,-12),rnd(.4,.9),pick(HFX.cols),1);P[k].g=-10}   // chispas que suben
    if((p.sp=(p.sp||0)-dt)<=0){p.sp=rnd(.3,.7);const a=rnd(0,6.283),r=Math.sqrt(Math.random())*p.R*.8;SPL.push({kind:'hit',x:p.x+Math.cos(a)*r,y:p.y+Math.sin(a)*r*.6-2,t:0,T:.3,k:.45})}   // burbujas que revientan
    F.forEach(f=>{if(f!==p.own&&f.hp>0&&!f.ghost&&inEll(f,p.x,p.y,p.R)&&Math.random()<dt*10){const k=P.length;part(f.x+rnd(-4,4),f.y-rnd(0,12),rnd(-5,5),rnd(-30,-14),.45,pick(HFX.cols),1);P[k].g=-10}})   // chisporroteo sobre quien esta dentro
-  }if(p.tick<=0){p.tick+=.5;F.forEach(f=>{if(f!==p.own&&f.hp>0&&!f.ghost&&inEll(f,p.x,p.y,p.R)){hurt(f,CONFIG.ACID_DPS*.5,true,'#9dff4a');burst(f.x,f.y-8,3,['#9dff4a','#d6ff6a'],40)}})}});
+  }if(p.tick<=0){p.tick+=.5;petsArea(p.x,p.y,p.R,CONFIG.ACID_DPS*.5,p.own.side);F.forEach(f=>{if(f!==p.own&&f.hp>0&&!f.ghost&&inEll(f,p.x,p.y,p.R)){hurt(f,CONFIG.ACID_DPS*.5,true,'#9dff4a');burst(f.x,f.y-8,3,['#9dff4a','#d6ff6a'],40)}})}});
  AC=AC.filter(p=>p.life>0);
  spawnT-=dt;
  if(spawnT<=0){
@@ -403,10 +416,11 @@ function update(dt){
   if(b.life<=0||!inArena(b.x,b.y,-30)){if(b.mine&&b.life>0)mineBoom(b.x,b.y,.6);else if(b.mar&&CONFIG.MFX.on&&b.life>0)sparkHit(b.x,b.y-12,.5);else if(!b.mar&&HFX.on&&b.life>0)acidSplash(b.x,b.y-4,b.vx,b.vy,b.big?1.4:.6);return false}
   for(const f of F)if(f!==b.own&&f.hp>0&&!f.ghost&&!(f.dashI>0)&&Math.hypot(b.x-f.x,b.y-f.y)<f.r+(b.big||b.mine?4:2)){if(cloaked(f)){if(b.ev)continue;b.ev=1;if(Math.random()<DT.evasion){evade(f);continue}}if(b.mine&&(CONFIG.MBIG.fuse||0)>0){plantMine(b,f);return false}hurt(f,dtDmg(f,b.dmg),false,!b.mar&&HFX.on?'#b8ff6a':undefined);if(b.big)acidApply(f,b.own);if(b.mine){burnApply(f,b.own);mineBoom(b.x,f.y-4)}else if(b.mar&&CONFIG.MFX.on)sparkHit(b.x,f.y-8,b.sc||1);else if(!b.mar&&HFX.on)acidSplash(b.x,f.y-8,b.vx,b.vy,b.big?1.8:(b.sc||1));else burst(f.x,f.y-7,4,b.mar?['#ffe27a']:['#d6ff6a','#b8452a'],50);return false}
   for(const l of L)if(!l.dead&&Math.hypot(b.x-l.x,b.y-l.y)<6){l.hp-=b.dmg;if(b.mar&&CONFIG.MFX.on)sparkHit(b.x,b.y-8,.6);else if(!b.mar&&HFX.on)acidSplash(b.x,b.y-8,b.vx,b.vy,.7);if(b.mine)mineBoom(b.x,b.y,.7);if(l.hp<=0)boom(l);return false}
+  if(petBulletHit(b))return false;
   return true;
  });
  L=L.filter(l=>!l.dead);
- mineStep(dt);
+ mineStep(dt);petUpdate(dt);
  const dead=F.filter(f=>f.hp<=0);
  if(dead.length){
   dead.forEach(f=>{const hy=f.type=='h';burst(f.x,f.y-6,hy?22:50,f.type=='m'?['#3b66ad','#6c9be0','#ffb43a']:f.type=='d'?['#b44aff','#7fd0ff','#ffffff']:f.type=='z'?['#7fd0ff','#ffd24a','#ffffff']:['#7a5236','#b8452a','#d9a441'],hy?70:120);lives[F.indexOf(f)]--;f.chT=0;f.stun=0;f.dT=0});F.forEach(f=>f.ghost=0);
@@ -557,6 +571,7 @@ function grenadeBoom(q){
  else{shake=.25;burst(x,y-4,40,['#ffd98a','#ff7a1a','#fff2a0','#6a5a50'],120);
  RG.push({x,y,R,life:.45,max:.45,c:'255,170,60'})}
  F.forEach(f=>{if(f!==q.own&&f.hp>0&&!f.ghost&&inEll(f,x,y,R)){hurt(f,CONFIG.GRENADE_DAMAGE);burst(f.x,f.y-6,10,['#e0503a','#ffb43a'],70)}});
+ petsArea(x,y,R,CONFIG.GRENADE_DAMAGE,q.own.side);
  L.forEach(l=>{if(!l.dead&&inEll(l,x,y,R))boom(l)});
 }
 function drawFloorFx(){
@@ -870,6 +885,7 @@ function meleeHit(f,part=1){
  const R=reachOf(f)+4,dmg=CONFIG.DAMAGE[f.type]*part,zl=f.type=='z';
  F.forEach(t=>{if(t!==f&&t.hp>0&&!t.ghost&&!(t.dashI>0)&&dist(f,t)<=f.r+t.r+R){if(cloaked(t)&&Math.random()<DT.evasion){evade(t);return}hurt(t,dtDmg(t,dmg));burst(t.x,t.y-10,zl?6:12,zl?['#e8f4ff','#7fd0ff','#ffd24a']:['#e8f4ff','#8fc8ff','#c97bff'],80);shake=Math.max(shake,.12)}});
  L.forEach(l=>{if(!l.dead&&dist(f,l)<=f.r+6+R){l.hp=0;boom(l)}});   // la cuchilla detona los zerglings cercanos
+ petsMelee(f,R,dmg);   // y muerde a las mascotas enemigas que alcance
 }
 /* ---- Zealot: CARGA (su especial). Embiste en linea recta hacia donde estaba el rival al lanzarla (se puede esquivar moviendose).
    Al chocar hace ZL.chargeDamage, empuja al rival ZL.chargeKnock px y el Zealot se recupera ZL.chargeStun s. Config: CONFIG.ZL ---- */
@@ -884,6 +900,7 @@ function chargeStep(f,o,dt){
  const t0=f.trail[0];if(!t0||Math.hypot(t0.x-f.x,t0.y-f.y)>2.5){f.trail.unshift({x:f.x,y:f.y});if(f.trail.length>10)f.trail.pop()}
  if(Math.random()<.6)part(f.x-Math.cos(a)*5+rnd(-3,3),f.y-rnd(2,14),-Math.cos(a)*20,rnd(-14,4),rnd(.2,.4),pick(['#ffd24a','#7fd0ff','#ffffff']),1);
  L.forEach(l=>{if(!l.dead&&dist(f,l)<=f.r+8){l.hp=0;boom(l)}});   // arrolla los zerglings explosivos (la explosion tambien le alcanza)
+ petsMelee(f,3,ZL.chargeDamage);   // y a las mascotas enemigas
  for(const t of F){if(t===f||t.hp<=0||t.ghost||t.dashI>0||dist(f,t)>f.r+t.r+2)continue;
   hurt(t,ZL.chargeDamage);if(t.hp>0){t.stun=Math.max(t.stun,ZL.hitStun);t.stunFx=ZL.hitStun;t.chT=0;t.atkT=null;popups.push({x:t.x,y:t.y-34,txt:'¡Aturdido!',c:'#ffd24a',sz:12,life:.9})}   // mini stun del rival (ZL.hitStun)
   AUDIO.play('zl_impact');shake=Math.max(shake,.25);
@@ -924,6 +941,7 @@ function blinkLand(q){
  AUDIO.play('dt_slash');shake=Math.max(shake,.2);
  burst(x,y-10,34,['#c97bff','#e8f4ff','#ffffff'],110);RG.push({x,y,R,life:.4,max:.4,c:'190,120,255'});
  F.forEach(t=>{if(t!==f&&t.hp>0&&!t.ghost&&inEll(t,x,y,R)){hurt(t,DT.blinkDamage);burst(t.x,t.y-8,14,['#e8f4ff','#c97bff'],80)}});
+ petsArea(x,y,R,DT.blinkDamage,f.side);
  L.forEach(l=>{if(!l.dead&&inEll(l,x,y,R))boom(l)});
 }
 function drawBlink(q){
@@ -978,7 +996,7 @@ const MA=ATLAS_MARINE,MART=CONFIG.MARINE_ART,MAR={im:null,fl:null,acid:null};
 function drawMarineAnim(f,x,y){
  const mv=f.mv>0;let ax,ay;
  if(MART.faceMove&&mv&&!(f.aimT>0)){ax=f.mdx;ay=f.mdy}else{ax=Math.cos(f.face);ay=Math.sin(f.face)}   // caminando mira hacia donde va; quieto o disparando, al rival
- const col=Math.min(8,Math.round(Math.atan2(Math.abs(ax),-ay)/(Math.PI/8))),mir=ax<0;
+ const col=Math.min(8,Math.round(Math.atan2(Math.abs(ax),-ay)/(Math.PI/8))),mir=Math.abs(ax)>.2?(f.mir=ax<0):!!f.mir;   // zona muerta: yendo casi en vertical no voltea el sprite por un ax minimo que oscila de signo
  const row=f.shT>0?MA.shootRow:mv?MA.walkRow+((f.step/(.12*MART.stride))|0)%MA.walkN:MA.idleRow;   // el fotograma depende de la distancia recorrida: los pies no patinan
  const bob=mv?Math.abs(Math.sin(f.step*3))*MART.bob:0,k=MART.scale,C=MA.cell;
  const rx=CONFIG.MFX.on&&f.mf>0?-Math.cos(f.mfa)*CONFIG.MFX.recoil*f.mf/CONFIG.MFX.flashT:0;
@@ -996,7 +1014,7 @@ const HA=ATLAS_HYDRA,HART=CONFIG.HYDRA_ART,HYR={im:null,fl:null,acid:null};
 function drawHydraAnim(f,x,y){
  const mv=f.mv>0;let ax,ay;
  if(HART.faceMove&&mv&&!(f.aimT>0)){ax=f.mdx;ay=f.mdy}else{ax=Math.cos(f.face);ay=Math.sin(f.face)}   // caminando mira hacia donde va; quieto o escupiendo, al rival
- const col=Math.min(8,Math.round(Math.atan2(Math.abs(ax),-ay)/(Math.PI/8))),mir=ax<0;
+ const col=Math.min(8,Math.round(Math.atan2(Math.abs(ax),-ay)/(Math.PI/8))),mir=Math.abs(ax)>.2?(f.mir=ax<0):!!f.mir;   // zona muerta: yendo casi en vertical no voltea el sprite por un ax minimo que oscila de signo
  let row;
  if(f.shT>0)row=HA.atkRow+Math.min(HA.atkN-1,((HART.attackT-f.shT)/HART.attackT*HA.atkN)|0);          // ciclo de ataque: la cabeza se lanza
  else row=HA.walkRow+(mv?((f.step/(.12*HART.stride))|0)%HA.walkN:0);                                  // el fotograma depende de la distancia recorrida: no patina
@@ -1030,7 +1048,7 @@ function drawZealot(f){
  const im=ZIM[k];if(!im)return;
  const mv=f.mv>0,atk=f.atkT!=null,ch=f.chT>0;let ax,ay;
  if(ZL.faceMove&&mv&&!atk&&!(f.stun>0)){ax=f.mdx;ay=f.mdy}else{ax=Math.cos(f.face);ay=Math.sin(f.face)}   // caminando mira hacia donde va; quieto, atacando o aturdido, al rival
- const col=Math.min(8,Math.round(Math.atan2(Math.abs(ax),-ay)/(Math.PI/8))),mir=ax<0;
+ const col=Math.min(8,Math.round(Math.atan2(Math.abs(ax),-ay)/(Math.PI/8))),mir=Math.abs(ax)>.2?(f.mir=ax<0):!!f.mir;   // zona muerta: yendo casi en vertical no voltea el sprite por un ax minimo que oscila de signo
  const row=atk?ZA.atkRow+Math.min(ZA.atkN-1,(f.atkT*ZL.atkFps)|0):ZA.walkRow+(mv?((f.step/(.12*ZL.stride))|0)%ZA.walkN:0);
  const bob=mv&&!atk?Math.abs(Math.sin(f.step*3))*ZL.bob:0,src=f.flash>0?(f.fk?ZAC[k]:ZFL[k])||im:im;
  g.fillStyle='rgba(0,0,0,.4)';g.beginPath();g.ellipse(x,y,10,3.8,0,0,7);g.fill();
@@ -1251,8 +1269,8 @@ function draw(){
  g.drawImage(bg,0,0,W,H);
  if(state=='victory'){drawVictory();g.restore();return}
  g.save();if(cam.on){const z=camZ(cam.t);g.translate(cam.x,cam.y);g.scale(z,z);g.translate(-cam.x,-cam.y)}
- drawAmbient();drawFloorFx();I.forEach(drawItem);L.forEach(drawLing);
- [...F].sort((a,b)=>a.y-b.y).forEach(drawF);F.forEach(drawAcidOn);F.forEach(drawBurnOn);F.forEach(drawStunStars);
+ drawAmbient();drawFloorFx();I.forEach(drawItem);L.forEach(drawLing);petDrawBack();
+ [...F.map(f=>({y:f.y,d:()=>drawF(f)})),...petDrawList()].sort((a,b)=>a.y-b.y).forEach(e=>e.d());F.forEach(drawAcidOn);F.forEach(drawBurnOn);F.forEach(drawStunStars);
  B.forEach(drawB);MN.forEach(drawMineArmed);GR.forEach(drawProj);RG.forEach(drawRing);SPL.forEach(drawSplash);gDrawFx();
  bcDraw();
  if(state=='nuke'&&nk)drawNuke();

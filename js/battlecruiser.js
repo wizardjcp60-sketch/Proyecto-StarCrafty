@@ -89,6 +89,7 @@ function bcLaserLand(q){
  const x=q.x1,y=q.y1,R=BCL.radius;
  AUDIO.play('bc_laser_hit');gMini(x,y,0);burst(x,y-3,8,['#fff2a0','#ffb43a','#ff7a1a'],95);RG.push({x,y,R,life:.28,max:.28,c:'255,190,90'});shake=Math.max(shake,.12);
  F.forEach(f=>{if(f!==q.own&&f.hp>0&&!f.ghost&&inEll(f,x,y,R)){hurt(f,BCL.dmg,false,'#ffd98a');burst(f.x,f.y-6,6,['#e0503a','#ffb43a'],70)}});
+ petsArea(x,y,R,BCL.dmg,q.own.side);
  L.forEach(l=>{if(!l.dead&&inEll(l,x,y,R))boom(l)});   // detona los zerglings que pille
 }
 
@@ -105,6 +106,7 @@ function bcYamatoLand(q){
  burst(x,y-6,50,['#ffffff','#ffd98a','#ff7a1a'],220);
  if(b){b.yq=null;b.ydone=true;const d=bcDir(b,b.k);b.beam={t:0,T:.4,x:x,y:y,sx:b.x+d.fx*30*b.k,sy:bcSy(b)+d.fy*30*b.k}}
  F.forEach(f=>{if(f!==q.own&&f.hp>0&&!f.ghost&&inEll(f,x,y,R)){hurt(f,BCY.dmg,false,'#ffcf5a');burst(f.x,f.y-6,16,['#e0503a','#ffb43a','#ffffff'],110)}});
+ petsArea(x,y,R,BCY.dmg,q.own.side);
  L.forEach(l=>{if(!l.dead&&inEll(l,x,y,R))boom(l)});
 }
 

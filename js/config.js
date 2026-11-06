@@ -7,11 +7,11 @@ const CONFIG={
   ROUND_TIME:45,              // segundos por ronda; al acabarse cae la bomba nuclear
   LIVES:2,                    // vidas por luchador
   COUNTDOWN:3,                // segundos de cuenta atras antes de FIGHT!
-  HP:      {m:125, h:140, d:115, z:112},    // vida: m = Marine, h = Hidralisco, d = Dark Templar, z = Zealot
+  HP:      {m:128, h:152, d:108, z:104},    // vida: m = Marine, h = Hidralisco, d = Dark Templar, z = Zealot
   SPEED:   {m:74, h:50, d:72, z:70},     // velocidad de movimiento (pixeles logicos por segundo)
   COOLDOWN:{m:1.07, h:1.07, d:1, z:1},   // segundos entre disparos (mayor = dispara mas lento); antes .20/.75, ahora cadencia x0,7
-  DAMAGE:  {m:3.6, h:8.4, d:15, z:12.5},    // dano por proyectil (antes 6/14, ahora x0,6)
-  LING_DAMAGE:30,             // dano de la explosion del zergling
+  DAMAGE:  {m:3.9, h:9.3, d:14.2, z:11.5},    // dano por proyectil (antes 6/14, ahora x0,6)
+  LING_DAMAGE:25,             // dano de la explosion del zergling
   MEDKIT_HEAL:35,             // vida que cura el medical kit (varia +-5 al azar)
   SPECIAL_COOLDOWN:9,        // segundos para recargar el ataque especial
   KEYS:{marine:'KeyG', hydra:'Period'},   // tecla del especial: G (granada) y . (acido)
@@ -213,6 +213,40 @@ const CONFIG={
   LING_TIMER:true,            // muestra la cuenta atras sobre el zergling (false = sin numero)
   LING_TNT:true,              // dibuja el paquete de dinamita (TNT) sobre el zergling explosivo (false = sin TNT)
   LING_ART:{dirs:9, walkN:7, cell:40, fps:14, scale:.5, ax:20, ay:29, tntY:8, tntScale:.75},   // sprite del zergling: direcciones, fotogramas de caminar, tamano de celda (px), velocidad de animacion, escala (.5 = 1 px de imagen por px de pantalla), pie (ax,ay) y altura de la TNT sobre el suelo
+  EGG:{                       // HUEVO ZERG: sale al azar durante la pelea y a los 3 s nace una MASCOTA zergling (ver LEEME seccion 6K)
+    on:true,                  // false = no salen huevos
+    first:[8,14],             // segundos desde que empieza la pelea hasta el primer huevo (al azar entre los dos valores)
+    gap:[14,24],              // segundos hasta el siguiente huevo (al azar entre los dos valores). No sale otro mientras haya un huevo o una mascota sin dueno
+    hatch:3,                  // segundos desde que aparece el huevo hasta que nace el zergling
+    transT:.45,               // de esos segundos: aparicion (larva -> huevo) ...
+    preT:.6,                  // ... pre-nacimiento (el huevo se agita) ...
+    birthT:.4,                // ... y nacimiento (se abre el cascaron). El resto es el huevo quieto
+    fps:10,                   // velocidad del ciclo del huevo quieto
+    scale:.5,                 // .5 = 1 px de imagen por px de pantalla (igual que el zergling explosivo)
+    ring:true,                // aro pulsante en el suelo bajo el huevo
+    minDist:48                // el huevo no aparece a menos de estos px de un luchador
+  },
+  PET:{                       // MASCOTA ZERGLING (nace del huevo, ver EGG). Sin dueno deambula; el primer luchador que la toca la adopta y ataca al rival con ella
+    hp:40,                    // vida propia de la mascota (solo para la barra: ahora muere por numero de golpes, ver hitsToDie)
+    hitsToDie:3,              // golpes que aguanta la mascota: al recibir este numero de golpes muere, sea cual sea el dano
+    hitGap:.12,               // segundos de invulnerabilidad tras un golpe, para que una misma explosion o rafaga no cuente como varios
+    speed:80,                 // velocidad al perseguir al rival (px logicos por segundo)
+    wander:32,                // velocidad al deambular sin dueno
+    damage:3,                 // dano de cada mordisco (el escudo lo absorbe; el DT camuflado puede esquivarlo)
+    cooldown:.3,              // segundos de pausa entre mordiscos (ademas de la animacion de ataque)
+    reach:7,                  // alcance del mordisco en px, medido desde el borde del rival
+    hitAt:.15,                // segundo de la animacion de ataque en que cae el mordisco
+    lunge:10,                 // margen extra de alcance (px) cuando cae el mordisco: el rival se mueve durante la animacion y, sin margen, casi todos fallarian
+    touch:6,                  // px extra de contacto con un luchador para que la adopte
+    max:2,                    // mascotas vivas a la vez por luchador (con el maximo ya no adopta mas)
+    aimR:46,                  // si una mascota ENEMIGA esta a menos de estos px, el luchador (jugador o IA) le dispara o golpea a ella en vez de al rival
+    aiRange:170, aiPull:2.2,  // la IA va a tocar una mascota sin dueno que tenga a menos de aiRange px (aiPull = cuanto la atrae)
+    fps:14, stride:5.5,       // animacion: fotogramas por segundo del ataque y px recorridos por fotograma al caminar
+    deathFps:10,              // velocidad de la animacion de muerte (7 fotogramas)
+    scale:.5,                 // .5 = 1 px de imagen por px de pantalla
+    bar:true,                 // barra de vida sobre la mascota
+    ring:true                 // aro de color bajo la mascota: verde = sin dueno, azul = del luchador izquierdo, rojo = del derecho
+  },
   DAMAGE_NUMBERS:true,        // cifras de dano flotantes sobre el personaje golpeado
   KO_CAM:false,               // zoom y camara lenta en el ultimo golpe de cada ronda (desactivada: no gusto)
   TOUCH_CONTROLS:'auto',      // controles tactiles: 'auto' (solo en pantallas tactiles), true o false
@@ -302,6 +336,12 @@ const ASSETS={
     roja:'assets/images/sprites/battlecruiser_atlas_roja.png'
   },
   ling:'assets/images/sprites/zergling_atlas.png',         // zergling explosivo: 9 direcciones (0 sur, 4 oeste, 8 norte; el este se espeja) x 7 fotogramas de caminar; se genera con tools/build_ling_atlas.py
+  egg:'assets/images/sprites/huevo_atlas.png',            // huevo zerg: celdas de 64x48; filas: aparicion, huevo quieto, pre-nacimiento, nacimiento, capa inferior; se genera con tools/build_pet_assets.py
+  pet:{                                                   // mascota zergling: 9 direcciones x (7 de caminar, 5 de ataque) + 7 de muerte; sin dueno (verde), del izquierdo (azul) y del derecho (rojo)
+    neutral:'assets/images/sprites/zergling_mascota_neutral.png',
+    azul   :'assets/images/sprites/zergling_mascota_azul.png',
+    roja   :'assets/images/sprites/zergling_mascota_roja.png'
+  },
   hydraAtlas:'assets/images/sprites/hidralisco_atlas.png',   // hoja del Hidralisco: 9 direcciones x (7 de caminar, 5 de ataque); se genera con tools/build_hydra_atlas.py
   portraits:{                                                // retratos del HUD
     m:'assets/images/ui/retrato_marine.jpg',

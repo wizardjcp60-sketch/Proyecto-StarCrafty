@@ -1,0 +1,10 @@
+CONTENIDO DEL PAQUETE
+=====================
+Proyecto-StarCrafty-main/                 Proyecto del juego con TODO incluido. Se abre con index.html.
+                                          - Huevo zerg y mascota zergling (LEEME.txt, seccion 6K).
+                                          - Correccion: la IA de Marine e Hidralisco ya no tiembla junto al borde de la arena.
+                                          - Correccion: el paso del Hidralisco ya no suena a arrastre (pisada corta nueva).
+                                          Detalle de las correcciones y su efecto en el equilibrio: LEEME.txt, entrada "CORRECCION: IA QUE TEMBLABA...".
+                                          Pruebas (necesitan Node): node tools/test_pet.js | test_ai_flip.js | test_dash.js | test_bc.js
+extras/huevo_prenacimiento_zerg/          Los 41 frames del huevo y pre-nacimiento recortados del sprite sheet (PNG con transparencia).
+extras/vista_previa_huevo_mascota.png     Secuencia huevo -> nacimiento -> mascota (verde, azul, roja, ataque y muerte).

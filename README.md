@@ -17,6 +17,7 @@ Haz clic en la pantalla antes de esperar la música: los navegadores bloquean el
 - Cada luchador tiene **2 vidas** (configurable de 1 a 3) y cada ronda dura **45 segundos**.
 - Si se acaba el tiempo, cae un **misil nuclear** sobre quien tenga menos vida.
 - Caen objetos al azar: escudo, stimpack, botiquín, multidisparo y un zergling explosivo (un disparo lo detona).
+- **Huevo zerg y mascota:** de vez en cuando sale un huevo al azar; a los 3 s nace un zergling con vida propia que deambula. Quien lo toca lo adopta (se vuelve azul o rojo) y la mascota persigue y muerde al rival. Se puede matar a disparos, golpes y áreas (ver LEEME, sección 6K).
 - **Super ataque raro:** de vez en cuando cae una baliza azul. Quien la recoge llama a un **Battlecruiser** que entra con salto táctico, cambia la música y bombardea al rival con láseres y el cañón Yamato (las marcas del suelo se pueden esquivar). Se ajusta en `CONFIG.BC` de `js/config.js`.
 - **Ataques especiales automáticos:** cada 5 ataques el Hidralisco escupe una bola de ácido grande (deja ácido encima) y el Marine dispara una **mina** que se pega al rival y explota **2 s despues** (temporizador en `CONFIG.MBIG.fuse`; 0 = explota al instante) y deja **quemadura** por segundo. Ajustes en `CONFIG.HBIG` y `CONFIG.MBIG` de `js/config.js`.
 - Dificultad de la IA: fácil, normal o difícil.

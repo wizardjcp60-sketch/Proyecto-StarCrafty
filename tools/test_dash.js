@@ -1,6 +1,6 @@
 /* test_dash.js - prueba automatica del dash (teclado, recarga, invulnerabilidad, balas, IA) sin navegador.  Uso: node tools/test_dash.js */
 /* sim_balance.js - simula partidas IA contra IA SIN navegador para medir el balance.
-   Carga js/config.js, js/granada_fx.js, js/battlecruiser.js y js/game.js dentro de un contexto de Node con un DOM falso
+   Carga js/config.js, js/granada_fx.js, js/battlecruiser.js, js/mascota.js y js/game.js dentro de un contexto de Node con un DOM falso
    (no dibuja nada: solo avanza la logica del juego a 60 fotogramas por segundo simulados).
 
    Uso:  node tools/sim_balance.js [partidas] [dificultad] [ajustes] [combinaciones]
@@ -74,6 +74,7 @@ for (const s of settings) {
 }
 load('granada_fx.js');
 load('battlecruiser.js');
+load('mascota.js');
 load('game.js');
 
 

@@ -13,7 +13,7 @@ ACTUALIZACION DE AUDIO
   disparo_hidralisco, granada_lanza y la voz zhywht01 se subieron +9 dB.
 
 SEGUNDA ACTUALIZACION DE AUDIO (python3 tools/build_extra_sfx.py)
-- Pasos: paso_marine, paso_hidralisco, paso_dt. En game.js, la tabla STEPS dice en que fotogramas del ciclo de caminar suena la pisada.
+- Pasos: paso_marine, paso_hidralisco, paso_dt (el del Hidralisco es una pisada corta de 0,17 s; se genera con tools/build_step_hydra.py y el 'arrastre' anterior se guarda en assets/audio/source/). En game.js, la tabla STEPS dice en que fotogramas del ciclo de caminar suena la pisada.
 - Publico: publico_ko, publico_critico (como mucho 1 cada 2,5 s), publico_nuclear.
 - tension.wav: latido en bucle que se acelera en los ultimos 10 s, junto con la musica (+6 % de velocidad).
 - Voces: control propio de volumen (AUDIO.voiceVolume, guardado en el navegador). Frases de fin de partida en CONFIG.VOICE_END (config.js).

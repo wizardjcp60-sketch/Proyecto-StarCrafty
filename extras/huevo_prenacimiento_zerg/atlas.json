@@ -1,0 +1,92 @@
+{
+  "origen": "PC___Computer_-_StarCraft_-_Zerg_-_Zerg_Larvae__Eggs____Births.png",
+  "credito": "Extraido y compilado por ACE_Spark (sheet original)",
+  "grupos": {
+    "transformacion_huevo": {
+      "nombre": "Transformacion en huevo",
+      "frames": 4,
+      "ancho_frame": 33,
+      "alto_frame": 37,
+      "tira": "transformacion_huevo_tira.png",
+      "archivos": [
+        "frames/transformacion_huevo/transformacion_huevo_00.png",
+        "frames/transformacion_huevo/transformacion_huevo_01.png",
+        "frames/transformacion_huevo/transformacion_huevo_02.png",
+        "frames/transformacion_huevo/transformacion_huevo_03.png"
+      ]
+    },
+    "huevo_ciclo": {
+      "nombre": "Huevo en pie (ciclo)",
+      "frames": 12,
+      "ancho_frame": 33,
+      "alto_frame": 37,
+      "tira": "huevo_ciclo_tira.png",
+      "archivos": [
+        "frames/huevo_ciclo/huevo_ciclo_00.png",
+        "frames/huevo_ciclo/huevo_ciclo_01.png",
+        "frames/huevo_ciclo/huevo_ciclo_02.png",
+        "frames/huevo_ciclo/huevo_ciclo_03.png",
+        "frames/huevo_ciclo/huevo_ciclo_04.png",
+        "frames/huevo_ciclo/huevo_ciclo_05.png",
+        "frames/huevo_ciclo/huevo_ciclo_06.png",
+        "frames/huevo_ciclo/huevo_ciclo_07.png",
+        "frames/huevo_ciclo/huevo_ciclo_08.png",
+        "frames/huevo_ciclo/huevo_ciclo_09.png",
+        "frames/huevo_ciclo/huevo_ciclo_10.png",
+        "frames/huevo_ciclo/huevo_ciclo_11.png"
+      ]
+    },
+    "huevo_muerte": {
+      "nombre": "Muerte del huevo",
+      "frames": 12,
+      "ancho_frame": 67,
+      "alto_frame": 56,
+      "tira": "huevo_muerte_tira.png",
+      "archivos": [
+        "frames/huevo_muerte/huevo_muerte_00.png",
+        "frames/huevo_muerte/huevo_muerte_01.png",
+        "frames/huevo_muerte/huevo_muerte_02.png",
+        "frames/huevo_muerte/huevo_muerte_03.png",
+        "frames/huevo_muerte/huevo_muerte_04.png",
+        "frames/huevo_muerte/huevo_muerte_05.png",
+        "frames/huevo_muerte/huevo_muerte_06.png",
+        "frames/huevo_muerte/huevo_muerte_07.png",
+        "frames/huevo_muerte/huevo_muerte_08.png",
+        "frames/huevo_muerte/huevo_muerte_09.png",
+        "frames/huevo_muerte/huevo_muerte_10.png",
+        "frames/huevo_muerte/huevo_muerte_11.png"
+      ]
+    },
+    "prenacimiento": {
+      "nombre": "Pre-nacimiento",
+      "frames": 8,
+      "ancho_frame": 33,
+      "alto_frame": 37,
+      "tira": "prenacimiento_tira.png",
+      "archivos": [
+        "frames/prenacimiento/prenacimiento_00.png",
+        "frames/prenacimiento/prenacimiento_01.png",
+        "frames/prenacimiento/prenacimiento_02.png",
+        "frames/prenacimiento/prenacimiento_03.png",
+        "frames/prenacimiento/prenacimiento_04.png",
+        "frames/prenacimiento/prenacimiento_05.png",
+        "frames/prenacimiento/prenacimiento_06.png",
+        "frames/prenacimiento/prenacimiento_07.png"
+      ]
+    },
+    "capa_inferior": {
+      "nombre": "Capa inferior (bajo los frames de nacimiento)",
+      "frames": 5,
+      "ancho_frame": 59,
+      "alto_frame": 29,
+      "tira": "capa_inferior_tira.png",
+      "archivos": [
+        "frames/capa_inferior/capa_inferior_00.png",
+        "frames/capa_inferior/capa_inferior_01.png",
+        "frames/capa_inferior/capa_inferior_02.png",
+        "frames/capa_inferior/capa_inferior_03.png",
+        "frames/capa_inferior/capa_inferior_04.png"
+      ]
+    }
+  }
+}

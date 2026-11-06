@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """build_extra_sfx.py - sintetiza (sin archivos externos) en assets/audio/sfx/:
-   paso_marine, paso_hidralisco, paso_dt   pasos (botas metalicas, arrastre humedo, pisada etérea)
+   paso_marine, paso_dt   pasos (botas metalicas, pisada etérea; el del Hidralisco: tools/build_step_hydra.py)
    publico_ko, publico_critico, publico_nuclear   el publico del coliseo
    tension   latido en bucle que acompana los ultimos 10 s de la ronda
 Uso:  python3 tools/build_extra_sfx.py     (requiere numpy y scipy)
@@ -47,7 +47,8 @@ save('paso_marine', norm(b, .8))
 x = t(.34)                                                                   # Hidralisco: arrastre humedo (sh-shlk)
 sl = bp(noise(.34), 250, 1900) * np.sin(np.pi * np.clip(x / .3, 0, 1)) ** 1.3 * (.55 + .45 * np.sin(2 * np.pi * 36 * x))
 sq = lp(noise(.34), 700) * env(x - 0, .004, 26) * .6 * (x < .12)
-save('paso_hidralisco', norm(sl + sq + sine(glide(95, 55, .12), .34, 24) * .5, .8))
+# (paso_hidralisco ya no se guarda aqui: el 'arrastre humedo' sonaba a roce continuo; el paso actual lo genera tools/build_step_hydra.py. Se sigue calculando solo para no cambiar el ruido aleatorio de los sonidos siguientes)
+_ = norm(sl + sq + sine(glide(95, 55, .12), .34, 24) * .5, .8)
 x = t(.3)                                                                    # Dark Templar: pisada suave con brillo psionico
 b = lp(noise(.3), 500) * env(x, .002, 40) * .9 + sine(glide(110, 60, .1), .3, 26) * .5
 b += (sine(1320, .3, 14) * .13 + sine(1980, .3, 18) * .09) * (1 + .4 * np.sin(2 * np.pi * 22 * x))

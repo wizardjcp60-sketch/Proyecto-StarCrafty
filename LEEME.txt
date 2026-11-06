@@ -43,6 +43,8 @@ coliseo-broodwar/
                               expansiva, mancha de quemado (solo visual). Se carga ANTES de game.js. Ver 6G.
     battlecruiser.js          SUPER ATAQUE del Battlecruiser: baliza que cae, entrada, láseres, Yamato, dibujo. Se carga ANTES de
                               game.js (si lo quitas de index.html, game.js deja de funcionar). Ver 6J.
+    mascota.js                HUEVO ZERG y MASCOTA ZERGLING: aparición al azar, nacimiento a los 3 s, adopción, ataque, daño y dibujo. Se carga
+                              ANTES de game.js (si lo quitas de index.html, game.js deja de funcionar). Ver 6K.
   assets/
     images/
       sprites/                Zealot: zealot_atlas_azul/roja.png y zealot_muerte.png (ver 6H).
@@ -75,6 +77,10 @@ coliseo-broodwar/
     build_bc_atlas.py         Recorta la hoja del Battlecruiser y genera los atlas azul/rojo (python3 tools/build_bc_atlas.py).
     build_bc_audio.py         Sintetiza bc.mp3 (música) y los 7 efectos del Battlecruiser (python3 tools/build_bc_audio.py; luego tools/build_audio_data.py).
     test_bc.js                Prueba automática del Battlecruiser sin navegador (node tools/test_bc.js).
+    build_pet_assets.py       Genera huevo_atlas.png y zergling_mascota_{neutral,azul,roja}.png desde las hojas de ACE_Spark (python3 tools/build_pet_assets.py).
+    test_pet.js               Prueba automática del huevo y la mascota sin navegador (node tools/test_pet.js; SEED=n cambia la semilla). 84 comprobaciones.
+    test_ai_flip.js           Prueba automática de que la IA no tiembla al moverse (node tools/test_ai_flip.js; SEED=n cambia la semilla). 14 comprobaciones.
+    build_step_hydra.py       Sintetiza el paso del Hidralisco (assets/audio/sfx/paso_hidralisco.mp3). Después: python3 tools/build_audio_data.py.
   dist/                       (no se sube a GitHub: se genera con tools/build_dist.py)
     coliseo-broodwar-un-solo-archivo.html   Versión todo-en-uno.
 
@@ -363,6 +369,37 @@ AUDIO (sintetizado por código, sin derechos de terceros, con tools/build_bc_aud
 
 DÓNDE ESTÁ EN EL CÓDIGO: js/battlecruiser.js (todo) y 12 pequeños enganches en js/game.js (buscar "bc": caída en update(), recogida, land(), drawProj(),
 marcas en drawFloorFx(), drawItem(), draw(), hud(), loopBody (cámara lenta), newRound/startNuke/K.O. (reinicio)). Prueba automática: node tools/test_bc.js
+
+6K. HUEVO ZERG Y MASCOTA ZERGLING (noviembre 2026)
+----------------------------------------------------
+De vez en cuando sale un HUEVO en un punto al azar de la arena. A los 3 s nace un zergling con VIDA PROPIA que deambula sin dueño. El primer
+luchador que lo TOCA lo adopta: pasa a su bando, persigue al rival y lo muerde. Todo se ajusta en js/config.js (bloques EGG y PET).
+- APARICIÓN: el primer huevo sale entre 8 y 14 s después del FIGHT! (EGG.first) y los siguientes cada 14 a 24 s (EGG.gap). Nunca hay dos a la vez:
+  no sale otro mientras haya un huevo o una mascota sin dueño. No aparece a menos de 48 px de un luchador (EGG.minDist). EGG.on=false lo apaga.
+- NACIMIENTO (EGG.hatch = 3 s): aparece (larva -> huevo, 0,45 s), espera quieto, se agita (pre-nacimiento, 0,6 s) y se abre el cascaron (0,4 s) con
+  la capa inferior de restos debajo. Al terminar nace el zergling. Usa los fotogramas "Zerg Larvae, Eggs and Birth" de ACE_Spark.
+- SIN DUEÑO: deambula (anda y descansa a ratos), verde, con aro pulsante y barra de vida. Es INTOCABLE mientras no tiene dueño: las balas la atraviesan
+  (hay que tocarla, no dispararle). La IA va a tocarla si la tiene a menos de 170 px (PET.aiRange).
+- ADOPCIÓN: al tocarla un luchador (PET.touch) pasa a su bando, cambia de color (azul = luchador izquierdo, rojo = derecho) y sale "¡Mascota!".
+  Una vez adoptada ya no cambia de dueño. Cada luchador puede tener a la vez 2 (PET.max); con el máximo ya no adopta más.
+- ATAQUE: persigue al rival (velocidad 80) y lo muerde: 3 de daño cada ~0,65 s (PET.damage, PET.cooldown). El mordisco tiene margen de alcance
+  (PET.lunge) porque el rival se mueve mientras dura la animación. El escudo lo absorbe, el dash lo esquiva y un Dark Templar camuflado puede
+  esquivarlo (igual que un disparo). Si no hay rival al que atacar acompaña a su dueño.
+- VIDA PROPIA: 40 (PET.hp). La daña lo que NO es de su bando: balas (también minas), granada, salto sombrío, cuchilla del Dark Templar y del Zealot,
+  embestida del Zealot, charcos de ácido, láseres y Yamato del Battlecruiser y la explosión de un zergling explosivo (esa daña a todas). Al morir
+  hace la animación de muerte de ACE_Spark y se desvanece.
+- PUNTERÍA: si una mascota ENEMIGA está a menos de 46 px (PET.aimR) el luchador le dispara o golpea a ella en vez de al rival (también la IA); en cuanto
+  muere, vuelve al rival. El especial (granada, ácido, salto, carga) sigue yendo siempre al rival.
+- CADA RONDA EMPIEZA SIN HUEVOS NI MASCOTAS. Sonidos: reutiliza los del juego (ling_land al salir el huevo, ling_pop al nacer y al morir, pickup_multi al adoptar,
+  hit al morder), así que no hay sonidos nuevos ni hay que regenerar audio_data.js.
+- ARTE: tools/build_pet_assets.py genera assets/images/sprites/huevo_atlas.png (celdas de 64x48: aparición, quieto, pre-nacimiento, nacimiento, capa
+  inferior) y zergling_mascota_neutral/azul/roja.png (9 direcciones x 7 de caminar + 5 de ataque, y la muerte debajo). Las hojas originales están en
+  assets/images/source/zergling/ (hoja_original_huevo_nacimiento.png y hoja_original_zergling.png). Escala: EGG.scale y PET.scale (.5 = 1 px de imagen
+  por px de pantalla, como el zergling explosivo).
+- DÓNDE ESTÁ EN EL CÓDIGO: js/mascota.js (todo) y 13 pequeños enganches en js/game.js (buscar "pet": newRound, update, bucle de balas, ai, meleeHit,
+  chargeStep, grenadeBoom, blinkLand, boom, ácido y draw) y 2 en js/battlecruiser.js (láser y Yamato). Prueba automática: node tools/test_pet.js
+- AJUSTES QUE MÁS SE USAN: PET.hp (vida), PET.damage y PET.cooldown (cuánto ayuda), PET.max (cuántas a la vez), EGG.gap (cada cuánto sale un huevo),
+  EGG.hatch (segundos hasta nacer) y PET.aimR (0 = nadie les dispara a propósito).
 
 6C. OPCIONES Y EXTRAS
 ----------------------
@@ -929,6 +966,32 @@ sprites battlecruiser_atlas_azul/roja.png, música bc.mp3, 7 efectos bc_*.wav y 
 Cambios en archivos existentes: config.js (bloque BC, ASSETS.bc, ATLAS_BC), audio.js (pistas y sonidos nuevos; playMusic(nombre, true) reanuda una pista),
 game.js (enganches), index.html (script nuevo, versión de caché 2p4), audio_data.js (regenerado), build_dist.py (ahora admite el ?v= de index.html y el script nuevo),
 sim_balance.js y test_dash.js (cargan battlecruiser.js).
+
+CORRECCIÓN: IA QUE TEMBLABA Y PASO "ARRASTRADO" DEL HIDRALISCO (noviembre 2026)
+------------------------------------------------------------------------------
+1) TEMBLOR DE LA IA (Marine e Hidralisco con IA; el Dark Templar y el Zealot no lo tenían). Junto al borde de la arena (a menos de 24 px) dos órdenes
+   se contradecían: "rodea al rival" lo llevaba hacia la pared y "no te salgas" lo devolvía. Cada fotograma ganaba una, así que el luchador subía y bajaba
+   ~0,7 px 30 veces por segundo y su sprite, que mira hacia donde se mueve, se volteaba izquierda-derecha hasta 31 veces por segundo (Marine) y 17 (Hidralisco).
+   Arreglo en ai() de js/game.js: (a) si rodear al rival lleva contra la pared, rodea por el otro lado y mantiene ese giro 0,9 s; (b) el empuje del borde tiene
+   histéresis (empieza a 24 px y sigue hasta estar a 34 px); (c) la distancia de combate tiene histéresis (se acerca a partir de pref+25 y para en pref+15;
+   se aleja a partir de pref-35 y para en pref-25). Además el dibujo de Marine, Hidralisco y Zealot ya no voltea el sprite si va casi en vertical (|ax| <= 0,2).
+   Resultado medido: volteos del sprite por segundo 31 -> 2 (Marine) y 17,5 -> 1 (Hidralisco). Prueba: node tools/test_ai_flip.js (falla con el código anterior).
+   EFECTO EN EL EQUILIBRIO (IA contra IA, 150 partidas por combinación, semilla 11, con huevos): la IA a distancia ya no pierde tiempo vibrando pegada a la
+   pared y rinde más. Marine vs Zealot: gana el Marine 21% -> 43%. Marine vs DT: 8% -> 19%. Hidralisco vs DT: 7% -> 15%. Marine vs Hidralisco casi igual (72/28 -> 69/31).
+   Si prefieres el equilibrio anterior, sube Zealot/DT en CONFIG o baja la vida de Marine/Hidralisco; no hay que tocar la IA.
+2) PASO DEL HIDRALISCO. El sonido era un "arrastre húmedo" de 0,34 s (ruido agudo sostenido, 5% de graves, ~265 ms audible); sonando 3 veces por segundo
+   ocupaba el 77% del tiempo y se pegaba en un roce continuo. Ahora es una pisada de 0,17 s (golpe grave + chasquido húmedo, 68% de graves, se apaga en 82 ms,
+   24% del tiempo) con la misma sonoridad de pico. Se genera con tools/build_step_hydra.py (y js/audio_data.js se regeneró: solo cambió step_hydra).
+   El sonido anterior se conserva en assets/audio/source/paso_hidralisco_arrastre_original.mp3 (cópialo sobre assets/audio/sfx/paso_hidralisco.mp3 y ejecuta
+   tools/build_audio_data.py para volver a él). build_extra_sfx.py ya no guarda ese paso.
+3) index.html: versión de caché 2p21 (para que el navegador recargue game.js y audio_data.js).
+
+HUEVO ZERG Y MASCOTA ZERGLING (noviembre 2026)
+---------------------------------------------
+Mecánica nueva (sección 6K): sale un huevo al azar, a los 3 s nace un zergling con vida propia y quien lo toca lo adopta y ataca con él. Archivos nuevos:
+js/mascota.js, sprites huevo_atlas.png y zergling_mascota_neutral/azul/roja.png, hoja fuente hoja_original_huevo_nacimiento.png y las herramientas
+build_pet_assets.py y test_pet.js. Cambios en archivos existentes: config.js (bloques EGG y PET, ASSETS.egg y ASSETS.pet), game.js y battlecruiser.js
+(enganches), index.html (script nuevo, versión de caché 2p20), build_dist.py (incluye mascota.js), sim_balance.js, test_dash.js y test_bc.js (cargan mascota.js).
 
 PANTALLA DE VICTORIA (drawVictory / vicStep en js/game.js)
 - El ganador cae desde arriba con destello blanco, onda en el suelo, temblor de cámara y rugido del público; luego respira y le orbitan destellos.
