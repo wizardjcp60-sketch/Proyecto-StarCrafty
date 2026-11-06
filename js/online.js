@@ -15,7 +15,7 @@ var ONLINE=(function(){
  try{for(const k in AUDIO){const f=AUDIO[k];if(typeof f=='function')AUDIO[k]=function(){const u=useSim;useSim=false;try{return f.apply(this,arguments)}finally{useSim=u}}}}catch(e){}
 
  const O={active:false,side:0,cur:[null,null],tk:0};
- let peer=null,conn=null,host=false,local={},remote={},capT=0,acc=0,lastRx=0,epoch=0;   // epoch: numero de partida; descarta controles viejos que llegan tras una revancha
+ let guestCh=null,peer=null,conn=null,host=false,local={},remote={},capT=0,acc=0,lastRx=0,epoch=0;   // epoch: numero de partida; descarta controles viejos que llegan tras una revancha
  const NEUTRAL=[0,0,0,0,0];
  const $$=s=>document.querySelector(s);
  const say=t=>{const e=$$('#ons');if(e)e.textContent=t||''};
@@ -70,7 +70,7 @@ var ONLINE=(function(){
   popups.push({x:F[O.side].x,y:F[O.side].y-42,txt:'\u00a1Eres t\u00fa!',c:'#ffd98a',life:2.5});
  }
  function startMatch(){   // solo el anfitrion: elige luchadores, vidas y arena con los controles del menu, y manda la semilla
-  const o={e:epoch+1,seed:(nat()*4294967296)>>>0,ch:[$$('#cl').value||'m',$$('#cr').value||'h'],lives:+$$('#liv').value||2,arena:$$('#ar').value};
+  const o={e:epoch+1,seed:(nat()*4294967296)>>>0,ch:[$$('#cl').value||'m',guestCh||'h'],lives:+$$('#liv').value||2,arena:$$('#ar').value};
   send({k:'start',o});begin(o);
  }
 
@@ -79,14 +79,17 @@ var ONLINE=(function(){
   conn=c;
   c.on('open',()=>{
    lastRx=performance.now();
-   if(host){say('\u00a1Rival conectado! Empezando\u2026');startMatch()}
-   else say('Conectado. Esperando a que el anfitri\u00f3n empiece\u2026');
+   if(host){say('\u00a1Rival conectado! Cuando est\u00e9s listo, pulsa \u00ab2 jugadores\u00bb para empezar.')}   // el anfitrion decide cuando empezar
+   else{say('Conectado. Esperando a que el anfitri\u00f3n empiece\u2026');send({k:'hi',c:$$('#cr').value})}   // el invitado manda el luchador que ha elegido
   });
   c.on('data',m=>{
    lastRx=performance.now();
    if(!m)return;
    if(m.k=='in'){if(m.e===epoch)remote[m.t]=m.i}
    else if(m.k=='start'&&!host){begin(m.o)}
+   else if(host&&(m.k=='hi'||m.k=='pick')&&/^[mhdz]$/.test(m.c)){
+    guestCh=m.c;
+    if(!O.active)say('Rival listo con '+NAMES[m.c]+'. Pulsa \u00ab2 jugadores\u00bb para empezar.')}
   });
   c.on('close',()=>{if(conn===c)leave('El rival se desconect\u00f3.')});
   c.on('error',()=>{if(conn===c)leave('Error de conexi\u00f3n.')});
@@ -94,7 +97,7 @@ var ONLINE=(function(){
  function leave(msg){
   const was=O.active;O.active=false;
   try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}
-  conn=null;peer=null;host=false;local={};remote={};
+  conn=null;peer=null;host=false;guestCh=null;local={};remote={};
   const pb=$$('#pb');if(pb)pb.style.display='';const ol=$$('#ol');if(ol)ol.style.display='none';
   if(was){bcReset(true);state='menu';mode='1m';AUDIO.playMusic('music_menu');$$('#pz').classList.add('hide');
    $$('#ov').classList.remove('end','hide');$$('#t').textContent='Coliseo';syncRoster()}
@@ -134,6 +137,7 @@ var ONLINE=(function(){
   $$('#onc').onkeydown=e=>{e.stopPropagation();if(e.key=='Enter')join()};   // escribir el codigo no mueve a nadie
   $$('#onc').onkeyup=e=>e.stopPropagation();
   $$('#ol').onclick=()=>leave('');
+  $$('#cr').addEventListener('change',()=>{if(conn&&conn.open&&!host)send({k:'pick',c:$$('#cr').value})});   // el invitado cambia de luchador entre partidas
  }
  ui();
  return O;

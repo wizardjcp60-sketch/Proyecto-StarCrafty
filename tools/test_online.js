@@ -92,6 +92,7 @@ Bc.run(`document.querySelector('#onj').onclick()`);
 
 // ---- bucle de tiempo simulado ----
 let rematches = 0, lastSt = '';
+let firstStart = false;   // el anfitrion empieza la primera partida cuando quiere (ya no es automatico)
 for (let ms = 100; ms < SECS * 1000; ms += 0.5) {
   pump(ms);
   for (const c of [A, Bc]) {
@@ -101,6 +102,7 @@ for (let ms = 100; ms < SECS * 1000; ms += 0.5) {
       c.run(`loopBody(${ms})`);
     }
   }
+  if (!firstStart && ms >= 1000) { firstStart = true; A.run(`start('2p')`); }
   // al acabar la partida el anfitrion pide revancha (cambia la semilla y reinicia los dos)
   if (A.run('state') === 'victory' && A.run('ONLINE.active') && ms % 3000 < 1) {
     rematches++; A.run(`document.querySelector('#ov').classList.contains('x')||start('2p')`);
