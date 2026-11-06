@@ -15,7 +15,7 @@ var ONLINE=(function(){
  try{for(const k in AUDIO){const f=AUDIO[k];if(typeof f=='function')AUDIO[k]=function(){const u=useSim;useSim=false;try{return f.apply(this,arguments)}finally{useSim=u}}}}catch(e){}
 
  const O={active:false,side:0,cur:[null,null],tk:0};
- let guestCh=null,peer=null,conn=null,host=false,local={},remote={},capT=0,acc=0,lastRx=0,epoch=0;   // epoch: numero de partida; descarta controles viejos que llegan tras una revancha
+ let guestCh=null,guestReady=false,peer=null,conn=null,host=false,local={},remote={},capT=0,acc=0,lastRx=0,epoch=0;   // epoch: numero de partida; descarta controles viejos que llegan tras una revancha
  const NEUTRAL=[0,0,0,0,0];
  const $$=s=>document.querySelector(s);
  const say=t=>{const e=$$('#ons');if(e)e.textContent=t||''};
@@ -32,7 +32,9 @@ var ONLINE=(function(){
  const _tp=togglePause;togglePause=function(){if(!O.active)return _tp.apply(this,arguments)};   // sin pausa online (pararia al otro jugador)
  const _start=start;
  start=function(m){   // con un rival conectado, cualquier boton de jugar = (re)empezar la partida online
-  if(conn&&conn.open){if(host)startMatch();else say('Espera: el anfitrion empieza la partida.');return}
+  if(conn&&conn.open){if(!host){say('Espera: el anfitri\u00f3n empieza la partida.');return}
+   if(!guestReady){say('Todav\u00eda no puedes empezar: tu rival debe elegir su personaje y pulsar \u00abEstoy listo\u00bb.');return}
+   startMatch();return}
   return _start(m)};
 
  function send(m){try{if(conn&&conn.open)conn.send(m)}catch(e){}}
@@ -79,17 +81,18 @@ var ONLINE=(function(){
   conn=c;
   c.on('open',()=>{
    lastRx=performance.now();
-   if(host){say('\u00a1Rival conectado! Cuando est\u00e9s listo, pulsa \u00ab2 jugadores\u00bb para empezar.')}   // el anfitrion decide cuando empezar
-   else{say('Conectado. Esperando a que el anfitri\u00f3n empiece\u2026');send({k:'hi',c:$$('#cr').value})}   // el invitado manda el luchador que ha elegido
+   if(host){guestReady=false;say('\u00a1Alguien se uni\u00f3 a tu sala! Espera a que elija su personaje y est\u00e9 listo\u2026')}
+   else{showReady(true);say('Conectado. Elige tu personaje en \u00abLuchador derecho\u00bb y pulsa \u00abEstoy listo\u00bb.');send({k:'join'})}
   });
   c.on('data',m=>{
    lastRx=performance.now();
    if(!m)return;
    if(m.k=='in'){if(m.e===epoch)remote[m.t]=m.i}
    else if(m.k=='start'&&!host){begin(m.o)}
-   else if(host&&(m.k=='hi'||m.k=='pick')&&/^[mhdz]$/.test(m.c)){
-    guestCh=m.c;
-    if(!O.active)say('Rival listo con '+NAMES[m.c]+'. Pulsa \u00ab2 jugadores\u00bb para empezar.')}
+   else if(host&&m.k=='ready'&&/^[mhdz]$/.test(m.c)){   // el invitado eligio y esta listo
+    guestCh=m.c;guestReady=true;
+    if(!O.active)say('\u00a1Tu rival est\u00e1 listo con '+NAMES[m.c]+'! Pulsa \u00ab2 jugadores\u00bb para empezar.')}
+   else if(host&&m.k=='unready'){guestReady=false;if(!O.active)say('Tu rival est\u00e1 cambiando de personaje\u2026 espera a que vuelva a estar listo.')}
   });
   c.on('close',()=>{if(conn===c)leave('El rival se desconect\u00f3.')});
   c.on('error',()=>{if(conn===c)leave('Error de conexi\u00f3n.')});
@@ -97,12 +100,13 @@ var ONLINE=(function(){
  function leave(msg){
   const was=O.active;O.active=false;
   try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}
-  conn=null;peer=null;host=false;guestCh=null;local={};remote={};
+  conn=null;peer=null;host=false;guestCh=null;guestReady=false;showReady(false);local={};remote={};
   const pb=$$('#pb');if(pb)pb.style.display='';const ol=$$('#ol');if(ol)ol.style.display='none';
   if(was){bcReset(true);state='menu';mode='1m';AUDIO.playMusic('music_menu');$$('#pz').classList.add('hide');
    $$('#ov').classList.remove('end','hide');$$('#t').textContent='Coliseo';syncRoster()}
   btns(true);say(msg||'');
  }
+ const showReady=on=>{const b=$$('#onr');if(b){b.hidden=!on;b.disabled=false;b.textContent='Estoy listo'}};
  const btns=on=>{['#onh','#onj','#onc'].forEach(s=>{const e=$$(s);if(e)e.disabled=!on})};
  function lib(){if(typeof Peer=='undefined'){say('No se pudo cargar PeerJS (\u00bfsin internet?).');return false}return true}
 
@@ -137,7 +141,8 @@ var ONLINE=(function(){
   $$('#onc').onkeydown=e=>{e.stopPropagation();if(e.key=='Enter')join()};   // escribir el codigo no mueve a nadie
   $$('#onc').onkeyup=e=>e.stopPropagation();
   $$('#ol').onclick=()=>leave('');
-  $$('#cr').addEventListener('change',()=>{if(conn&&conn.open&&!host)send({k:'pick',c:$$('#cr').value})});   // el invitado cambia de luchador entre partidas
+  $$('#onr').onclick=()=>{if(!(conn&&conn.open&&!host))return;send({k:'ready',c:$$('#cr').value||'h'});$$('#onr').textContent='\u2713 Listo (esperando al anfitri\u00f3n)';say('Listo con '+NAMES[$$('#cr').value||'h']+'. Esperando a que el anfitri\u00f3n empiece\u2026')};
+  $$('#cr').addEventListener('change',()=>{if(conn&&conn.open&&!host){send({k:'unready'});showReady(true);say('Pulsa \u00abEstoy listo\u00bb para confirmar tu personaje.')}});   // si cambia de luchador, debe confirmar otra vez
  }
  ui();
  return O;

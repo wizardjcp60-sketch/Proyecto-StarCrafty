@@ -92,6 +92,7 @@ Bc.run(`document.querySelector('#onj').onclick()`);
 
 // ---- bucle de tiempo simulado ----
 let rematches = 0, lastSt = '';
+let readySent = false, hostTried = false;
 let firstStart = false;   // el anfitrion empieza la primera partida cuando quiere (ya no es automatico)
 for (let ms = 100; ms < SECS * 1000; ms += 0.5) {
   pump(ms);
@@ -102,7 +103,10 @@ for (let ms = 100; ms < SECS * 1000; ms += 0.5) {
       c.run(`loopBody(${ms})`);
     }
   }
-  if (!firstStart && ms >= 1000) { firstStart = true; A.run(`start('2p')`); }
+  // el anfitrion intenta empezar ANTES de que el invitado este listo: no debe arrancar
+  if (!hostTried && ms >= 1000) { hostTried = true; A.run(`start('2p')`); if (A.run('ONLINE.active')) { console.log('FALLA: empezo sin estar listo el invitado'); process.exit(1); } }
+  if (!readySent && ms >= 1500) { readySent = true; Bc.els['#cr'].value = 'z'; Bc.run(`document.querySelector('#onr').onclick()`); }
+  if (!firstStart && ms >= 2500) { firstStart = true; A.run(`start('2p')`); if (!A.run('ONLINE.active') || A.run('CH[1]') !== 'z') { console.log('FALLA: no empezo con el personaje elegido', A.run('CH')); process.exit(1); } }
   // al acabar la partida el anfitrion pide revancha (cambia la semilla y reinicia los dos)
   if (A.run('state') === 'victory' && A.run('ONLINE.active') && ms % 3000 < 1) {
     rematches++; A.run(`document.querySelector('#ov').classList.contains('x')||start('2p')`);
