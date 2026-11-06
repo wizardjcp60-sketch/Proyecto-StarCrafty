@@ -75,6 +75,9 @@ function press(c) {
 
 // ---- arranque: el anfitrion crea la sala, el invitado se une con el codigo ----
 A.run('ONLINE'); A.els['#onh'] = A.els['#onh'] || {};
+A.run(`document.querySelector('#onn').value='Ana'`);Bc.run(`document.querySelector('#onn').value='Beto'`);
+// sin nickname no se puede crear sala
+{const v=A.run(`document.querySelector('#onn').value`);A.run(`document.querySelector('#onn').value=''`);A.run(`document.querySelector('#onh').onclick()`);if(Object.keys(net.peers).length){console.log('FALLA: creo sala sin nickname');process.exit(1)};A.run(`document.querySelector('#onn').value='${v}'`)}
 A.run(`document.querySelector('#onh').onclick()`);
 net.q.sort((a, b) => a.t - b.t);
 const code = () => Object.keys(net.peers).find(k => k.startsWith('starcrafty-')).slice(11);
@@ -106,7 +109,8 @@ for (let ms = 100; ms < SECS * 1000; ms += 0.5) {
   // el anfitrion intenta empezar ANTES de que el invitado este listo: no debe arrancar
   if (!hostTried && ms >= 1000) { hostTried = true; A.run(`start('2p')`); if (A.run('ONLINE.active')) { console.log('FALLA: empezo sin estar listo el invitado'); process.exit(1); } }
   if (!readySent && ms >= 1500) { readySent = true; Bc.els['#cr'].value = 'z'; Bc.run(`document.querySelector('#onr').onclick()`); }
-  if (!firstStart && ms >= 2500) { firstStart = true; A.run(`start('2p')`); if (!A.run('ONLINE.active') || A.run('CH[1]') !== 'z') { console.log('FALLA: no empezo con el personaje elegido', A.run('CH')); process.exit(1); } }
+  if (ms === 6000 && Bc.run('ONLINE.nicks.join()') !== 'Ana,Beto') { console.log('FALLA: el invitado no recibio los nicknames'); process.exit(1); }
+  if (!firstStart && ms >= 2500) { firstStart = true; A.run(`start('2p')`); if (!A.run('ONLINE.active') || A.run('CH[1]') !== 'z' || A.run('ONLINE.nicks.join()') !== 'Ana,Beto') { console.log('FALLA: no empezo con el personaje elegido', A.run('CH')); process.exit(1); } }
   // al acabar la partida el anfitrion pide revancha (cambia la semilla y reinicia los dos)
   if (A.run('state') === 'victory' && A.run('ONLINE.active') && ms % 3000 < 1) {
     rematches++; A.run(`document.querySelector('#ov').classList.contains('x')||start('2p')`);

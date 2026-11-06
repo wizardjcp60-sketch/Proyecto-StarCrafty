@@ -369,3 +369,5 @@ input[type=range].padf{background:transparent!important;outline-offset:4px;box-s
 #ov[data-on=host] .opts .l-cl,#ov[data-on=host] .opts .l-ar,#ov[data-on=host] .opts .l-liv,#ov[data-on=host] .opts .l-fps,#ov[data-on=guest] .opts .l-cr,#ov[data-on=guest] .opts .l-fps{display:flex!important}
 #ov[data-on=host] #onrow,#ov[data-on=guest] #onrow{display:none}
 #onv{font-weight:700;color:#ffd98a}
+#ov[data-on=host] #onnw,#ov[data-on=guest] #onnw{display:none}
+#onn{font:700 14px Rajdhani,sans-serif;text-align:center;text-transform:none;width:150px;color:var(--ok);background:#0a0f0b;border:2px solid var(--edge);padding:3px 6px}

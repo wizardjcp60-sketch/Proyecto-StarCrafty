@@ -58,7 +58,7 @@ function newRound(q){
  F[0].ai=mode=='1h';F[1].ai=mode=='1m';
  F[0].face=0;F[1].face=Math.PI;
  B=[];I=[];L=[];P=[];popups=[];GR=[];AC=[];RG=[];SPL=[];MN=[];BX=[];GSTOP=0;GFLASH=0;cam.on=false;AUDIO.duck('ko',false);spawnT=1.5;shake=0;introT=CONFIG.COUNTDOWN;fightT=0;koT=0;roundT=CONFIG.ROUND_TIME;nk=null;AUDIO.duck('nuclear',false);state='intro';if(!q)AUDIO.play('round_start');
- $('#nm').textContent=NAMES[CH[0]]+(F[0].ai?' (IA)':'');$('#nh').textContent=NAMES[CH[1]]+(F[1].ai?' (IA)':'');setPortraits();
+ {const nk=window.ONLINE&&ONLINE.nicks;$('#nm').textContent=nk?nk[0]+' ('+NAMES[CH[0]]+')':NAMES[CH[0]]+(F[0].ai?' (IA)':'');$('#nh').textContent=nk?nk[1]+' ('+NAMES[CH[1]]+')':NAMES[CH[1]]+(F[1].ai?' (IA)':'');}setPortraits();
  hud();
 }
 const inArena=(x,y,m)=>{const a=(x-CX)/(RX-m),b=(y-CY)/(RY-m);return a*a+b*b<=1};
