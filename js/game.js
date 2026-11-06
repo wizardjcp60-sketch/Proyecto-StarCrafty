@@ -1485,7 +1485,12 @@ function loop(ts){
  requestAnimationFrame(loop);
 }
 function loopBody(ts){
- let dt=Math.min(.05,(ts-last)/1000||0);last=ts;padPoll();if(GSTOP>0){GSTOP-=dt;dt*=GFX.stopScale}
+ let dt=Math.min(.05,(ts-last)/1000||0);last=ts;padPoll();
+ if(window.ONLINE&&ONLINE.active)ONLINE.frame(dt);else simStep(dt);   // online: js/online.js avanza la simulacion en pasos fijos y sincronizados
+ draw();hud();
+}
+function simStep(dt){   // todo lo que cambia el estado del juego (sin dibujar): online.js la llama con dt fijo
+ if(GSTOP>0){GSTOP-=dt;dt*=GFX.stopScale}
  dt*=bcScale();   // camara lenta de la entrada del Battlecruiser
  if(fightT>0&&state!='paused')fightT-=dt;
  if(state=='play')update(dt);else if(state=='intro')intro(dt);else if(state=='ko')koStep(dt);else if(state=='nuke')nukeStep(dt);else if(state=='victory'){time+=dt;vicStep(dt)}
@@ -1493,7 +1498,6 @@ function loopBody(ts){
  if(shake>0)shake-=dt;
  if(state!='paused'&&CRT.length){CRT.forEach(c=>c.age+=dt);CRT=CRT.filter(c=>c.age<CRATER_T)}
  AUDIO.setIntensity(state=='play'&&roundT<10?(10-roundT)/10:0);   // musica mas rapida y latido en los ultimos 10 s
- draw();hud();
 }
 requestAnimationFrame(loop);
 

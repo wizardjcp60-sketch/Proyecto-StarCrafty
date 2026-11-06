@@ -39,6 +39,18 @@ Haz clic en la pantalla antes de esperar la música: los navegadores bloquean el
 
 ![Efecto de la granada del Marine](docs/preview_granada.jpg)
 
+## Jugar online (1 contra 1)
+
+Sin servidor propio: los dos navegadores se conectan directamente (WebRTC con [PeerJS](https://peerjs.com), que se carga desde internet).
+
+1. Uno pulsa **Jugar online → Crear sala** y recibe un **código de 4 letras** (elige antes los luchadores, las vidas y la arena: él juega a la izquierda).
+2. El otro pulsa **Jugar online**, escribe el código y pulsa **Unirse** (juega a la derecha). La partida empieza sola.
+3. Al acabar, el anfitrión pulsa cualquier botón de jugar para la **revancha**. **Salir** (arriba) cierra la sala.
+
+Los controles son los de 1 jugador (WASD o flechas, `F`/Espacio, `G` o `.`, `V` o `/`, mando y táctil). No hay pausa online.
+Funciona por **sincronización de controles** (lockstep): los dos juegos corren idénticos a 60 pasos/s con la misma semilla y solo se envían las teclas, con 4 pasos de adelanto (~67 ms). Detalles en `js/online.js`.
+Prueba automática sin navegador: `node tools/test_online.js` (dos clientes, red falsa con latencia y jitter, comprueba que los estados son idénticos paso a paso).
+
 ## Jugar en tu ordenador
 
 Descarga el repositorio (botón verde **Code → Download ZIP**), descomprímelo y abre `index.html` en Chrome, Edge o Firefox. No necesita servidor.
@@ -48,7 +60,7 @@ Descarga el repositorio (botón verde **Code → Download ZIP**), descomprímelo
 ```
 index.html        Página principal (HUD, menú, pausa y canvas)
 css/              Estilos
-js/               config.js (ajustes y rutas), audio.js, granada_fx.js, game.js
+js/               config.js (ajustes y rutas), audio.js, granada_fx.js, game.js, online.js
 assets/           Imágenes, sonidos, voces y música
 tools/            Scripts de Python que generan atlas, efectos y sonidos
 docs/             Capturas para este README

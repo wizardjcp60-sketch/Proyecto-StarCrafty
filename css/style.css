@@ -354,3 +354,10 @@ canvas{cursor:var(--cur-canvas,auto)}
 .snd button.padf{background:rgba(79,211,90,.18)!important}
 input[type=range].padf{background:transparent!important;outline-offset:4px;box-shadow:none}
 .clist button.padf{box-shadow:none}
+
+/* ---- modo online ---- */
+.onl{margin:6px 0}.onl #onp{margin-top:8px}
+#onc{width:92px;text-align:center;text-transform:uppercase;letter-spacing:.2em;font:inherit;font-size:14px;padding:4px 6px;background:#0a110d;color:#e8f4e8;border:2px solid var(--edge)}
+#onc:disabled,.onl button:disabled{opacity:.5}
+#ons:empty{display:none}
+#ol{padding:4px 12px;font-size:14px}

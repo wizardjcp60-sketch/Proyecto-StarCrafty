@@ -1001,3 +1001,21 @@ PANTALLA DE VICTORIA (drawVictory / vicStep en js/game.js)
 - En un empate solo se ven las brasas y el humo, con el cartel "Empate".
 - La pila de caídos lleva calaveras (con los ojos brillando del color del caído), huesos sueltos y cruzados, un charco de sangre que se extiende y
   dos estacas laterales con calavera y estandarte del color del ganador (gris en un empate). Se genera en vicStart() y se dibuja en vicBack() / vicFront().
+
+
+================================================================================
+ MODO ONLINE (js/online.js)
+================================================================================
+Qué es: partida de 1 contra 1 por internet, sin servidor propio. Se carga después de game.js.
+Conexión: PeerJS (peerjs@1.5.4 desde unpkg, en index.html) abre un canal WebRTC directo entre los dos navegadores. El anfitrión crea una
+          sala con código de 4 letras (id 'starcrafty-XXXX' en el servidor público de PeerJS) y el invitado lo escribe.
+Sincronización (lockstep): los dos navegadores ejecutan el mismo juego con pasos fijos de 1/60 s y la misma semilla aleatoria; solo viajan
+          los controles de cada paso, enviados con DELAY=4 pasos de adelanto. Si faltan los del rival, la simulación espera.
+          Para que sea idéntica: el aleatorio compartido solo se usa dentro de simStep() (dibujo, sonido y menús usan el aleatorio normal),
+          el audio no gasta números del compartido, y cada partida lleva un número (epoch) para descartar mensajes viejos tras una revancha.
+Cambios en game.js: loopBody() se dividió en loopBody() (dibujar) y simStep(dt) (toda la lógica); en modo online loopBody llama a ONLINE.frame().
+Reglas: el anfitrion elige luchadores, vidas y arena en el menú; juega a la izquierda. Sin pausa. En el menú, con rival conectado, cualquier botón
+          de jugar del anfitrión = revancha. Se corta tras 10 s sin datos del rival.
+IMPORTANTE al tocar la lógica: todo lo que use Math.random o cambie el estado debe ocurrir dentro de update()/simStep() y no depender de nada
+          local (teclas, tamaño de ventana, imágenes cargadas, sonido). Tras cualquier cambio de jugabilidad ejecuta  node tools/test_online.js .
+Prueba: node tools/test_online.js  (SEED=n, SECS=n, LAT0/LAT1=latencia en ms). Comprueba paso a paso que los dos clientes son idénticos.
